@@ -1,5 +1,5 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.2.2 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.2.3 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
@@ -603,10 +603,17 @@ string message
 ### `/task/status` 배선과 heartbeat 계약
 
 - **유일한 발행자:** `pnp_orchestrator`. 프로세스가 살아 있는 동안 명시적으로 steady clock을 사용하는 timer에서 `task_status_rate_hz` 기본 2.0 Hz로 발행한다. Gazebo pause 중에도 멈추지 않아야 한다.
-- **필수 구독자:** `pnp_evaluation`. active trial 동안 마지막 수신 시각을 evaluator 자신의 steady clock으로 측정한다. `task_status_timeout_s` 기본 2.0초 동안 새 메시지가 없으면 `TASK_HEARTBEAT_TIMEOUT`으로 기록하고 `RunTrial` cancel을 요청한다. `cancel_timeout_s` 안에 종료가 확인된 경우에만 reset하며, 확인되지 않으면 `SAFE_STOP`으로 이동한다.
+- **필수 구독자:** `pnp_evaluation`. active trial 동안 마지막 수신 시각을 evaluator 자신의 steady clock으로 측정한다. `task_status_timeout_s` 기본 2.0초 동안 새 메시지가 없으면 `TASK_HEARTBEAT_TIMEOUT`으로 기록하고 `RunTrial` cancel을 요청한다. `cancel_timeout_s` 기본 5.0초 안에 종료가 확인된 경우에만 reset하며, 확인되지 않으면 `SAFE_STOP`으로 이동한다.
 - `heartbeat_seq`는 프로세스 수명 동안 매 발행마다 증가한다. liveness는 sequence의 숫자 차이나 ROS sim timestamp가 아니라 **새 메시지 수신 간격**으로 판정한다.
 - active goal에서는 `run_id`가 `RunTrial.goal.run_id`와 같고 `outer_stage`는 현재 outer state다. idle에서는 빈 `run_id`와 `IDLE`을 발행한다.
 - `TaskStatus`는 진단·watchdog용이다. stage 전이, retry, trial 성공·완료 판정의 권위는 상태기계와 `RunTrial` action result에만 있으며, 이 topic을 별도의 제어 상태기계로 사용하지 않는다.
+
+### `PickPlace` liveness와 cancel 계약
+
+- `pnp_orchestrator`는 active `PickPlace` goal마다 steady-clock action·stage watchdog을 소유한다. `PickPlace.feedback.inner_stage`와 `progress`는 현재 내부 단계를 관측하는 신호이며, 주기적인 heartbeat로 간주하지 않는다.
+- action 또는 stage timeout이면 orchestrator가 `PickPlace` cancel을 요청한다. `pnp_manipulation`의 cancel callback은 즉시 응답하고 cancel flag를 설정하며, blocking `execute()` 뒤에 대기하지 않는 별도 제어 경로에서 `MoveGroupInterface::stop()`을 호출한다. worker는 `execute()`가 풀린 뒤 cancel 상태를 확인해 goal을 canceled 또는 aborted terminal state로 끝낸다.
+- terminal state는 같은 `cancel_timeout_s` 기본 5.0초 안에 확인되어야 한다. 확인되지 않으면 reset하지 않고 `SAFE_STOP`으로 이동한다.
+- manipulation이 멈춰도 별도 프로세스인 orchestrator의 `/task/status`는 계속 발행될 수 있다. 따라서 `/task/status`를 manipulation liveness나 Session 4 deadlock 통과 증거로 사용하지 않는다.
 
 ## 4.5 상태기계
 
@@ -693,10 +700,11 @@ Week 3에서 센서 검증이 지연되면 `VERIFY_PICK_BASELINE`을 유지하�
 | 구간 | 권장 시간 |
 |---|---:|
 | 지난 회차 재현 | 15~20분 |
-| 핵심 개념 설명 | 20~35분 |
-| 함께 구현 | 90~120분 |
-| 시험과 오류 주입 | 30~45분 |
+| 핵심 개념 설명 | 15~25분 |
+| 함께 구현 | 75~100분 |
+| 시험과 오류 주입 | 30~40분 |
 | 결과 기록과 commit | 15~25분 |
+| **합계** | **150~210분 (2.5~3.5시간)** |
 
 지난 회차 결과가 재현되지 않으면 새 기능을 추가하지 않는다.
 
@@ -750,7 +758,7 @@ main
 
 # 6. Week 0 — 환경 구축과 위험 제거
 
-Week 0는 본과정에 들어가기 전의 준비 기간이다. 설치에 무한정 시간을 쓰지 않고 **6~7시간 상한**을 둔다.
+Week 0는 본과정에 들어가기 전의 준비 기간이다. 세 회차의 권장 시간 합계는 **6~7.5시간**이며, 설치와 환경 복구를 포함해 **7.5시간을 하드 캡**으로 둔다.
 
 Week 0는 세 회차로 구성한다.
 
@@ -759,6 +767,7 @@ Week 0는 세 회차로 구성한다.
 | Session 0-1 | ROBOTIS Docker 환경 구축 | 2~2.5시간 |
 | Session 0-2 | 공식 Gazebo·MoveIt smoke test | 1.5~2시간 |
 | Session 0-3 | **핵심 위험 3종 spike** | 2.5~3시간 |
+| **합계** |  | **6~7.5시간** |
 
 Session 0-3의 시간을 낙관적으로 잡지 않는다. Docker GUI나 bridge 전제까지 복구해야 하면 spike B 주변 작업에 2시간 가까이 걸릴 수 있다. 다만 **B의 설계 가능성 판정 자체는 world와 bridge가 기동된 시점부터 60분 timebox**다. 60분 안에 계약을 검증하지 못하면 `미해결`로 기록하고 fallback을 선택하며, 환경 복구 시간과 spike 판정 시간을 섞어 성공처럼 처리하지 않는다.
 
@@ -1245,13 +1254,13 @@ position_only_ik_effective
 
 ### 실습
 
-1. `pnp_interfaces` 생성
+1. `pnp_interfaces`와 `pnp_evaluation` 패키지 생성
 2. outer용 `RunTrial.action`, inner용 `PickPlace.action`, 진단용 `TaskStatus.msg` 작성
 3. evaluator → orchestrator dummy client/server 작성
 4. orchestrator → manipulation dummy client/server 작성
 5. 두 action에서 각각 outer/inner stage feedback 발행
 6. orchestrator에서 steady-clock timer로 `/task/status`를 기본 2.0 Hz 발행
-7. evaluator에서 `/task/status`를 구독하고 `task_status_timeout_s` watchdog 구현
+7. evaluator에서 `/task/status`를 구독하고 `task_status_timeout_s` watchdog과 `cancel_timeout_s` 종료 확인 구현
 8. cancel 처리
 9. steady-clock action watchdog timeout 처리
 10. 평가·outer·inner 상태 enum과 허용 전이표 작성
@@ -1267,6 +1276,7 @@ manipulation: PLAN_PICK → EXECUTE_PICK → VERIFY_PICK → PLAN_PLACE → EXEC
 
 ### 산출물
 
+- `pnp_interfaces`, `pnp_evaluation` 패키지
 - `RunTrial.action`, `PickPlace.action`, `TaskStatus.msg`
 - 2단 dummy server/client 체인
 - `/task/status` publisher와 evaluator watchdog
@@ -1430,7 +1440,8 @@ C++ `MoveGroupInterface`로 관절 목표와 손끝 pose 목표를 계획하고 
 8. 속도·가속도 scaling parameter 분리
 9. **단독 실행 파일에서 먼저 성공시킨 뒤** action server에 연결
 10. worker thread 구조로 action server 통합
-11. 동시에 두 개의 goal을 보내 거부되는지 확인
+11. Session 2의 dummy orchestrator 또는 action test client로 feedback·action timeout·cancel terminal state 확인
+12. 동시에 두 개의 goal을 보내 거부되는지 확인
 
 ### 권장 함수 구조
 
@@ -1454,6 +1465,10 @@ handle_goal()
 handle_accepted()
     → 전용 worker thread를 띄우고 즉시 반환
 
+handle_cancel()
+    → 즉시 수락하고 cancel flag 설정
+    → blocking worker와 분리된 경로에서 MoveGroupInterface::stop() 호출
+
 executeGoal()   [worker thread]
     → MoveGroupInterface plan / execute 호출
     → feedback 발행
@@ -1465,15 +1480,18 @@ executeGoal()   [worker thread]
 - `MultiThreadedExecutor`를 사용한다
 - action server 콜백과 MoveGroupInterface 관련 콜백을 서로 다른 callback group에 두거나 reentrant group을 사용한다
 - 콜백 안에서 같은 executor의 future를 무작정 blocking wait 하지 않는다
-- 공유 MoveGroupInterface 객체는 동시 접근하지 못하도록 보호한다
+- 공유 MoveGroupInterface 객체의 일반 plan/execute 동시 접근은 막는다. cancel 경로의 `stop()`만 blocking worker와 분리된 제어 경로로 허용한다
 - **동시에 하나의 pick-place goal만 허용**하고 나머지는 거부한다
 
 ### 완료 기준에 추가
 
 - action callback을 담당하는 executor가 responsive함
-- blocking `execute()` 중에도 cancel 요청을 수신할 수 있음
-- blocking `execute()` 중에도 orchestrator의 `/task/status`가 설정 주기로 계속 발행되고 `heartbeat_seq`가 증가함
+- `PickPlace.feedback.inner_stage`가 plan·execute 단계 전이를 올바르게 보여 줌
+- blocking `execute()` 중에도 cancel 요청을 수신하고 별도 cancel 경로가 `MoveGroupInterface::stop()`을 호출해 `cancel_timeout_s` 안에 terminal state로 종료함
+- 의도적으로 result를 지연하면 orchestrator 또는 action test client의 steady-clock action·stage timeout이 `EXECUTION_TIMEOUT`으로 판정함
 - 두 번째 goal은 **즉시 거부**됨
+
+`/task/status`는 orchestrator 자체의 liveness만 나타낸다. 이 회차의 manipulation deadlock·cancel 검증에는 `PickPlace` feedback, action·stage timeout, terminal state를 사용한다.
 
 ### 산출물
 
@@ -1621,7 +1639,7 @@ base_yaw ≈ atan2(object_y - joint1_origin_y,
 
 ### 5-3. 실습
 
-1. 최종 world 골격 생성 (테이블·큐브·카메라 mount·조명·place zone)
+1. `pnp_simulation` 패키지 생성 후 최종 world 골격 구성 (테이블·큐브·카메라 mount·조명·place zone)
 2. 동일 크기의 테이블·큐브를 Planning Scene에 등록
 3. 물체 ID와 frame 통일
 4. 테이블이 없을 때와 있을 때 계획 비교
@@ -1646,7 +1664,7 @@ position-only에서는 `base_yaw_deg`와 `orientation_error_deg`를 `NA`로 둘 
 
 ### 산출물
 
-- 최종 world 파일 (카메라 mount 포함)
+- `pnp_simulation` 패키지와 최종 world 파일 (카메라 mount 포함)
 - `docs/world_layout.md` — 카메라 위치·frame 이름·조명 설정
 - IK mode별 목표 생성 함수, effective 설정, 필요 시 tool-frame offset
 - 도달 영역 CSV와 IK 실패 영역 표시
@@ -1780,7 +1798,7 @@ lateral_error = ||e_lateral||
 
 ### 실습
 
-1. hard-coded pick pose 설정 (동결한 IK mode의 목표 생성 규칙 사용)
+1. `pnp_transport` 패키지 생성 후 hard-coded pick pose 설정 (동결한 IK mode의 목표 생성 규칙 사용)
 2. open → pre-grasp → approach → close 단계 함수 연결
 3. `grasp_frame`의 current transform으로 접근축을 planning frame에 회전
 4. `desired_axial_offset`을 포함한 `lateral_error`·`axial_error` 계산 구현
@@ -1797,6 +1815,7 @@ lateral_error = ||e_lateral||
 
 ### 산출물
 
+- `pnp_transport` 패키지
 - pick 단계 action server
 - grasp gate 판정 함수와 parameter YAML
 - 접근축 벡터 확정값
@@ -2459,7 +2478,7 @@ total_time_ms
 4. evaluator가 perception pose와 GT를 동시에 수집하는 경로 작성
 5. trial loop 작성
 6. steady-clock action timeout과 run ID 연결
-7. `/task/status` subscriber와 `task_status_timeout_s` watchdog 연결
+7. `/task/status` subscriber와 `task_status_timeout_s` watchdog, `cancel_timeout_s` 종료 확인 연결
 8. ground truth로 perception error 계산
 9. place zone success 판정
 10. CSV 저장
@@ -2954,6 +2973,13 @@ L3는 처음부터 선택하는 것이 아니라 다음 조건을 만족할 때�
 ---
 
 # 18. 개정 이력
+
+## v3.2.3
+
+- Session 4의 manipulation liveness를 orchestrator `/task/status`에서 분리하고 `PickPlace` feedback·steady-clock action/stage timeout·cancel terminal state로 검증
+- `cancel_timeout_s` 기본값을 5.0초로 정하고 Session 2·11의 evaluator 구현에 연결
+- §5.1 회차 구간 합계를 150~210분으로 맞추고 Week 0 총량과 하드 캡을 6~7.5시간으로 일치
+- `pnp_evaluation`, `pnp_simulation`, `pnp_transport` 패키지 생성 시점을 최초 사용 회차에 명시
 
 ## v3.2.2
 
