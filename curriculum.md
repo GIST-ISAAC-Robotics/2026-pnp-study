@@ -1,5 +1,5 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.2.4 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.2.5 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
@@ -421,6 +421,8 @@ pick_place_ws/
 ROBOTIS의 공식 패키지는 직접 복사해 프로젝트 패키지 안에 넣지 않는다. dependency로 사용하고, 수정이 꼭 필요하면 fork와 commit을 명시한다.
 
 `transport_server.py`는 grasp gate와 prepare/start/stop service, `TransportStatus` 발행을 소유한다. T1의 연속 갱신은 `pose_follower.py`, T0의 one-shot 경로는 `t0_transport.py`로 분리한다.
+
+`pnp_simulation/reset_trial_node.py`는 `/simulation/reset_trial`의 유일한 service server다. Week 0에서 동결한 `reset_backend`로 object pose와 linear/angular velocity를 초기화하고, pose·twist settle threshold를 통과한 경우에만 `ResetTrial.response.reset_ok = true`를 반환한다.
 
 `pnp_orchestrator/orchestrator.py`는 `RunTrial` action server, outer state machine, `/task/status`의 유일한 발행자다. `pnp_evaluation`은 `/task/status`를 구독해 liveness만 감시하며, trial 완료 여부는 계속 `RunTrial` action result로 판정한다.
 
@@ -1868,10 +1870,20 @@ lateral_error = ||e_lateral||
 
 ### 시간이 부족할 때
 
-- 회차 내 pick-and-lift 시험을 5회에서 3회로 축소
-- 빠진 lift-only 2회는 별도 의무로 누적하지 않고, 6B 이후의 전체 trial에서 pick·lift 단계 검증으로 대체
-- 임계값 튜닝은 §5.5의 개인 작업 상한 안에서만 이관
-- `VERIFY_PICK_BASELINE`의 4번 항목만 남기고 나머지는 다음 회차
+구현량이 회차를 잠식하면 시험 횟수부터 줄이되 transport 계약을 우회하지 않는다. 먼저 다음 **`6A-min` 안전 체크포인트**를 만든다.
+
+1. `PrepareTransport.srv`와 `TransportStatus.msg`가 빌드되고 `transport_server.py`가 세 service와 `/transport/state`를 제공함
+2. 성공한 `/transport/prepare` 전에는 `/transport/start`가 비성공 응답을 반환하며, manipulation도 attach와 T1/T0 pose 갱신을 실행하지 않음
+3. `/transport/prepare`가 실제 grasp gate를 수행하고, 통과 시 선택한 mode의 lift-only 동작을 시작하며 `/transport/stop`은 반복 호출해도 안전하게 `IDLE`로 복귀함
+4. 정상 pose 1회와 일부러 빗나간 pose 1회에서 `/transport/state` 전이와 "거부 시 transport 미실행"을 확인함
+
+- §5.1의 함께 구현 구간이 끝날 때 `6A-min`을 통과하지 못하면, 세 service가 **fail-closed**로 남는 빌드 가능한 checkpoint를 commit한다. 이 상태에서 service를 우회해 직접 attach·pose 갱신하지 않고, pick-and-lift trial이나 Session 6A 완료로 세지 않는다.
+- 이관할 수 있는 구현은 누락된 `6A-min` 항목뿐이며 §5.5 상한 안에서 Session 6B의 첫 구현 블록에 먼저 끝낸다. 이를 상쇄하기 위해 6B의 20 Hz sweep과 RTT 분포 상세 분석은 생략하고 Week 0에서 동결한 주기를 사용한다. 필수 timeout·dropped-update·단일 RTT 기록은 유지한다.
+- 그 블록에서도 `6A-min`이 끝나지 않으면 T1을 억지로 유지하지 않는다. T0와 `L1-fallback`으로 전환하거나 Week 2 Gate를 통과하지 않은 것으로 기록한다.
+- `6A-min` 통과 후에는 회차 내 pick-and-lift 시험을 5회에서 3회로 축소한다.
+- 빠진 lift-only 2회는 별도 의무로 누적하지 않고, 6B 이후의 전체 trial에서 pick·lift 단계 검증으로 대체한다.
+- 임계값 튜닝은 §5.5의 개인 작업 상한 안에서만 이관한다.
+- `VERIFY_PICK_BASELINE` 1~4번은 정상 경로 1회에서 확인한다. 단계별 timeout 구현은 유지하되, 별도 timeout fault injection만 6B로 이관할 수 있다.
 
 ### 시간이 남을 때
 
@@ -2014,6 +2026,7 @@ T0 경로는 1~7 대신 persistent follower를 만들지 않고, pick/lift 완�
 
 ### 시간이 부족할 때
 
+- `6A-min` 이관분이 있으면 새 transport 기능보다 먼저 완료한다. 이 경우 20 Hz sweep과 RTT 분포 상세 분석은 생략하고, Week 0에서 동결한 주기와 필수 timeout·dropped-update·단일 RTT 기록만 유지한다.
 - 회차 내 전체 시험을 5회에서 3회로 축소
 - 같은 동결 설정·reset·scenario에서 무개입 연속 실행한 6B trial은 §5.5의 Week 2 10회 세트에 포함하고, 별도 보충 횟수를 만들지 않음
 - place 영역 하나만 사용
@@ -2489,7 +2502,7 @@ total_time_ms
 ### 실습
 
 1. scenario loader 작성
-2. reset service/node와 reset 완료 검증 작성
+2. `pnp_interfaces`에 `ResetTrial.srv`를 추가하고, `pnp_simulation/reset_trial_node.py`에서 `/simulation/reset_trial` service server와 pose·twist reset·settle 완료 검증 구현
 3. evaluator → `/task/run_trial` action client 작성
 4. evaluator가 perception pose와 GT를 동시에 수집하는 경로 작성
 5. trial loop 작성
@@ -2502,6 +2515,13 @@ total_time_ms
 12. 실패 유형별 bag 저장
 13. 결과 요약 표 생성
 
+### 산출물
+
+- `pnp_interfaces/srv/ResetTrial.srv`
+- `/simulation/reset_trial`을 제공하는 `pnp_simulation/reset_trial_node.py`
+- `pnp_evaluation/scenario_runner.py`, `evaluator.py`, 동결한 scenario YAML/CSV
+- raw 평가 CSV, 결과 요약 표, 대표 성공·실패 bag
+
 ### 완료 기준
 
 - L2 최소 20회 또는 L1-fallback 최소 10회, 권장 30회 무개입 실행
@@ -2511,7 +2531,7 @@ total_time_ms
 - 단계별 실패율 계산
 - 평가 중 parameter 변경 없음
 - grasp gate 임계값이 평가 전에 동결됨
-- reset마다 pose·twist threshold 통과
+- `/simulation/reset_trial` 응답의 `reset_ok`, pose error, linear/angular speed가 실제 settle 판정과 일치하고, reset마다 pose·twist threshold 통과
 - active trial에서 `/task/status` 수신 간격이 threshold를 넘으면 `TASK_HEARTBEAT_TIMEOUT`으로 분류
 - nested cancel 경계·실패 fault injection에서 inner→outer 종료 순서와 `SAFE_STOP` 시 reset 금지가 유지됨
 - evaluator가 perception pose를 직접 구독하며 perception 노드는 GT를 구독하지 않음
@@ -2994,6 +3014,11 @@ L3는 처음부터 선택하는 것이 아니라 다음 조건을 만족할 때�
 ---
 
 # 18. 개정 이력
+
+## v3.2.5
+
+- `ResetTrial.srv`와 `reset_trial_node.py`를 Session 11의 구현·산출물에 배정하고 `/simulation/reset_trial`의 소유자와 완료 판정을 명시
+- Session 6A에 fail-closed skeleton과 `6A-min` 안전 체크포인트를 추가하고, 미완료 구현의 제한된 6B 이관·작업량 상쇄·T0 전환 규칙을 정의
 
 ## v3.2.4
 
