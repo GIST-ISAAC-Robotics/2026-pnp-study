@@ -1,5 +1,5 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.3.0 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.3.1 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
@@ -20,12 +20,14 @@ Week 1을 시작하기 전에 다음 네 가지를 `docs/setup/week0_spike.md`�
 
 | 고정 항목 | 확인 방법 | 기록값 |
 |---|---|---|
-| `ik_mode` | effective MoveIt parameter와 position-only/full-pose 비교 | `position-only` 또는 `full-pose` |
+| `ik_mode` | effective MoveIt parameter와 position-only/full-pose 비교 | `position-only` 또는 `full-pose` + `ik_mode_status` (`final` 또는 `provisional`) |
 | `planning_frame` | `move_group.getPlanningFrame()` | 런타임 출력 |
 | `reset_backend` | pose와 twist를 함께 초기화할 수 있는 경로 시험 | `set_entity_state` · `respawn` · `custom_reset` 중 하나 |
 | RGB-depth 좌표계 | 해상도·registration·CameraInfo·optical frame 시험 | 역투영에 쓸 image/CameraInfo/frame |
 
 이 네 값은 문서의 예시 이름보다 **실제 런타임 결과가 우선**이다. 특히 `position_only_ik`는 설치된 ROBOTIS commit과 생성된 MoveIt parameter를 직접 확인한다. 소스 YAML에 키가 없거나 다른 값이 있어도 추측으로 보충하지 않는다.
+
+`ik_mode_status=provisional`은 Week 0에서 안전한 1점만 검증한 비상 통과 상태다. 최종 동결이 아니며, Session 5에서 축소 workspace를 포함한 grid로 재판정해 `final`로 바꾸기 전에는 Session 6A를 시작하지 않는다.
 
 ## 프레임 고정표
 
@@ -63,6 +65,8 @@ completion_level: L2 | L1-fallback
 perception_mode: P1 | P2
 transport_mode: T1 | T0
 ik_mode: position-only | full-pose
+ik_mode_status: final
+runner_profile: perception_evaluation
 target_mode: perception       # 최종 평가 고정
 ```
 
@@ -197,7 +201,7 @@ Session 6 분할로 본과정은 **13회**다. Week 2만 주 4회로 운영하�
 - 오류 코드 표, 시스템 구조도, TF tree, 상태 전이도
 - 최종 시연 영상
 - 최소 1개의 단위 테스트와 1개의 reset 후 재실행 통합 테스트
-- `completion_level`, `perception_mode`, `transport_mode`, `ik_mode`, 최종 `target_mode=perception`과 축소 이유
+- `completion_level`, `perception_mode`, `transport_mode`, `ik_mode`, `ik_mode_status=final`, 최종 `runner_profile=perception_evaluation`, `target_mode=perception`과 축소 이유
 
 ### 선택 경로에 따라 필수
 
@@ -520,7 +524,7 @@ Gazebo PosePublisher
 | `/task/run_trial` | `pnp_interfaces/action/RunTrial` | evaluator가 outer task 한 회를 요청 |
 | `/pick_place/execute` | `pnp_interfaces/action/PickPlace` | orchestrator가 manipulation 내부 동작 요청 |
 | `/transport/prepare` | `pnp_interfaces/srv/PrepareTransport` | object와 grasp frame을 지정해 gate 수행. 실제 `T_eef_object`는 transport가 fresh GT와 TF로 내부 계산 |
-| `/transport/start` | `std_srvs/srv/Trigger` | 준비된 follower 시작 |
+| `/transport/start` | `std_srvs/srv/Trigger` | 준비된 T1 follower 시작. T0 one-shot 경로에서는 호출하지 않음 |
 | `/transport/stop` | `std_srvs/srv/Trigger` | follower 중지와 마지막 요청 완료 확인 |
 | `/transport/state` | `pnp_interfaces/msg/TransportStatus` | run별 grasp 평가·slip·dropped update·timeout·error snapshot. evaluator가 필수 구독 |
 | `/task/status` | `pnp_interfaces/msg/TaskStatus` | `pnp_orchestrator`가 heartbeat·outer stage 발행, `pnp_evaluation`이 watchdog 구독 |
@@ -623,7 +627,10 @@ string message
 - fresh GT/TF로 gate를 계산해 통과하면 `prepared = true`, `grasp_evaluated = true`, `grasp_eligible = true`다. gate를 계산했지만 탈락하면 `false, true, false`, freshness·TF 실패로 계산하지 못하면 `false, false, false`다. `/transport/start`는 세 값이 모두 true일 때만 성공한다.
 - gate가 통과한 경우에만 transport가 실제 `T_eef_object = T_planning_eef⁻¹ × T_planning_object_gt`를 내부에 저장한다. manipulation이 목표 pose에서 만든 offset을 넘기거나 GT pose·저장된 transform을 되돌려 받지 않는다.
 - `TransportStatus.state` 허용값은 `IDLE | PREPARED | FOLLOWING | REJECTED | STOPPED | ERROR`로 고정한다.
-- `/transport/state`는 reliable + keep-last 20 QoS로 run 시작 전부터 evaluator가 구독한다. prepare 판정과 stop/cleanup의 최종 누적값을 같은 `run_id`로 발행한다. `REJECTED`·`STOPPED`·`ERROR` terminal snapshot을 내보낸 뒤에만 빈 `run_id`의 `IDLE`로 돌아가며, evaluator는 terminal snapshot에서 `grasp_evaluated`, `grasp_eligible`, grasp 오차, 최대 slip, dropped update, timeout을 CSV로 옮긴다. T0에서 측정하지 않는 연속 slip은 message에서는 IEEE `NaN`, CSV에서는 `NA`로 남긴다.
+- 서버 시작 상태는 빈 `run_id`의 `IDLE`이다. `/transport/prepare`가 gate와 offset 저장까지 성공하면 성공 응답 전에 같은 `run_id`의 `PREPARED`를 발행한다. gate 탈락·stale GT·TF 실패면 실패 응답 전에 같은 `run_id`의 `REJECTED` terminal snapshot을 발행하며 `PREPARED`를 거치지 않는다.
+- T1에서 `/transport/start`가 `PREPARED` run을 수락하고 follower worker가 활성화되면 `FOLLOWING`으로 전이한다. `PREPARED`가 아닌 상태의 start는 비성공 응답을 반환하고 follower를 만들지 않는다. T0는 `/transport/start`를 호출하거나 `FOLLOWING`으로 가장하지 않고, 준비된 offset으로 one-shot 갱신하는 동안 `PREPARED`를 유지한다.
+- `/transport/stop`은 T1의 마지막 in-flight 요청 또는 T0의 마지막 one-shot 완료·timeout을 확인한 뒤 같은 `run_id`의 `STOPPED` terminal snapshot을 발행한다. 따라서 정상 상태열은 T1 `IDLE → PREPARED → FOLLOWING → STOPPED → IDLE`, T0 `IDLE → PREPARED → STOPPED → IDLE`, prepare 거부 `IDLE → REJECTED → IDLE`이다. `PREPARED`·`FOLLOWING` 중 내부 service/worker 오류가 나면 `ERROR` terminal로 전이한다.
+- `/transport/state`는 reliable + keep-last 20 QoS로 run 시작 전부터 evaluator가 구독한다. prepare 판정과 stop/cleanup의 최종 누적값을 같은 `run_id`로 발행한다. `REJECTED`·`STOPPED`·`ERROR` terminal snapshot을 내보낸 뒤에만 빈 `run_id`의 `IDLE`로 돌아가며, evaluator는 terminal snapshot에서 `grasp_evaluated`, `grasp_eligible`, grasp 오차, 최대 slip, dropped update, timeout을 CSV로 옮긴다. terminal 또는 그 뒤 `IDLE`에서 반복된 stop은 성공으로 처리하되 새 run snapshot을 만들지 않는다. T0에서 측정하지 않는 연속 slip은 message에서는 IEEE `NaN`, CSV에서는 `NA`로 남긴다.
 - gate에 도달하지 못한 upstream 실패는 `grasp_evaluated = false`로 구분한다. gate에 도달했는데 해당 run의 status snapshot이 없으면 `EVALUATION_DATA_MISSING`으로 batch를 중단한다.
 - `TransportStatus`는 평가·진단 데이터이며 start/stop 또는 상태 전이의 제어 권위로 사용하지 않는다.
 
@@ -665,7 +672,18 @@ IDLE → SELECT_TARGET
 → VALIDATE → CALL_MANIPULATION → COMPLETE
 ```
 
-`target_mode`는 `fixed | perception` enum parameter다. Week 2의 고정 좌표 baseline에서만 `fixed`를 쓰며, Session 5 도달 grid에서 사람이 미리 고른 `planning_frame`의 `fixed_pick_pose` YAML과 config hash를 기록한다. 런타임 GT로 fixed pose를 생성·보정하지 않는다. Session 9부터는 `perception`으로 전환하고, 최종 평가 runner는 `fixed`이면 시작을 거부한다. `fixed`는 GT fallback이 아니며 Week 3 Gate와 최종 sensor-to-action 결과로 채점하지 않는다.
+`target_mode`는 `fixed | perception` enum parameter다. Week 2의 고정 좌표 baseline에서만 `fixed`를 쓰며, Session 5 도달 grid에서 사람이 미리 고른 `planning_frame`의 `fixed_pick_pose` YAML과 config hash를 기록한다. 런타임 GT로 fixed pose를 생성·보정하지 않는다. Session 9부터는 `perception`으로 전환한다. `fixed`는 GT fallback이 아니며 Week 3 Gate와 최종 sensor-to-action 결과로 채점하지 않는다.
+
+`scenario_runner.py`는 Session 11에서 확장한 뒤에도 두 실행 profile을 보존한다.
+
+| `runner_profile` | 허용 `target_mode` | 용도 |
+|---|---|---|
+| `week2_baseline` | `fixed` | Session 6B의 fixed pose·initial pose·seed를 유지한 Week 2 Gate와 이후 회귀 시험 |
+| `perception_evaluation` | `perception` | Week 3 sensor-to-action 시험과 Session 11에서 확장하는 최종 평가 |
+
+`runner_profile`은 evaluator의 batch parameter이고 `target_mode`는 orchestrator의 parameter다. runner는 batch 시작 시 ROS parameter service로 orchestrator의 effective `target_mode`를 읽어 위 조합을 검증하며, batch가 끝날 때까지 두 값을 변경하지 않는다. 두 값은 시작 로그·CSV·`config_hash` 입력에 함께 포함하고, orchestrator도 시작 시 `target_mode` enum을 검증한다. 알 수 없는 값 또는 profile/mode 불일치는 attempt 할당·reset 전에 `INVALID_TARGET_MODE`로 시작을 거부하며 `/simulation/reset_trial`과 `RunTrial`을 호출하지 않는다. 최종 평가 분모에는 `runner_profile=perception_evaluation` 행만 포함하고, `week2_baseline` 결과는 별도 regression CSV로 남긴다.
+
+profile별 필수 metric도 분리한다. `week2_baseline`은 perception pose·detection·perception error를 요구하지 않고 해당 CSV 필드를 `NA`로 둔다. `perception_evaluation`은 이 세 입력을 필수로 요구한다. `EVALUATION_DATA_MISSING`은 선택한 profile에서 필수인 action result·terminal `TransportStatus`·GT·perception 입력 중 하나가 없을 때만 발생한다.
 
 `pnp_manipulation`의 inner state machine:
 
@@ -717,7 +735,7 @@ Week 3에서 센서 검증이 지연되면 `VERIFY_PICK_BASELINE`을 유지하�
 | `RGBD_REGISTRATION_ERROR` | RGB mask 픽셀과 depth 광선이 일치하지 않음 | 실행 중단, registration 계약 재확인 |
 | `TF_ERROR` | 좌표 변환 실패 | TF 대기 후 1회 재시도 |
 | `OUT_OF_WORKSPACE` | 안전 작업 영역 밖 | trial 실패 |
-| `INVALID_TARGET_MODE` | 회차 또는 최종 평가 계약과 맞지 않는 `target_mode` | 실행 거부, fixed/perception 설정과 config hash 확인 |
+| `INVALID_TARGET_MODE` | 알 수 없는 `target_mode`·`runner_profile` 또는 허용되지 않은 조합 | attempt/reset 전 실행 거부, profile/mode와 config hash 확인 |
 | `PLANNING_FAILED` | 경로 생성 실패 | 동일 목표 1회 재계획 |
 | `IK_UNREACHABLE_POSE` | 동결한 IK mode에서 목표를 만족하지 못함 | mode별 목표 생성 규칙 확인 후 1회 재시도 |
 | `GRASP_NOT_ELIGIBLE` | 파지 기하 조건 미달로 transport 실행 거부 | trial 실패, `grasp_plausible_success = false` |
@@ -1140,16 +1158,17 @@ position_only_ik_effective
 8. plan과 execute 결과를 구분하고 Gazebo 반영 확인
 9. 도달 불가능한 목표를 주고 오류 반환 확인
 10. 다음 규칙으로 `ik_mode` 동결
-    - position-only가 세 점에서 tilt 제한을 만족하면 **position-only 권장**
-    - tilt가 무너지지만 full-pose 성공률이 충분하면 full-pose 선택
-    - 둘 다 불안정하면 workspace·seed·자세 규칙을 줄이고 Week 1 전에 재판정
+    - position-only가 세 점에서 tilt 제한을 만족하면 **position-only 권장**, `ik_mode_status=final`
+    - tilt가 무너지지만 full-pose가 같은 세 점의 position·orientation 제한을 만족하면 full-pose 선택, `ik_mode_status=final`
+    - 둘 다 세 점을 통과하지 못했지만 한 mode가 안전한 1점에서 plan·execute·tool 자세를 검증했다면 그 mode와 점을 기록하고 `ik_mode_status=provisional`
+    - 어느 mode도 안전한 1점을 검증하지 못하면 Gate 실패
 
 #### 완료 기준
 
 - **RViz 클릭 없이** 코드 실행만으로 로봇이 움직임
 - plan 실패와 execute 실패가 구분되어 보고됨
 - 두 IK mode의 position·orientation 결과가 비교됨
-- `ik_mode`, effective parameter, 실제 tool tilt가 문서에 동결됨
+- `ik_mode`, `ik_mode_status`, effective parameter, 실제 tool tilt가 문서에 동결됨
 - colcon 빌드와 실행 명령을 문서에 기록
 
 #### 실패 시
@@ -1168,7 +1187,7 @@ position_only_ik_effective
 - RGB-D topic·registration·CameraInfo·optical frame 기록
 - entity pose 호출 방법, in-flight 정책, 지연·dropped update
 - pose+twist reset backend와 3회 시험 로그
-- 두 IK mode 비교, 동결값, pose goal 최소 예제와 빌드 명령
+- 두 IK mode 비교, `ik_mode_status`를 포함한 동결값, pose goal 최소 예제와 빌드 명령
 - 세 spike의 성공·실패와 그에 따른 계획 변경 사항
 
 ---
@@ -1191,9 +1210,9 @@ position_only_ik_effective
 - RGB·depth·CameraInfo가 5분 안정 수신되고 registration 계약이 확정되거나, 실패 원인별 P2 입력·frame·평가 계약이 확정됨
 - ROS 경로의 A→B→A와 10 Hz × 5초 1-in-flight 추종이 성공하거나, T0 one-shot 왕복 경로와 `L1-fallback`이 확정됨
 - pose와 twist reset backend가 3회 연속 성공 (**fallback 없음**)
-- 코드 실행만으로 최소 안전 위치 1점의 pose/position goal plan·execute와 tool 자세가 검증됨 (**fallback 없음**)
+- 코드 실행만으로 최소 안전 위치 1점의 pose/position goal plan·execute와 tool 자세가 검증됨 (**검증 자체에는 fallback 없음**)
 - `planning_frame`, `arm_base_frame`, `eef_frame`과 선택한 sensor source frame 기록
-- `ik_mode`와 실제 tool tilt/orientation 검증 규칙 동결
+- `ik_mode`, `ik_mode_status`와 실제 tool tilt/orientation 검증 규칙 동결
 
 ### Gate 실패 시 판정 규칙
 
@@ -1203,7 +1222,7 @@ position_only_ik_effective
 | spike A (RGB-D) | 실패 원인별 P2 입력·frame·평가 방법을 문서에 고정 | fallback 계약이 닫히면 통과 가능 |
 | spike B-1/B-2 (entity pose) | T1을 T0로 낮추고 `L1-fallback`으로 전환 | T0 one-shot 경로가 확인되면 통과 가능 |
 | spike B-3 (reset) | pose+twist reset backend를 구현하고 3회 연속 settle 재시험 | **성공 전까지 실패** |
-| spike C (pose goal/IK mode) | workspace를 안전한 1점까지 줄여 한 mode의 plan·execute·tool 자세를 검증하고 provisional mode를 동결 | 1점도 검증하지 못하면 **실패** |
+| spike C (pose goal/IK mode) | workspace를 안전한 1점까지 줄여 한 mode의 plan·execute·tool 자세를 검증하고 `ik_mode_status=provisional`로 동결. Session 5 재동결 전에는 6A 진입 금지 | 1점도 검증하지 못하면 **실패** |
 
 세 spike 중 둘 이상이 실패하면 Week 1 시작 전에 팀 회의를 한 번 더 한다.
 
@@ -1305,8 +1324,9 @@ position_only_ik_effective
 11. cancel 처리
 12. steady-clock action watchdog timeout 처리
 13. `target_mode: fixed | perception` 분기와 `SELECT_TARGET` 허용 전이표 작성
-14. 평가·outer·inner 상태 enum과 허용 전이표 작성
-15. `run_id`, `stage`, `error_code`, `target_mode`를 모든 로그에 포함
+14. evaluator가 parameter service로 orchestrator의 effective `target_mode`를 읽어 `runner_profile: week2_baseline | perception_evaluation`과의 허용 조합을 검증하고, 잘못된 조합을 `INVALID_TARGET_MODE`로 attempt/reset 전에 거부하는 dummy 시험 작성
+15. 평가·outer·inner 상태 enum과 허용 전이표 작성
+16. `run_id`, `stage`, `error_code`, `target_mode`를 action 로그에 포함하고, evaluator batch 시작 로그에는 `runner_profile`과 조회한 effective `target_mode`를 함께 포함
 
 dummy server는 로봇을 움직이지 않고 **소유권이 겹치지 않는 세 층**을 순회한다.
 
@@ -1323,7 +1343,7 @@ manipulation: PLAN_PICK → EXECUTE_PICK → VERIFY_PICK → PLAN_PLACE → EXEC
 - `pnp_orchestrator/orchestrator.py`·`state_machine.py` dummy 골격과 2단 server/client 체인
 - `trial_completed`/`pipeline_success` 결과 의미 시험
 - `/task/status` publisher와 evaluator watchdog
-- `target_mode` 분기를 포함한 상태 전이표
+- `target_mode` 분기와 `runner_profile` 호환성 표를 포함한 상태 전이표
 - 오류 코드 초안
 
 ### 완료 기준
@@ -1339,6 +1359,7 @@ manipulation: PLAN_PICK → EXECUTE_PICK → VERIFY_PICK → PLAN_PLACE → EXEC
 - 중복 goal 처리 규칙 존재
 - 허용되지 않은 상태 전이를 거부
 - `fixed`와 `perception` 목표 경로가 `SELECT_TARGET` 뒤에서만 갈리고 VALIDATE 이후 상태를 공유함
+- `week2_baseline + fixed`와 `perception_evaluation + perception`만 허용되며, 반대 조합은 `INVALID_TARGET_MODE`를 남기고 reset·action 없이 종료됨
 - reset·detect·planning 상태가 서로 다른 소유자에 중복 정의되지 않음
 - run ID로 로그 추적 가능
 
@@ -1635,15 +1656,27 @@ OpenMANIPULATOR-X는 **5개의 관절 구성**을 가지며, 이 중 하나는 �
 
 #### 먼저 effective 설정을 확인한다
 
-Week 0에서 동결한 `ik_mode`를 그대로 사용한다. 설치된 package의 YAML 한 줄만 보지 말고 launch 후 effective parameter와 테스트 결과를 함께 기록한다.
+Week 0의 `ik_mode_status=final`이면 동결한 `ik_mode`를 그대로 사용한다. `provisional`이면 그 값은 재검증할 첫 후보일 뿐이며 아래 재동결을 통과하기 전에는 fixed pick pose나 Session 6A 입력으로 사용하지 않는다. 설치된 package의 YAML 한 줄만 보지 말고 launch 후 effective parameter와 테스트 결과를 함께 기록한다.
 
 ```text
 ik_mode
+ik_mode_status
 position_only_ik_effective
 planning_frame
 eef_frame
 robotis_commit
 ```
+
+#### provisional mode 재동결
+
+Week 0에서 `ik_mode_status=provisional`을 기록했다면 다음 규칙을 Session 5의 grid 작업에 적용한다. 아래 3×3은 5-3 실습의 도달 영역 grid와 같은 측정이며, 별도 sweep을 한 번 더 요구하지 않는다.
+
+1. Week 0의 유일한 안전점을 같은 commit·effective parameter·joint seed에서 다시 plan·execute한다.
+2. provisional mode로 3×3 grid를 측정한다. 시간이 부족한 경로에서도 중앙·좌·우 3점은 생략하지 않는다.
+3. 각 점에 mode별 조건을 적용한다. position-only는 plan·execute와 `actual_tool_tilt_deg`, full-pose는 position·orientation error를 확인한다.
+4. 후보 mode가 유지할 workspace의 점을 통과하지 못하면 같은 점에서 다른 mode를 시험한다. workspace를 줄일 수는 있지만, 줄인 영역에서 측정 grid를 다시 만들며 Week 0의 1점 결과만 재사용하지 않는다.
+5. fixed pick pose와 서로 다른 추가 grid 점 2개 이상이 mode별 제한을 만족하고, 선언한 workspace 안의 유지 점이 모두 통과해야 `ik_mode_status=final`로 재동결한다. mode·workspace·seed·목표 생성 규칙이 바뀌면 parameter YAML과 config hash도 함께 갱신한다.
+6. 어느 mode도 위 조건을 만족하지 못하면 Session 5 실패다. `provisional` 상태로 6A에 넘어가거나, 실패 점을 fixed pose로 숨기지 않는다.
 
 #### 경로 A — `position-only`
 
@@ -1696,19 +1729,20 @@ base_yaw ≈ atan2(object_y - joint1_origin_y,
 6. 동일 크기의 테이블·큐브를 Planning Scene에 등록
 7. Gazebo·Planning Scene·reset request의 물체 ID와 frame 통일
 8. 테이블이 없을 때와 있을 때 계획 비교
-9. Week 0에서 동결한 `ik_mode`를 parameter와 시작 로그에 출력
+9. Week 0에서 동결한 `ik_mode`와 `ik_mode_status`를 parameter와 시작 로그에 출력
 10. position-only면 position target + top-down seed, full-pose면 위치별 orientation 생성 함수 작성
 11. 3×3 위치 grid 생성
 12. 각 위치의 IK·planning 성공과 실제 tool tilt 기록
-13. IK 실패 영역을 별도로 표시
-14. pre-grasp 높이 결정
-15. 수직 approach와 retreat 시험
-16. Week 0 spike B의 entity pose 갱신과 `/simulation/reset_trial`을 이 최종 world에서 재확인
+13. `provisional`이면 위 재동결 규칙을 같은 grid 결과에 적용해 `final`로 확정하고, 실패하면 이 회차를 중단
+14. IK 실패 영역을 별도로 표시
+15. pre-grasp 높이 결정
+16. 수직 approach와 retreat 시험
+17. Week 0 spike B의 entity pose 갱신과 `/simulation/reset_trial`을 이 최종 world에서 재확인
 
 ### 도달 영역 CSV
 
 ```text
-point_id,x,y,z,ik_mode,position_only_ik_effective,base_yaw_deg,
+point_id,x,y,z,ik_mode,ik_mode_status,position_only_ik_effective,base_yaw_deg,
 ik_ok,plan_ok,position_error_mm,orientation_error_deg,
 actual_tool_tilt_deg,planning_time_ms,note
 ```
@@ -1731,6 +1765,7 @@ position-only에서는 `base_yaw_deg`와 `orientation_error_deg`를 `NA`로 둘 
 - PosePublisher → bridge → adapter 경로가 scoped cube 하나만 골라 fresh `world_frame` GT를 5분 이상 발행
 - `/simulation/reset_trial`이 `world_frame` initial pose를 받아 pose·twist threshold를 3회 연속 통과
 - 테이블 충돌 회피 확인
+- `ik_mode_status=final`이며 provisional 경로였다면 재검증 grid·mode 선택·config hash 변경 근거가 남음
 - 동결한 IK mode로 3×3 grid 계획 결과 기록
 - position-only면 실제 tool tilt 제한 통과, full-pose면 position·orientation 오차 제한 통과
 - 도달 가능한 workspace parameter 확정
@@ -1750,8 +1785,9 @@ position-only에서는 `base_yaw_deg`와 `orientation_error_deg`를 `NA`로 둘 
 
 - 먼저 **`simulation-min`**을 끝낸다: 최종 world·PosePublisher/GT adapter·`ResetTrial` service·3회 settle
 - 그 뒤 3×3 대신 중앙·좌·우 3점만 측정
+- `ik_mode_status=provisional`이면 중앙·좌·우 3점 재동결과 `final` 전환은 축소하지 않음
 - 테이블 충돌 등록은 유지하되 '테이블 없음' 비교만 생략
-- `simulation-min`이 끝나지 않으면 6A의 grasp gate와 Week 2 무개입 runner가 성립하지 않으므로 Session 6A로 넘어가지 않음
+- `simulation-min`이 끝나지 않거나 `ik_mode_status=final`이 아니면 6A의 grasp gate와 Week 2 무개입 runner가 성립하지 않으므로 Session 6A로 넘어가지 않음
 
 ### 시간이 남을 때
 
@@ -1874,7 +1910,7 @@ lateral_error = ||e_lateral||
 14. `VERIFY_PICK_BASELINE` 5개 항목 구현
 15. 정상 경로에서 `/transport/stop` → detach → open → home → attached object 제거 확인 → `/simulation/reset_trial`
 16. 실패 경로에서도 같은 cleanup을 idempotent하게 실행
-17. 정상·거부 run의 최종 `TransportStatus`에 grasp 판정·오차·누적 진단값이 남는지 확인
+17. 정상 T1에서 `IDLE→PREPARED→FOLLOWING→STOPPED→IDLE`, 정상 T0에서 `IDLE→PREPARED→STOPPED→IDLE`, prepare 거부에서 `IDLE→REJECTED→IDLE` 상태열과 최종 grasp 판정·오차·누적 진단값이 남는지 확인
 18. **5회 pick-and-lift 시험**
 
 ### 산출물
@@ -1896,6 +1932,7 @@ lateral_error = ||e_lateral||
 - **일부러 빗나간 pose를 주면 `GRASP_NOT_ELIGIBLE`로 거부되고 transport가 시작되지 않음**
 - stale GT에서는 `STALE_GROUND_TRUTH`로 prepare가 fail-closed하며 저장 offset과 attach가 생기지 않음
 - evaluator가 같은 `run_id`의 `TransportStatus`에서 gate 판정과 grasp 오차를 복원할 수 있음
+- T1·T0·prepare 거부가 §4.4의 서로 다른 상태열을 따르고 `PREPARED`·`FOLLOWING` 전이 시점이 service 응답·worker 시작과 일치
 - T1이면 lift 구간 연속 추종, T0이면 lift 완료 one-shot 갱신이 mode 표기와 일치
 - lift 후 상대 transform 변화가 허용 범위 이내
 - 정상 종료 뒤 attached object가 남지 않고 gripper open·home·object reset 완료
@@ -1926,7 +1963,7 @@ lateral_error = ||e_lateral||
 1. `PrepareTransport.srv`와 확장된 `TransportStatus.msg`가 빌드되고 `grasp_gate.py`·`transport_server.py`가 세 service와 `/transport/state`를 제공함
 2. 성공한 `/transport/prepare` 전에는 `/transport/start`가 비성공 응답을 반환하며, manipulation도 attach와 T1/T0 pose 갱신을 실행하지 않음
 3. `/transport/prepare`가 fresh GT/TF로 실제 grasp gate와 `T_eef_object` 내부 저장을 수행하고, 통과 시 선택한 mode의 lift-only 동작을 시작하며 `/transport/stop`은 반복 호출해도 안전하게 `IDLE`로 복귀함
-4. 정상 pose 1회와 일부러 빗나간 pose 1회에서 `/transport/state`의 grasp 평가·오차·state 전이와 "거부 시 transport 미실행"을 확인함
+4. 정상 pose 1회와 일부러 빗나간 pose 1회에서 `/transport/state`의 T1 `IDLE→PREPARED→FOLLOWING→STOPPED→IDLE` 또는 T0 `IDLE→PREPARED→STOPPED→IDLE`, 거부 `IDLE→REJECTED→IDLE`과 "거부 시 transport 미실행"을 확인함
 
 - §5.1의 함께 구현 구간이 끝날 때 `6A-min`을 통과하지 못하면, 세 service가 **fail-closed**로 남는 빌드 가능한 checkpoint를 commit한다. 이 상태에서 service를 우회해 직접 attach·pose 갱신하지 않고, pick-and-lift trial이나 Session 6A 완료로 세지 않는다.
 - 이관할 수 있는 구현은 누락된 `6A-min` 항목뿐이며 §5.5 상한 안에서 Session 6B의 첫 구현 블록에 먼저 끝낸다. 이를 상쇄하기 위해 6B의 20 Hz sweep과 RTT 분포 상세 분석은 생략하고 Week 0에서 동결한 주기를 사용한다. 필수 timeout·dropped-update·단일 RTT 기록은 유지한다.
@@ -2031,7 +2068,7 @@ T_world_object = T_world_eef × T_eef_object
 11. Gazebo 물체 최종 pose 정합 확인
 12. gripper open과 retreat
 13. 실패 후 `/simulation/reset_trial`과 home 복귀
-14. orchestrator를 `target_mode=fixed`로 두고 `planning_frame`의 `fixed_pick_pose` YAML/config hash를 동결한 뒤, Session 2의 `pnp_evaluation` 골격을 확장해 reset 전에 `run_id`를 할당하고 고정 pose·seed 하나를 `reset → RunTrial → terminal TransportStatus/GT 결합 → minimal CSV`로 반복하는 `scenario_runner.py` 최소판 작성. reset 실패도 대체하지 않고 실패 row로 남김
+14. runner를 `runner_profile=week2_baseline`, orchestrator를 `target_mode=fixed`로 두고 `planning_frame`의 `fixed_pick_pose` YAML/config hash를 동결한 뒤, Session 2의 `pnp_evaluation` 골격을 확장해 reset 전에 `run_id`를 할당하고 고정 pose·seed 하나를 `reset → RunTrial → terminal TransportStatus/GT 결합 → minimal CSV`로 반복하는 `scenario_runner.py` 최소판 작성. reset 실패도 대체하지 않고 실패 row로 남김
 15. **runner로 5회 전체 픽앤플레이스 시험**
 16. 설정을 바꾸지 않았다면 위 5회를 이어 같은 연속 run을 10회까지 완료하고, 설정을 바꿨다면 10회 세트를 처음부터 재시작
 
@@ -2098,14 +2135,14 @@ T0 경로는 1~7 대신 persistent follower를 만들지 않고, pick/lift 완�
 
 ### Week 2 반복 시험 (회차 사이 또는 Week 3 첫 30분)
 
-6A의 pick-and-lift 5회와 6B의 단계 시험 5회는 서로 다른 검증이므로, 단순 합계만으로 **10회 연속 전체 시험**이 되지는 않는다. Week 2 Gate의 반복 의무는 Session 6B의 최소 `scenario_runner.py`가 `/simulation/reset_trial`과 `RunTrial`을 호출해, 동결한 설정·reset·scenario에서 사람의 개입 없이 수행하는 고정 좌표 full pick-and-place 10회 한 세트다.
+6A의 pick-and-lift 5회와 6B의 단계 시험 5회는 서로 다른 검증이므로, 단순 합계만으로 **10회 연속 전체 시험**이 되지는 않는다. Week 2 Gate의 반복 의무는 Session 6B의 최소 `scenario_runner.py`가 `runner_profile=week2_baseline`, `target_mode=fixed`에서 `/simulation/reset_trial`과 `RunTrial`을 호출해, 동결한 설정·reset·scenario에서 사람의 개입 없이 수행하는 고정 좌표 full pick-and-place 10회 한 세트다.
 
 6B의 전체 trial이 위 조건을 만족하며 연속 실행됐다면 그 횟수부터 포함한다. 6A의 lift-only trial은 포함하지 않으며, 6A·6B의 회차 내 시험을 축소한 경우에도 별도 보충분을 더하지 않는다. 남은 횟수만 §5.5 상한 안에서 회차 사이 또는 Week 3 첫 30분에 수행한다.
 
 기록 항목:
 
 ```text
-trial_id, run_id, reset_ok, trial_started, trial_completed, target_mode, ik_mode, transport_mode, grasp_evaluated, grasp_eligible,
+trial_id, run_id, reset_ok, trial_started, trial_completed, runner_profile, target_mode, ik_mode, ik_mode_status, transport_mode, grasp_evaluated, grasp_eligible,
 grasp_lateral_error_mm, grasp_axial_error_mm,
 transport_max_slip_mm, place_error_mm, cleanup_ok, success, error_code
 ```
@@ -2328,7 +2365,7 @@ Z = depth
 8. pick 전 최신 pose 재확인
 9. pick 후 source 영역 변화 확인
 10. place 후 목표 영역 확인
-11. Session 6B의 runner를 sensor-to-action 경로로 재사용해 10~15회 반복
+11. Session 6B의 runner를 `runner_profile=perception_evaluation`, `target_mode=perception`으로 전환해 sensor-to-action 경로를 10~15회 반복
 12. 대표 실패 bag 저장
 
 ### 완료 기준
@@ -2336,7 +2373,7 @@ Z = depth
 - 원본 인식 pose의 `header.frame_id`·timestamp가 보존되고 orchestrator/evaluator 소비 시 `planning_frame`으로 변환
 - stale pose 거부
 - workspace 밖 물체 거부
-- Session 6B runner가 source-frame perception을 사용하는 sensor-to-action 전체 루프를 reset 포함 반복
+- Session 6B runner가 `runner_profile=perception_evaluation`에서 source-frame perception을 사용하는 sensor-to-action 전체 루프를 reset 포함 반복
 - 오류가 정의된 코드로 분류
 - `target_mode=perception`이며 fixed pose와 ground truth가 perception/orchestrator 실행 입력으로 사용되지 않음
 
@@ -2382,7 +2419,7 @@ Z = depth
 - P1 또는 문서화된 P2 fallback
 - camera → planning frame TF 변환
 - 인식 기반 전체 픽앤플레이스
-- `target_mode=perception`에서 Session 6B runner를 재사용한 최소 10회 sensor-to-action trial
+- `runner_profile=perception_evaluation`, `target_mode=perception`에서 Session 6B runner를 재사용한 최소 10회 sensor-to-action trial
 - 실패 코드와 대표 bag
 
 ---
@@ -2491,6 +2528,8 @@ Z = depth
 
 ### Reset contract
 
+runner는 batch 시작 시 자신의 `runner_profile`과 parameter service로 읽은 orchestrator의 effective `target_mode` 조합을 먼저 검증한다. `week2_baseline + fixed` 또는 `perception_evaluation + perception`이 아니면 `INVALID_TARGET_MODE`를 남기고 attempt를 만들지 않으며, 아래 reset 절차에도 진입하지 않는다.
+
 runner는 reset 전에 `run_id`를 먼저 만들고 reset·action·status·CSV 전체에 같은 값을 사용한다. 각 attempt 시작 순서:
 
 1. 이전 `RunTrial`이 active인 경우에만 cancel하고 §4.4 예산에 따라 active `PickPlace`까지 terminal state임을 확인. 이미 terminal이면 중복 cancel하지 않으며, 종료 확인 실패 시 `SAFE_STOP`으로 이동하고 아래 reset 순서를 실행하지 않음
@@ -2521,6 +2560,8 @@ completion_level             # L2 | L1-fallback
 perception_mode              # P1 | P2
 transport_mode               # T1 | T0
 ik_mode                      # position-only | full-pose
+ik_mode_status               # 최종 실행은 final
+runner_profile               # week2_baseline | perception_evaluation
 target_mode                  # 최종 평가는 perception 고정
 object_x
 object_y
@@ -2573,14 +2614,14 @@ total_time_ms
 
 ### 실습
 
-1. Session 6B의 fixed `scenario_runner.py`를 중앙·좌우·경계 scenario loader와 고정 seed subset으로 일반화하고, `target_mode=perception`이 아니면 시작을 거부한 뒤 reset 전 `run_id`·attempt row를 먼저 할당
+1. Session 6B의 `scenario_runner.py`에 profile 분기를 추가한다. `week2_baseline + fixed`는 기존 fixed pose·initial pose·seed YAML을 그대로 보존하고, `perception_evaluation + perception`에만 중앙·좌우·경계 scenario loader와 고정 seed subset을 사용
 2. Session 5의 `ResetTrial.srv`·`reset_trial_node.py`를 runner에 연결하고 wrong-frame·settle 실패 fault를 추가
 3. 기존 `/task/run_trial` client와 trial loop를 다중 scenario·재시작 금지 계약에 맞게 확장
-4. evaluator가 source-frame perception pose, GT, 같은 `run_id`의 최종 `/transport/state`를 함께 수집
+4. evaluator가 GT와 같은 `run_id`의 최종 `/transport/state`를 수집하고, `perception_evaluation` profile에서만 source-frame perception pose·detection·perception error를 필수로 결합
 5. `RunTrial.result.trial_completed`·`pipeline_success`와 transport snapshot의 존재 조건 검증
 6. steady-clock action timeout과 run ID 연결
 7. `/task/status` subscriber와 `task_status_timeout_s` watchdog, `run_trial_cancel_timeout_s` outer 종료 확인, `pick_place_cancel_timeout_s`·`cancel_propagation_margin_s` 불변식 재검증
-8. perception pose와 GT를 같은 timestamp의 `planning_frame`으로 변환해 perception error 계산
+8. `perception_evaluation`에서는 perception pose와 GT를 같은 timestamp의 `planning_frame`으로 변환해 perception error를 계산하고, `week2_baseline`에서는 관련 필드를 `NA`로 유지
 9. place zone success 판정
 10. `TransportStatus`의 grasp/slip/counter snapshot과 action result를 CSV에 병합
 11. 필요한 metric이 누락되면 `EVALUATION_DATA_MISSING`으로 batch 중단
@@ -2589,18 +2630,21 @@ total_time_ms
 14. 성공 bag 1개 저장
 15. 실패 유형별 bag 저장
 16. 결과 요약 표 생성
+17. 두 profile의 정상 시작과 반대 조합 2종을 fault injection해, 잘못된 조합이 `INVALID_TARGET_MODE`를 남기고 reset·attempt·`RunTrial` 없이 종료되는지 확인
 
 ### 산출물
 
 - Session 5에서 구현한 `ResetTrial.srv`·`reset_trial_node.py`의 runner 통합·fault 검증본
-- Session 6B 최소판에서 확장한 `pnp_evaluation/scenario_runner.py`, `evaluator.py`, 동결한 scenario YAML/CSV
+- Session 6B 최소판에서 확장하되 `week2_baseline` 회귀 profile을 보존한 `pnp_evaluation/scenario_runner.py`, `evaluator.py`, 동결한 scenario YAML/CSV
 - `RunTrial` result·`TransportStatus`·GT의 run ID 결합 시험
 - raw 평가 CSV, 결과 요약 표, 대표 성공·실패 bag
 
 ### 완료 기준
 
 - L2 최소 20회 또는 L1-fallback 최소 10회, 권장 30회 무개입 실행
-- seed, `git_commit`, `config_hash`, 네 결과 mode 필드와 `target_mode=perception` 기록
+- 최종 평가 row는 모두 `ik_mode_status=final`, `runner_profile=perception_evaluation`, `target_mode=perception`이며 seed, `git_commit`, `config_hash`, 네 결과 mode 필드가 기록됨
+- 같은 파일에서 `runner_profile=week2_baseline`, `target_mode=fixed` 회귀 시험을 다시 실행할 수 있고 그 CSV는 최종 평가 분모와 분리됨
+- profile/mode 반대 조합은 `INVALID_TARGET_MODE`로 attempt·reset 전에 거부됨
 - 실패가 오류 코드로 분류
 - **세 가지 성공률을 각각 계산** (`pipeline` / `grasp_plausible` / `place`)
 - `pipeline_success`는 `RunTrial` result에서, grasp/transport 지표는 같은 run의 terminal `TransportStatus`에서만 채워짐
@@ -2669,7 +2713,7 @@ total_time_ms
 8. Known issues 작성
 9. 축소한 기능과 이유 기록
 10. 단위·통합 테스트 clean run
-11. 네 결과 mode 필드와 최종 `target_mode=perception`, reset/IK/RGB-D 계약 확인
+11. 네 결과 mode 필드, `ik_mode_status=final`, 최종 `runner_profile=perception_evaluation`, `target_mode=perception`, reset/IK/RGB-D 계약 확인
 12. 최종 시연
 
 ### 산출물
@@ -2678,7 +2722,7 @@ total_time_ms
 - 시스템 구조도·TF tree·상태 전이도·오류 코드 표 최종본
 - Session 11의 raw CSV와 일치하는 최종 평가 요약·오류 코드별 개수
 - 최종 시연 영상과 대표 성공·실패 영상
-- Known issues, 네 결과 mode 필드, 최종 `target_mode`, 축소한 기능과 이유를 포함한 최종 문서
+- Known issues, 네 결과 mode 필드, `ik_mode_status`, 최종 `runner_profile`·`target_mode`, 축소한 기능과 이유를 포함한 최종 문서
 
 ### 최종 발표에서 설명할 내용
 
@@ -2697,7 +2741,7 @@ total_time_ms
 - repository clone 후 README만 보고 실행 가능
 - 최종 평가 결과와 raw CSV 일치
 - 코드 commit과 Docker 환경 기록
-- `completion_level`, `perception_mode`, `transport_mode`, `ik_mode`, `target_mode=perception` 기록
+- `completion_level`, `perception_mode`, `transport_mode`, `ik_mode`, `ik_mode_status=final`, `runner_profile=perception_evaluation`, `target_mode=perception` 기록
 - 두 사람 모두 전체 파이프라인 설명 가능
 - 알려진 한계가 문서화됨
 
@@ -2967,7 +3011,7 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 
 - [ ] 상위 launch
 - [ ] sensor/TF용 sim time과 watchdog용 steady time 분리
-- [ ] `target_mode`: Week 2 fixed baseline, Week 3·최종 평가 perception; final fixed 시작 거부
+- [ ] `runner_profile`/`target_mode`: `week2_baseline + fixed`, `perception_evaluation + perception`; 반대 조합은 `INVALID_TARGET_MODE`로 attempt/reset 전 거부
 - [ ] RunTrial outer action과 PickPlace inner action
 - [ ] `RunTrial.result.trial_completed`와 outer `pipeline_success` 의미 분리
 - [ ] transport prepare/start/stop
@@ -2985,7 +3029,7 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 - [ ] Planning Scene
 - [ ] attach/detach
 - [ ] planning frame·`link1`·EEF frame 기록
-- [ ] `ik_mode`와 effective `position_only_ik` 기록
+- [ ] `ik_mode_status=final`과 effective `position_only_ik` 기록; Week 0 provisional이면 Session 5 재동결 증빙
 - [ ] position-only: joint seed + 실제 tool tilt 검증
 - [ ] full-pose: 위치별 base yaw + orientation error 검증
 - [ ] 필요 시 tool_frame_offset 확정값 기록
@@ -3014,6 +3058,7 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 - [ ] transport가 fresh GT/TF로 실제 `T_eef_object`를 내부 계산하며 manipulation에 GT/offset을 노출하지 않음
 - [ ] PosePublisher → bridge → ground_truth_adapter
 - [ ] `/transport/state`의 run별 grasp 평가·오차·max slip·counter snapshot
+- [ ] T1 `IDLE→PREPARED→FOLLOWING→STOPPED→IDLE`, T0 `IDLE→PREPARED→STOPPED→IDLE`, 거부 `IDLE→REJECTED→IDLE`
 - [ ] Pose follower prepare/start/stop
 - [ ] set pose service
 - [ ] 1 in-flight/latest-wins와 dropped update 기록
@@ -3025,10 +3070,10 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 ## 평가
 
 - [ ] Session 5부터 동작하는 `/simulation/reset_trial`, stamped `world_frame` initial pose, pose+twist settle threshold
-- [ ] Session 6B fixed runner로 Week 2 무개입 10회
+- [ ] Session 6B `week2_baseline + fixed` runner로 Week 2 무개입 10회와 Session 11 이후 회귀 재실행
 - [ ] 고정 seed
 - [ ] L2 최소 20회 또는 L1-fallback 최소 10회, 권장 30회
-- [ ] `git_commit`, `config_hash`, 네 결과 mode 필드, 최종 `target_mode=perception`
+- [ ] `git_commit`, `config_hash`, 네 결과 mode 필드, 최종 `runner_profile=perception_evaluation`, `target_mode=perception`
 - [ ] raw CSV
 - [ ] `RunTrial` result·terminal `TransportStatus`·GT가 같은 `run_id`로 결합되고 누락 시 batch 중단
 - [ ] 고정 scenario 수와 raw CSV attempt 수 일치, reset 실패도 분모에 포함
@@ -3107,6 +3152,13 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 ---
 
 # 18. 개정 이력
+
+## v3.3.1
+
+- Week 0의 1점 IK fallback을 `ik_mode_status=provisional`로 명시하고, Session 5 grid 재판정·`final` 재동결·6A 진입 금지 규칙을 추가
+- `scenario_runner.py`에 `week2_baseline + fixed`와 `perception_evaluation + perception` profile을 분리해 Session 11 이후에도 Week 2 회귀 시험을 보존
+- profile/mode 불일치를 `INVALID_TARGET_MODE`로 attempt·reset 전에 거부하도록 Session 2·11과 최종 체크리스트에 배선
+- `TransportStatus`의 T1·T0·prepare 거부 상태열과 `PREPARED`·`FOLLOWING` 전이 시점을 정의하고 Session 6A 검증에 연결
 
 ## v3.3.0
 
