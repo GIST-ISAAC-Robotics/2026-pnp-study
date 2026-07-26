@@ -1,0 +1,1792 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="2인·4주 픽앤플레이스 스터디 방향 비교 및 추천 커리큘럼">
+  <title>4주 픽앤플레이스 스터디 — 방향 비교와 추천</title>
+  <style>
+    :root {
+      --gradient-start: #4f100e;
+      --gradient-mid: #7b1815;
+      --crimson: #bf2b25;
+      --crimson-deep: #971e19;
+      --crimson-dark: #6b1411;
+      --accent-soft: #f3f1f1;
+      --accent-border: #d8cfcf;
+      --ink: #171717;
+      --body: #4d4d4d;
+      --mute: #888888;
+      --canvas: #ffffff;
+      --canvas-soft: #fafafa;
+      --canvas-soft-2: #f5f5f5;
+      --hairline: #ebebeb;
+      --hairline-strong: #a1a1a1;
+      --positive: #1a7f4b;
+      --warning: #b06a00;
+      --negative: #971e19;
+      --shadow-1: 0 1px 1px #00000005, 0 2px 2px #0000000a, inset 0 0 0 1px #00000012;
+      --shadow-2: 0 2px 2px #0000000a, 0 8px 16px -8px #00000010, inset 0 0 0 1px #00000012;
+      --shadow-3: 0 2px 2px #0000000a, 0 12px 28px -12px #00000018, inset 0 0 0 1px #00000012;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --content: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas-soft);
+      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "Noto Sans KR", sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      letter-spacing: -0.15px;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: var(--crimson); }
+    button { font: inherit; }
+    strong { font-weight: 650; }
+
+    .skip-link {
+      position: fixed;
+      z-index: 999;
+      top: 8px;
+      left: 8px;
+      padding: 8px 12px;
+      color: white;
+      background: var(--ink);
+      border-radius: var(--radius-sm);
+      transform: translateY(-150%);
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    .topbar {
+      position: sticky;
+      z-index: 100;
+      top: 0;
+      border-bottom: 1px solid #ffffff16;
+      background: color-mix(in srgb, var(--ink) 93%, transparent);
+      backdrop-filter: blur(16px);
+    }
+    .topbar-inner {
+      width: min(calc(100% - 40px), var(--content));
+      height: 64px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .wordmark {
+      color: white;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      white-space: nowrap;
+    }
+    .wordmark span { color: #ee5f56; }
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav a {
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: #ffffffb8;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: .18s ease;
+    }
+    .nav a:hover,
+    .nav a.active {
+      color: white;
+      background: #ffffff13;
+    }
+    .nav-toggle {
+      display: none;
+      width: 40px;
+      height: 40px;
+      color: white;
+      background: transparent;
+      border: 1px solid #ffffff25;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      color: white;
+      background:
+        radial-gradient(circle at 86% 16%, #ff008036 0, transparent 27%),
+        radial-gradient(circle at 64% 5%, #007cf034 0, transparent 25%),
+        radial-gradient(circle at 74% 72%, #f9cb2826 0, transparent 25%),
+        linear-gradient(132deg, var(--gradient-start), var(--gradient-mid) 48%, var(--crimson));
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, #00000012 1px, transparent 1px),
+        linear-gradient(#00000012 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: linear-gradient(to bottom, #000, transparent 85%);
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      width: min(calc(100% - 40px), var(--content));
+      min-height: 600px;
+      margin: 0 auto;
+      padding: 92px 0 72px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(320px, .7fr);
+      align-items: end;
+      gap: 64px;
+    }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 18px;
+      color: var(--crimson);
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .8px;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 24px;
+      height: 2px;
+      background: currentColor;
+    }
+    .hero .eyebrow { color: #ffb3ae; }
+    .hero h1 {
+      max-width: 820px;
+      margin: 0;
+      font-size: clamp(44px, 6.2vw, 78px);
+      line-height: 1.02;
+      letter-spacing: -3.6px;
+    }
+    .hero-lead {
+      max-width: 750px;
+      margin: 28px 0 0;
+      color: #ffffffd6;
+      font-size: clamp(18px, 2vw, 23px);
+      line-height: 1.55;
+      letter-spacing: -0.6px;
+    }
+    .hero-actions {
+      margin-top: 34px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .button {
+      min-height: 46px;
+      padding: 0 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 650;
+      text-decoration: none;
+      transition: transform .18s ease, background .18s ease;
+    }
+    .button:hover { transform: translateY(-1px); color: inherit; }
+    .button-light { color: var(--ink); background: white; }
+    .button-light:hover { background: #f3f3f3; }
+    .button-ghost { color: white; border-color: #ffffff42; background: #ffffff0d; }
+    .button-ghost:hover { background: #ffffff1d; }
+    .button-primary { color: white; background: var(--crimson); }
+    .button-primary:hover { color: white; background: var(--crimson-deep); }
+
+    .hero-summary {
+      padding: 28px;
+      border: 1px solid #ffffff24;
+      border-radius: var(--radius-xl);
+      background: #141414b8;
+      box-shadow: 0 24px 56px #0000002b;
+      backdrop-filter: blur(14px);
+    }
+    .hero-summary-label {
+      margin: 0 0 12px;
+      color: #ffffff8c;
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+    }
+    .hero-summary h2 {
+      margin: 0;
+      font-size: 31px;
+      line-height: 1.18;
+      letter-spacing: -1.2px;
+    }
+    .hero-summary p { margin: 12px 0 0; color: #ffffffbd; font-size: 14px; }
+    .hero-metrics {
+      margin-top: 24px;
+      padding-top: 22px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid #ffffff1f;
+    }
+    .hero-metric + .hero-metric { border-left: 1px solid #ffffff1f; padding-left: 16px; }
+    .hero-metric b { display: block; color: white; font-size: 22px; line-height: 1.2; }
+    .hero-metric span { display: block; margin-top: 6px; color: #ffffff78; font-size: 11px; }
+
+    main { overflow: clip; }
+    .section {
+      width: min(calc(100% - 40px), var(--content));
+      margin: 0 auto;
+      padding: 96px 0;
+    }
+    .section + .section { border-top: 1px solid var(--hairline); }
+    .section-header {
+      max-width: 820px;
+      margin-bottom: 42px;
+    }
+    .section-header h2 {
+      margin: 0;
+      font-size: clamp(34px, 4vw, 50px);
+      line-height: 1.12;
+      letter-spacing: -2.1px;
+    }
+    .section-header p {
+      margin: 16px 0 0;
+      color: var(--body);
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .recommendation {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
+      gap: 24px;
+    }
+    .recommend-main,
+    .recommend-side {
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-2);
+    }
+    .recommend-main {
+      position: relative;
+      overflow: hidden;
+      padding: 42px;
+      background: white;
+    }
+    .recommend-main::before {
+      content: "A";
+      position: absolute;
+      right: 24px;
+      top: -28px;
+      color: #bf2b250d;
+      font-size: 210px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -12px;
+    }
+    .recommend-badge {
+      display: inline-flex;
+      padding: 6px 10px;
+      color: var(--crimson-dark);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .recommend-main h3 {
+      position: relative;
+      margin: 16px 0 0;
+      font-size: clamp(30px, 4vw, 44px);
+      line-height: 1.15;
+      letter-spacing: -1.8px;
+    }
+    .recommend-main .lead {
+      position: relative;
+      max-width: 720px;
+      margin: 18px 0 0;
+      color: var(--body);
+      font-size: 18px;
+    }
+    .reason-grid {
+      position: relative;
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .reason {
+      padding: 18px;
+      background: var(--canvas-soft-2);
+      border-radius: var(--radius-md);
+    }
+    .reason b { display: block; font-size: 15px; }
+    .reason span { display: block; margin-top: 6px; color: var(--body); font-size: 13px; line-height: 1.55; }
+    .recommend-side {
+      padding: 32px;
+      color: white;
+      background: var(--ink);
+    }
+    .recommend-side h3 { margin: 0; font-size: 21px; letter-spacing: -0.6px; }
+    .recommend-side p { margin: 10px 0 0; color: #ffffffa8; font-size: 14px; }
+    .condition-list { margin: 22px 0 0; padding: 0; list-style: none; }
+    .condition-list li {
+      padding: 15px 0;
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      border-top: 1px solid #ffffff16;
+    }
+    .condition-list b {
+      color: #ff756d;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+    .condition-list span { color: #ffffffc9; font-size: 13px; }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .option-preview {
+      min-height: 304px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      border-radius: var(--radius-lg);
+      background: white;
+      box-shadow: var(--shadow-1);
+      text-decoration: none;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .option-preview:hover { color: inherit; transform: translateY(-3px); box-shadow: var(--shadow-3); }
+    .option-preview.recommended { box-shadow: inset 0 0 0 2px var(--crimson), var(--shadow-2); }
+    .option-letter {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: var(--ink);
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .recommended .option-letter { background: var(--crimson); }
+    .option-preview h3 { margin: 18px 0 0; font-size: 22px; line-height: 1.25; letter-spacing: -0.7px; }
+    .option-preview p { margin: 10px 0 18px; color: var(--body); font-size: 14px; }
+    .option-tags { margin-top: auto; display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      padding: 4px 8px;
+      color: var(--body);
+      background: var(--canvas-soft-2);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .tag-red { color: var(--crimson-dark); background: var(--accent-soft); border: 1px solid var(--accent-border); }
+
+    .table-wrap {
+      margin-top: 24px;
+      overflow-x: auto;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-1);
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 840px; }
+    th, td { padding: 17px 18px; text-align: left; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
+    th {
+      color: var(--mute);
+      background: var(--canvas-soft-2);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+    }
+    td { color: var(--body); font-size: 14px; }
+    td:first-child { color: var(--ink); font-weight: 650; }
+    tr:last-child td { border-bottom: 0; }
+    .rating { display: inline-flex; gap: 3px; vertical-align: middle; }
+    .rating i { width: 8px; height: 8px; display: block; background: #dedede; border-radius: 50%; }
+    .rating i.on { background: var(--crimson); }
+    .rating-label { margin-left: 7px; color: var(--body); font-size: 12px; white-space: nowrap; }
+
+    .common-shell {
+      padding: 32px;
+      background: var(--ink);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-3);
+    }
+    .common-top {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+    .week-stamp {
+      padding: 22px;
+      color: white;
+      background: linear-gradient(145deg, var(--gradient-start), var(--crimson));
+      border-radius: var(--radius-lg);
+    }
+    .week-stamp small { display: block; color: #ffffffb0; font-size: 11px; letter-spacing: .7px; text-transform: uppercase; }
+    .week-stamp b { display: block; margin-top: 6px; font-size: 28px; letter-spacing: -1px; }
+    .common-copy h3 { margin: 0; color: white; font-size: 28px; line-height: 1.25; letter-spacing: -1px; }
+    .common-copy p { margin: 10px 0 0; color: #ffffffa3; }
+    .common-weeks {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .common-week {
+      padding: 24px;
+      border: 1px solid #ffffff13;
+      border-radius: var(--radius-lg);
+      background: #ffffff08;
+    }
+    .common-week h4 { margin: 0; color: white; font-size: 18px; }
+    .common-week ul { margin: 14px 0 0; padding-left: 18px; color: #ffffffb8; font-size: 14px; }
+    .common-week li + li { margin-top: 6px; }
+    .gate {
+      margin-top: 16px;
+      padding: 13px 15px;
+      color: #ffffffc8;
+      background: #ffffff0a;
+      border-left: 3px solid #e65a52;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 13px;
+    }
+    .stack-row {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .stack-pill {
+      padding: 6px 10px;
+      color: #ffffffbf;
+      border: 1px solid #ffffff1e;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .option-detail {
+      margin-top: 28px;
+      background: white;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-2);
+      scroll-margin-top: 84px;
+    }
+    .option-detail:first-child { margin-top: 0; }
+    .option-head {
+      padding: 38px 40px;
+      display: grid;
+      grid-template-columns: 68px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 22px;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .option-head .option-letter { width: 58px; height: 58px; font-size: 24px; }
+    .option-detail[data-option="A"] .option-letter { background: var(--crimson); }
+    .option-head h3 { margin: 0; font-size: 31px; line-height: 1.15; letter-spacing: -1.2px; }
+    .option-head p { margin: 7px 0 0; color: var(--body); font-size: 14px; }
+    .risk-chip {
+      padding: 7px 11px;
+      color: var(--body);
+      background: var(--canvas-soft-2);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .risk-chip.mid { color: var(--warning); background: #fff8ec; }
+    .risk-chip.high { color: var(--negative); background: #faf0ef; }
+    .option-body { padding: 34px 40px 40px; }
+    .option-overview {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 28px;
+    }
+    .thesis {
+      padding: 26px;
+      background: var(--canvas-soft-2);
+      border-radius: var(--radius-lg);
+    }
+    .mini-label {
+      color: var(--crimson);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+    }
+    .thesis h4 { margin: 8px 0 0; font-size: 22px; line-height: 1.35; letter-spacing: -0.6px; }
+    .thesis p { margin: 12px 0 0; color: var(--body); font-size: 14px; }
+    .output-list { margin: 0; padding: 0; list-style: none; }
+    .output-list li {
+      padding: 13px 0;
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 8px;
+      color: var(--body);
+      border-bottom: 1px solid var(--hairline);
+      font-size: 14px;
+    }
+    .output-list li:first-child { padding-top: 0; }
+    .output-list li:last-child { padding-bottom: 0; border-bottom: 0; }
+    .check { color: var(--crimson); font-weight: 700; }
+
+    .weekly-plan {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .week-card {
+      padding: 22px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-lg);
+      background: white;
+    }
+    .week-card .week-no { color: var(--crimson); font-size: 12px; font-weight: 650; letter-spacing: .7px; text-transform: uppercase; }
+    .week-card h4 { margin: 7px 0 0; font-size: 18px; line-height: 1.35; letter-spacing: -0.4px; }
+    .week-card ul { margin: 14px 0 0; padding-left: 18px; color: var(--body); font-size: 13px; }
+    .week-card li + li { margin-top: 6px; }
+    .deliverable {
+      margin-top: 16px;
+      padding-top: 14px;
+      color: var(--ink);
+      border-top: 1px solid var(--hairline);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .pros-cons {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .pros, .cons {
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      background: var(--canvas-soft-2);
+    }
+    .pros { border-top: 3px solid var(--positive); }
+    .cons { border-top: 3px solid var(--crimson-deep); }
+    .pros h4, .cons h4 { margin: 0; font-size: 16px; }
+    .pros ul, .cons ul { margin: 12px 0 0; padding-left: 18px; color: var(--body); font-size: 13px; }
+    .pros li + li, .cons li + li { margin-top: 7px; }
+
+    .detail-bottom {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .note-card {
+      padding: 22px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-lg);
+    }
+    .note-card h4 { margin: 0; font-size: 15px; }
+    .note-card p { margin: 9px 0 0; color: var(--body); font-size: 13px; }
+    .note-card code {
+      padding: 2px 5px;
+      color: var(--crimson-dark);
+      background: var(--accent-soft);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: .93em;
+    }
+
+    .hardware-lead {
+      display: grid;
+      grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr);
+      gap: 36px;
+      align-items: center;
+      padding: 34px;
+      color: white;
+      background: linear-gradient(120deg, var(--gradient-start), var(--crimson-dark));
+      border-radius: var(--radius-xl);
+    }
+    .hardware-lead .mini-label { color: #ffb3ae; }
+    .hardware-lead h3 {
+      margin: 10px 0 0;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.28;
+      letter-spacing: -1px;
+    }
+    .hardware-lead p {
+      margin: 0;
+      color: #ffffffc8;
+      font-size: 15px;
+    }
+    .hardware-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .hardware-card {
+      min-height: 220px;
+      padding: 26px;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-1);
+    }
+    .hardware-no {
+      display: inline-grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      color: white;
+      background: var(--crimson);
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .hardware-card h3 {
+      margin: 15px 0 0;
+      font-size: 19px;
+      line-height: 1.4;
+      letter-spacing: -.45px;
+    }
+    .hardware-card p {
+      margin: 9px 0 0;
+      color: var(--body);
+      font-size: 13px;
+    }
+    .hardware-card ul {
+      margin: 13px 0 0;
+      padding-left: 18px;
+      color: var(--body);
+      font-size: 13px;
+    }
+    .hardware-card li + li { margin-top: 5px; }
+    .hardware-bottom {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .hardware-panel {
+      padding: 28px;
+      background: white;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-1);
+    }
+    .hardware-panel h3 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -.5px;
+    }
+    .hardware-panel ul {
+      margin: 16px 0 0;
+      padding-left: 20px;
+      color: var(--body);
+      font-size: 14px;
+    }
+    .hardware-panel li + li { margin-top: 8px; }
+    .hardware-panel.return {
+      color: white;
+      background: var(--ink);
+    }
+    .hardware-panel.return h3 { color: white; }
+    .hardware-panel.return ul { color: #ffffffbd; }
+    .hardware-note {
+      margin-top: 18px;
+      padding: 20px 22px;
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 24px;
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-lg);
+      background: var(--accent-soft);
+    }
+    .hardware-note b { color: var(--crimson-dark); }
+    .hardware-note p { margin: 0; color: var(--body); font-size: 14px; }
+
+    .decision {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      background: white;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-2);
+      overflow: hidden;
+    }
+    .decision-step {
+      position: relative;
+      min-height: 230px;
+      padding: 30px;
+      border-right: 1px solid var(--hairline);
+    }
+    .decision-step:last-child { border-right: 0; }
+    .decision-step small { color: var(--crimson); font-size: 11px; font-weight: 650; letter-spacing: .7px; text-transform: uppercase; }
+    .decision-step h3 { margin: 12px 0 0; font-size: 19px; line-height: 1.35; }
+    .decision-step p { margin: 10px 0 0; color: var(--body); font-size: 13px; }
+    .decision-answer {
+      position: absolute;
+      left: 30px;
+      bottom: 28px;
+      padding: 6px 10px;
+      color: white;
+      background: var(--ink);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .decision-step:first-child .decision-answer { background: var(--crimson); }
+
+    .rules-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .rule-panel {
+      padding: 30px;
+      border-radius: var(--radius-xl);
+      background: white;
+      box-shadow: var(--shadow-1);
+    }
+    .rule-panel h3 { margin: 0; font-size: 21px; }
+    .rule-panel ol, .rule-panel ul { margin: 18px 0 0; padding-left: 21px; color: var(--body); font-size: 14px; }
+    .rule-panel li + li { margin-top: 10px; }
+    .rule-panel.dont { color: white; background: var(--ink); }
+    .rule-panel.dont h3 { color: white; }
+    .rule-panel.dont ul { color: #ffffffb7; }
+
+    .sources {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .source {
+      min-height: 100px;
+      padding: 19px;
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 13px;
+      background: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-1);
+      text-decoration: none;
+    }
+    .source:hover { color: inherit; box-shadow: var(--shadow-2); }
+    .source-no {
+      color: var(--crimson);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .source b { display: block; font-size: 14px; line-height: 1.4; }
+    .source span { display: block; margin-top: 5px; color: var(--mute); font-size: 12px; line-height: 1.45; }
+    .source-note {
+      margin-top: 20px;
+      color: var(--mute);
+      font-size: 12px;
+    }
+
+    footer {
+      padding: 56px 0;
+      color: #ffffffb2;
+      background: var(--ink);
+    }
+    .footer-inner {
+      width: min(calc(100% - 40px), var(--content));
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    footer .wordmark { font-size: 18px; }
+    footer p { margin: 4px 0 0; color: #ffffff70; font-size: 12px; }
+    .footer-meta { color: #ffffff5f; font-size: 12px; text-align: right; }
+
+    @media (max-width: 1040px) {
+      .hero-inner { grid-template-columns: 1fr; align-items: start; gap: 40px; min-height: auto; }
+      .hero-summary { max-width: 620px; }
+      .comparison-grid { grid-template-columns: repeat(2, 1fr); }
+      .weekly-plan { grid-template-columns: 1fr; }
+      .decision { grid-template-columns: repeat(2, 1fr); }
+      .decision-step:nth-child(2) { border-right: 0; }
+      .decision-step:nth-child(-n+2) { border-bottom: 1px solid var(--hairline); }
+    }
+
+    @media (max-width: 760px) {
+      html { scroll-padding-top: 70px; }
+      .topbar-inner { height: 58px; width: min(calc(100% - 28px), var(--content)); }
+      .nav-toggle { display: grid; place-items: center; }
+      .nav {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        top: 66px;
+        padding: 10px;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        border: 1px solid #ffffff1f;
+        border-radius: var(--radius-lg);
+        background: var(--ink);
+        box-shadow: 0 24px 48px #00000050;
+      }
+      .nav.open { display: flex; }
+      .hero-inner, .section, .footer-inner { width: min(calc(100% - 28px), var(--content)); }
+      .hero-inner { padding: 64px 0 56px; }
+      .hero h1 { letter-spacing: -2.6px; }
+      .hero-actions { flex-direction: column; align-items: stretch; }
+      .section { padding: 72px 0; }
+      .section-header h2 { letter-spacing: -1.6px; }
+      .recommendation,
+      .option-overview,
+      .pros-cons,
+      .detail-bottom,
+      .hardware-lead,
+      .hardware-grid,
+      .hardware-bottom,
+      .rules-grid,
+      .sources { grid-template-columns: 1fr; }
+      .reason-grid { grid-template-columns: 1fr; }
+      .comparison-grid { grid-template-columns: 1fr; }
+      .common-shell { padding: 22px; }
+      .common-top { grid-template-columns: 1fr; }
+      .common-weeks { grid-template-columns: 1fr; }
+      .option-head { padding: 28px 24px; grid-template-columns: 52px 1fr; }
+      .option-head .option-letter { width: 48px; height: 48px; }
+      .risk-chip { grid-column: 2; justify-self: start; }
+      .option-body { padding: 24px; }
+      .decision { grid-template-columns: 1fr; }
+      .decision-step { min-height: 210px; border-right: 0; border-bottom: 1px solid var(--hairline); }
+      .decision-step:last-child { border-bottom: 0; }
+      .hardware-note { grid-template-columns: 1fr; gap: 8px; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+      .footer-meta { text-align: left; }
+    }
+
+    @media print {
+      @page { size: A4; margin: 14mm; }
+      body { background: white; font-size: 10pt; }
+      .topbar, .hero-actions { display: none; }
+      .hero { color: var(--ink); background: white; border-bottom: 2px solid var(--crimson); }
+      .hero::after { display: none; }
+      .hero-inner { min-height: auto; padding: 20px 0; grid-template-columns: 1fr; }
+      .hero .eyebrow, .hero-lead { color: var(--body); }
+      .hero-summary { color: var(--ink); background: var(--canvas-soft-2); border: 1px solid var(--hairline); box-shadow: none; }
+      .hero-summary-label, .hero-summary p, .hero-metric span { color: var(--body); }
+      .hero-summary h2, .hero-metric b { color: var(--ink); }
+      .section { width: 100%; padding: 24px 0; break-inside: auto; }
+      .option-detail, .recommend-main, .recommend-side, .table-wrap, .common-shell { break-inside: avoid; box-shadow: none; }
+      .option-detail { border: 1px solid var(--hairline); }
+      .recommend-side, .common-shell { color: var(--ink); background: var(--canvas-soft-2); }
+      .recommend-side p, .condition-list span, .common-copy p, .common-week ul, .gate, .stack-pill { color: var(--body); }
+      .recommend-side h3, .common-copy h3, .common-week h4 { color: var(--ink); }
+      .comparison-grid, .hardware-grid, .hardware-bottom { grid-template-columns: repeat(2, 1fr); }
+      .weekly-plan { grid-template-columns: repeat(3, 1fr); }
+      footer { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="wordmark">ISAAC Robotics<span>.</span></div>
+      <button class="nav-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false">☰</button>
+      <nav class="nav" aria-label="문서 목차">
+        <a href="#recommendation">추천</a>
+        <a href="#compare">비교</a>
+        <a href="#common">공통 과정</a>
+        <a href="#options">상세안</a>
+        <a href="#physical-arm">실물 팔 판단</a>
+        <a href="#decision">선택 가이드</a>
+        <a href="#sources">근거</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-inner">
+      <div>
+        <p class="eyebrow">2026 Summer Study · Decision Brief</p>
+        <h1 id="hero-title">4주 픽앤플레이스 스터디, 무엇을 남길 것인가.</h1>
+        <p class="hero-lead">
+          2인 팀이 ROS 2 기초·로봇 시뮬레이션·픽앤플레이스·로봇학습을 어디까지 다룰지,
+          네 가지 완주 가능한 커리큘럼으로 나누어 비교했습니다.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-light" href="#recommendation">추천안 먼저 보기 →</a>
+          <a class="button button-ghost" href="#compare">네 안 비교하기</a>
+        </div>
+      </div>
+      <aside class="hero-summary" aria-label="결론 요약">
+        <p class="hero-summary-label">Recommended track</p>
+        <h2>A. 균형 탐색형</h2>
+        <p>고전 픽앤플레이스와 학습 기반 조작을 분리해 각각 작게 완주합니다. 지금 단계에서 가장 많은 판단 근거를 남기는 안입니다.</p>
+        <div class="hero-metrics">
+          <div class="hero-metric"><b>4주</b><span>본 과정</span></div>
+          <div class="hero-metric"><b>2명</b><span>교차 리뷰</span></div>
+          <div class="hero-metric"><b>2개</b><span>최종 데모</span></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <main id="main">
+    <section class="section" id="recommendation" aria-labelledby="recommend-title">
+      <div class="section-header">
+        <p class="eyebrow">01 · Recommendation</p>
+        <h2 id="recommend-title">기본 추천은 A안입니다.</h2>
+        <p>이번 스터디의 목적은 특정 기술을 깊게 파기보다, 다음 프로젝트에서 어느 길을 택할지 직접 판단할 경험을 얻는 데 있습니다.</p>
+      </div>
+
+      <div class="recommendation">
+        <article class="recommend-main">
+          <span class="recommend-badge">제1추천 · 균형 탐색형</span>
+          <h3>고전 시스템과 학습 시스템을<br>억지로 합치지 않습니다.</h3>
+          <p class="lead">
+            Week 2–3에는 ROS 2·Gazebo·MoveIt으로 재현 가능한 픽앤플레이스를 만들고,
+            Week 4에는 별도 MuJoCo 환경에서 ACT 학습·배포를 경험합니다.
+            통합 데모 하나 대신, 원리가 다른 두 파이프라인을 각각 끝까지 통과시키는 설계입니다.
+          </p>
+          <div class="reason-grid">
+            <div class="reason">
+              <b>탐색 정보가 큼</b>
+              <span>ROS 시스템과 로봇학습 양쪽을 직접 해본 뒤 다음 학기 방향을 고를 수 있습니다.</span>
+            </div>
+            <div class="reason">
+              <b>통합 폭발을 차단</b>
+              <span>Gazebo–MoveIt과 MuJoCo–LeRobot을 별도 환경으로 고정해 버전 충돌을 줄입니다.</span>
+            </div>
+            <div class="reason">
+              <b>실패해도 산출물 유지</b>
+              <span>학습 쪽이 흔들려도 고전 픽앤플레이스 데모는 독립적으로 남습니다.</span>
+            </div>
+          </div>
+        </article>
+
+        <aside class="recommend-side">
+          <h3>다만, 이 조건이면 바꾸십시오.</h3>
+          <p>“무조건 A”는 아닙니다. 목표가 명확할수록 더 날카로운 안이 낫습니다.</p>
+          <ul class="condition-list">
+            <li><b>B</b><span>2학기 자율주행 대비와 ROS 시스템 완성도가 최우선</span></li>
+            <li><b>C</b><span>로봇학습이 정말 적성에 맞는지 깊게 확인하는 것이 최우선</span></li>
+            <li><b>D</b><span>D435i 활용과 현실–시뮬레이션 좌표 연결 데모가 가장 흥미로움</span></li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="compare" aria-labelledby="compare-title">
+      <div class="section-header">
+        <p class="eyebrow">02 · Four Directions</p>
+        <h2 id="compare-title">같은 4주, 남는 것은 다릅니다.</h2>
+        <p>모든 안은 Week 0 환경 통과 시험과 Week 1 ROS 2 공통 과정을 공유합니다. 차이는 Week 2부터 시작됩니다.</p>
+      </div>
+
+      <div class="comparison-grid">
+        <a class="option-preview recommended" href="#option-a">
+          <span class="option-letter">A</span>
+          <h3>균형 탐색형</h3>
+          <p>고전 픽앤플레이스와 ACT 학습 데모를 각각 완주합니다.</p>
+          <div class="option-tags"><span class="tag tag-red">제1추천</span><span class="tag">ROS</span><span class="tag">MoveIt</span><span class="tag">ACT</span></div>
+        </a>
+        <a class="option-preview" href="#option-b">
+          <span class="option-letter">B</span>
+          <h3>ROS 시스템 완주형</h3>
+          <p>인지·TF·계획·재시도·평가가 연결된 하나의 시스템을 만듭니다.</p>
+          <div class="option-tags"><span class="tag">자율주행 전이</span><span class="tag">RGB-D</span><span class="tag">상태기계</span></div>
+        </a>
+        <a class="option-preview" href="#option-c">
+          <span class="option-letter">C</span>
+          <h3>로봇학습 집중형</h3>
+          <p>데이터 수집부터 ACT 학습·배포·실험까지 깊게 진행합니다.</p>
+          <div class="option-tags"><span class="tag">MuJoCo</span><span class="tag">LeRobot</span><span class="tag">실험</span></div>
+        </a>
+        <a class="option-preview" href="#option-d">
+          <span class="option-letter">D</span>
+          <h3>RealSense 디지털 트윈형</h3>
+          <p>현실의 물체 좌표를 D435i로 읽어 시뮬레이션 팔에 전달합니다.</p>
+          <div class="option-tags"><span class="tag">D435i</span><span class="tag">좌표 정합</span><span class="tag">비전</span></div>
+        </a>
+      </div>
+
+      <div class="table-wrap" role="region" aria-label="선택지 비교표" tabindex="0">
+        <table>
+          <thead>
+            <tr>
+              <th>선택지</th>
+              <th>4주 후 핵심 결과</th>
+              <th>ROS·자율주행 전이성</th>
+              <th>학습 체험</th>
+              <th>통합 위험</th>
+              <th>추천 상황</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>A · 균형 탐색형</td>
+              <td>고전 데모 1 + 학습 데모 1</td>
+              <td><span class="rating" aria-label="4점 중 3점"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="rating-label">높음</span></td>
+              <td><span class="rating"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="rating-label">중간</span></td>
+              <td><span class="rating"><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="rating-label">중간</span></td>
+              <td>아직 방향을 탐색 중</td>
+            </tr>
+            <tr>
+              <td>B · ROS 완주형</td>
+              <td>인지부터 평가까지 자동화</td>
+              <td><span class="rating"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="rating-label">최고</span></td>
+              <td><span class="rating"><i></i><i></i><i></i><i></i></span><span class="rating-label">없음</span></td>
+              <td><span class="rating"><i class="on"></i><i></i><i></i><i></i></span><span class="rating-label">낮음</span></td>
+              <td>완성도·전이성 우선</td>
+            </tr>
+            <tr>
+              <td>C · 학습 집중형</td>
+              <td>직접 학습한 ACT + 실험표</td>
+              <td><span class="rating"><i class="on"></i><i></i><i></i><i></i></span><span class="rating-label">낮음</span></td>
+              <td><span class="rating"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="rating-label">최고</span></td>
+              <td><span class="rating"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="rating-label">중상</span></td>
+              <td>학습 적성 확인 우선</td>
+            </tr>
+            <tr>
+              <td>D · 디지털 트윈형</td>
+              <td>현실 좌표 → 시뮬 팔 데모</td>
+              <td><span class="rating"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="rating-label">높음</span></td>
+              <td><span class="rating"><i></i><i></i><i></i><i></i></span><span class="rating-label">없음</span></td>
+              <td><span class="rating"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="rating-label">높음</span></td>
+              <td>비전·좌표계 데모 우선</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="common" aria-labelledby="common-title">
+      <div class="section-header">
+        <p class="eyebrow">03 · Shared Foundation</p>
+        <h2 id="common-title">먼저 같은 바닥을 깝니다.</h2>
+        <p>환경 설치를 4주 본편에 넣지 않습니다. 시작 전에 실행 경로를 통과시키고, Week 1은 모든 안이 동일하게 진행합니다.</p>
+      </div>
+
+      <div class="common-shell">
+        <div class="common-top">
+          <div class="week-stamp">
+            <small>Before kickoff</small>
+            <b>Week 0</b>
+          </div>
+          <div class="common-copy">
+            <h3>환경 통과 시험 · 4–6시간 상한</h3>
+            <p>
+              WSL2 Ubuntu 24.04 위에 ROS 2 Jazzy·Gazebo Harmonic·MoveIt 2·OpenMANIPULATOR-X를 고정합니다.
+              학습 포함 안은 Python 3.10 별도 환경에서 MuJoCo 튜토리얼까지 실행합니다.
+            </p>
+            <div class="stack-row" aria-label="공통 기술 스택">
+              <span class="stack-pill">WSL2 · Ubuntu 24.04</span>
+              <span class="stack-pill">ROS 2 Jazzy</span>
+              <span class="stack-pill">Gazebo Harmonic</span>
+              <span class="stack-pill">MoveIt 2</span>
+              <span class="stack-pill">RViz 2</span>
+              <span class="stack-pill">ros2_control</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="common-weeks">
+          <article class="common-week">
+            <h4>Week 0 · 통과 기준</h4>
+            <ul>
+              <li>Gazebo에서 OpenMANIPULATOR-X 스폰 및 관절·그리퍼 구동</li>
+              <li>RViz에서 MoveIt 계획 후 Gazebo 실행</li>
+              <li>하나의 launch 명령으로 시뮬레이터·컨트롤러 실행</li>
+              <li>A/C안은 ACT 100–500 step 시험 학습과 추론 1회</li>
+              <li>D안은 D435i 컬러·깊이 프레임 5분 연속 수신</li>
+            </ul>
+            <div class="gate"><strong>중단 규칙:</strong> 6시간 안에 공식 OpenMANIPULATOR-X 스택이 뜨지 않으면 버전 수리부터 하며 본편을 밀지 않습니다.</div>
+          </article>
+
+          <article class="common-week">
+            <h4>Week 1 · ROS 2 최소 핵심</h4>
+            <ul>
+              <li>workspace·package·node·launch·parameter</li>
+              <li>topic·action 중심, service는 개념과 간단 호출만</li>
+              <li>URDF/Xacro·TF2·ros2_control·joint trajectory</li>
+              <li>RViz 구조 확인과 ROS graph 설명</li>
+              <li>각자 작성한 노드로 관절 목표 전달</li>
+            </ul>
+            <div class="gate"><strong>완료 기준:</strong> 두 사람 모두 TF 트리와 노드 연결을 설명하고, 상대방 환경에서 같은 데모를 재현합니다.</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="options" aria-labelledby="options-title">
+      <div class="section-header">
+        <p class="eyebrow">04 · Detailed Curricula</p>
+        <h2 id="options-title">네 안의 정확한 구성입니다.</h2>
+        <p>주차별 작업, 최종 산출물, 장단점, 실패 시 축소선을 함께 적었습니다. “시간이 되면 이것도”는 대체로 시간이 안 됩니다.</p>
+      </div>
+
+      <article class="option-detail" id="option-a" data-option="A">
+        <header class="option-head">
+          <span class="option-letter">A</span>
+          <div>
+            <h3>균형 탐색형</h3>
+            <p>ROS·시뮬·픽앤플레이스·학습을 모두 경험하되 두 파이프라인은 분리</p>
+          </div>
+          <span class="risk-chip mid">완주 위험 · 중간</span>
+        </header>
+        <div class="option-body">
+          <div class="option-overview">
+            <div class="thesis">
+              <span class="mini-label">핵심 설계</span>
+              <h4>“둘 다 맛보기”가 아니라<br>“둘 다 작은 완주”를 목표로 합니다.</h4>
+              <p>Gazebo–MoveIt 데모와 MuJoCo–LeRobot 데모는 서로 연결하지 않습니다. 같은 로봇 모델을 고집하지도 않습니다. 비교 가능한 경험을 얻는 것이 목적입니다.</p>
+            </div>
+            <div>
+              <span class="mini-label">최종 산출물</span>
+              <ul class="output-list">
+                <li><span class="check">✓</span><span>OpenMANIPULATOR-X 고정/무작위 좌표 픽앤플레이스</span></li>
+                <li><span class="check">✓</span><span>TF·상태기계·rosbag2가 포함된 ROS 패키지</span></li>
+                <li><span class="check">✓</span><span>OMY MuJoCo 환경에서 학습한 ACT 정책</span></li>
+                <li><span class="check">✓</span><span>각 데모 20회 성공률과 실패 유형 기록</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="weekly-plan">
+            <article class="week-card">
+              <span class="week-no">Week 2</span>
+              <h4>MoveIt 픽앤플레이스</h4>
+              <ul>
+                <li>IK·충돌 회피·Planning Scene 개념</li>
+                <li>테이블과 큐브 충돌 물체 등록</li>
+                <li>pre-grasp → approach → close → attach → lift → place → detach</li>
+                <li>OpenMANIPULATOR-X에 맞춘 top-down 자세만 사용</li>
+              </ul>
+              <div class="deliverable">산출물 · 고정 좌표 5회 연속 성공 영상</div>
+            </article>
+            <article class="week-card">
+              <span class="week-no">Week 3</span>
+              <h4>ROS 시스템 연결</h4>
+              <ul>
+                <li><code>object_pose_provider</code> 노드 제작</li>
+                <li>고정 좌표 → 무작위 좌표 <code>PoseStamped</code> 발행</li>
+                <li>world/camera → base TF 변환</li>
+                <li>상태기계·타임아웃·계획 실패 1회 재시도</li>
+                <li>rosbag2 기록·재생</li>
+              </ul>
+              <div class="deliverable">산출물 · 무작위 10회 평가 로그</div>
+            </article>
+            <article class="week-card">
+              <span class="week-no">Week 4</span>
+              <h4>MuJoCo·ACT 학습</h4>
+              <ul>
+                <li>OMY 튜토리얼 예제 데이터 재생</li>
+                <li>직접 시연 20–40 episode 추가 수집</li>
+                <li>ACT 학습·checkpoint·시뮬 추론</li>
+                <li>초기 물체 위치를 바꿔 20회 평가</li>
+                <li>loss와 실제 성공률 차이 해설</li>
+              </ul>
+              <div class="deliverable">산출물 · ACT rollout 영상 + 결과표</div>
+            </article>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pros">
+              <h4>장점</h4>
+              <ul>
+                <li>현재 원하는 네 요소를 모두 실제로 경험합니다.</li>
+                <li>다음 학기에 고전 시스템과 학습 중 무엇을 더 팔지 판단하기 좋습니다.</li>
+                <li>한쪽 실패가 다른 쪽 산출물을 무너뜨리지 않습니다.</li>
+              </ul>
+            </div>
+            <div class="cons">
+              <h4>단점</h4>
+              <ul>
+                <li>각 분야의 깊이는 B/C안보다 얕습니다.</li>
+                <li>Week 4가 별도 환경이라 전체 프로젝트의 일체감은 낮습니다.</li>
+                <li>두 환경을 모두 관리하므로 Week 0 통과 시험이 필수입니다.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="detail-bottom">
+            <div class="note-card">
+              <h4>정확한 학습 환경</h4>
+              <p>커뮤니티 튜토리얼이 검증한 Python 3.10, MuJoCo 3.1.6, PyTorch 2.6.0/CUDA 12.4, 지정 LeRobot 커밋을 별도 가상환경에 고정합니다. 최신 LeRobot 패키지와 섞지 않습니다.</p>
+            </div>
+            <div class="note-card">
+              <h4>축소선</h4>
+              <p>Week 3가 밀리면 카메라 인식을 포기하고 무작위 좌표 발행까지만 완성합니다. Week 4 학습이 흔들리면 제공 데이터로 ACT 학습·배포를 재현하고 직접 데이터 수집량만 줄입니다.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="option-detail" id="option-b" data-option="B">
+        <header class="option-head">
+          <span class="option-letter">B</span>
+          <div>
+            <h3>ROS 시스템 완주형</h3>
+            <p>인지부터 실패 처리와 반복 평가까지, 하나의 시뮬레이션 시스템을 완성</p>
+          </div>
+          <span class="risk-chip">완주 위험 · 가장 낮음</span>
+        </header>
+        <div class="option-body">
+          <div class="option-overview">
+            <div class="thesis">
+              <span class="mini-label">핵심 설계</span>
+              <h4>한 번 움직이는 데모가 아니라<br>반복 실행 가능한 시스템을 만듭니다.</h4>
+              <p>학습은 완전히 제외합니다. 대신 센서 topic, TF, action, 상태기계, 로그, 정량 평가를 한 흐름으로 묶어 자율주행 프로젝트에도 옮길 수 있는 구조를 익힙니다.</p>
+            </div>
+            <div>
+              <span class="mini-label">최종 산출물</span>
+              <ul class="output-list">
+                <li><span class="check">✓</span><span>Gazebo RGB-D 기반 물체 위치 추정</span></li>
+                <li><span class="check">✓</span><span>detect → plan → pick → verify → place 상태기계</span></li>
+                <li><span class="check">✓</span><span>다물체 순차 처리와 재시도 정책</span></li>
+                <li><span class="check">✓</span><span>30회 자동 평가 리포트와 rosbag2</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="weekly-plan">
+            <article class="week-card">
+              <span class="week-no">Week 2</span>
+              <h4>고정 좌표 조작 완성</h4>
+              <ul>
+                <li>MoveIt Task Constructor 또는 명시적 단계 상태기계</li>
+                <li>Planning Scene 테이블·큐브 등록</li>
+                <li>top-down grasp와 논리적 attach/detach</li>
+                <li>계획 실패·타임아웃 오류 코드 정의</li>
+              </ul>
+              <div class="deliverable">산출물 · 고정 좌표 10회 반복</div>
+            </article>
+            <article class="week-card">
+              <span class="week-no">Week 3</span>
+              <h4>시뮬레이션 인식</h4>
+              <ul>
+                <li>Gazebo RGB-D 카메라 추가</li>
+                <li>AprilTag 또는 색상+깊이 중 하나만 선택</li>
+                <li>카메라 좌표 → base 좌표 TF 변환</li>
+                <li>인식 결과를 <code>PoseStamped</code>로 전달</li>
+                <li>위치 오차·실패 조건 기록</li>
+              </ul>
+              <div class="deliverable">산출물 · 인식 오차 표와 RViz 시각화</div>
+            </article>
+            <article class="week-card">
+              <span class="week-no">Week 4</span>
+              <h4>자동화·평가</h4>
+              <ul>
+                <li>무작위 위치와 2–3개 물체 순차 처리</li>
+                <li>실패 유형별 최대 1회 재시도</li>
+                <li>성공/계획 실패/인식 실패/타임아웃 분류</li>
+                <li>30회 이상 자동 반복</li>
+                <li>launch·config·README 정리</li>
+              </ul>
+              <div class="deliverable">산출물 · 원클릭 실행 + 자동 결과 CSV</div>
+            </article>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pros">
+              <h4>장점</h4>
+              <ul>
+                <li>가장 높은 완성도와 가장 낮은 일정 위험을 가집니다.</li>
+                <li>TF·sensor topic·action·logging·state machine은 자율주행에도 직접 전이됩니다.</li>
+                <li>두 사람이 한 코드베이스를 설계·통합하는 경험이 선명합니다.</li>
+              </ul>
+            </div>
+            <div class="cons">
+              <h4>단점</h4>
+              <ul>
+                <li>로봇학습을 전혀 경험하지 않습니다.</li>
+                <li>물리 접촉 파지를 필수로 잡으면 오히려 일정 위험이 커집니다.</li>
+                <li>비전이 단순 색상/태그라 학습 기반 인지의 재미는 적습니다.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="detail-bottom">
+            <div class="note-card">
+              <h4>파지 구현 범위</h4>
+              <p>필수는 MoveIt Planning Scene의 <code>attach/detach</code>입니다. Gazebo 접촉력만으로 물체를 쥐는 물리 파지는 여유 시간 도전 과제입니다. 둘은 같은 기능이 아닙니다.</p>
+            </div>
+            <div class="note-card">
+              <h4>축소선</h4>
+              <p>Week 3 인식이 밀리면 AprilTag만 남기고 색상·포인트클라우드를 버립니다. 다물체보다 단일 물체 30회 평가를 우선합니다.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="option-detail" id="option-c" data-option="C">
+        <header class="option-head">
+          <span class="option-letter">C</span>
+          <div>
+            <h3>로봇학습 집중형</h3>
+            <p>데이터 구조·시연 품질·ACT 학습·배포·실험을 한 사이클로 경험</p>
+          </div>
+          <span class="risk-chip mid">완주 위험 · 중상</span>
+        </header>
+        <div class="option-body">
+          <div class="option-overview">
+            <div class="thesis">
+              <span class="mini-label">핵심 설계</span>
+              <h4>모델 이름을 구경하는 대신<br>데이터–학습–평가를 반복합니다.</h4>
+              <p>ROS는 Week 1 수준에서 멈추고, 제공된 OMY MuJoCo 튜토리얼을 기준선으로 사용합니다. RL·Isaac Lab·VLA 파인튜닝은 제외하고 ACT 하나만 제대로 다룹니다.</p>
+            </div>
+            <div>
+              <span class="mini-label">최종 산출물</span>
+              <ul class="output-list">
+                <li><span class="check">✓</span><span>직접 수집·검수한 40–60 episode 데이터셋</span></li>
+                <li><span class="check">✓</span><span>학습 가능한 ACT checkpoint와 rollout</span></li>
+                <li><span class="check">✓</span><span>시연 수·초기 위치 변화에 따른 성공률 비교</span></li>
+                <li><span class="check">✓</span><span>최소 30회 평가와 실패 유형 분석</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="weekly-plan">
+            <article class="week-card">
+              <span class="week-no">Week 2</span>
+              <h4>환경·데이터 이해</h4>
+              <ul>
+                <li>OMY MuJoCo 환경과 키보드 텔레옵</li>
+                <li>observation image/state/action/episode 구조</li>
+                <li>제공 데이터 재생과 ACT 기준 학습 1회</li>
+                <li>수집 규칙·성공 조건·폐기 기준 정의</li>
+                <li>scripted 또는 replay 기준선 확보</li>
+              </ul>
+              <div class="deliverable">산출물 · 제공 데이터 기반 전체 파이프라인</div>
+            </article>
+            <article class="week-card">
+              <span class="week-no">Week 3</span>
+              <h4>직접 수집·학습</h4>
+              <ul>
+                <li>각자 20–30개 성공 시연 수집</li>
+                <li>실패·급격한 입력·중복 episode 제거</li>
+                <li>ACT 학습과 checkpoint 저장</li>
+                <li>batch size 4–8에서 시작해 VRAM 확인</li>
+                <li>훈련 로그와 추론 영상 기록</li>
+              </ul>
+              <div class="deliverable">산출물 · 사용자 데이터 ACT v1</div>
+            </article>
+            <article class="week-card">
+              <span class="week-no">Week 4</span>
+              <h4>통제 실험</h4>
+              <ul>
+                <li>시연 20개 vs 40개 성공률 비교</li>
+                <li>물체 초기 위치 분포 안/밖 비교</li>
+                <li>가능하면 카메라 시점 변화 1개 추가</li>
+                <li>각 조건 10회 이상, 총 30회 이상 평가</li>
+                <li>실패를 인지/궤적/파지/일반화로 분류</li>
+              </ul>
+              <div class="deliverable">산출물 · 실험표 + 결론 슬라이드</div>
+            </article>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pros">
+              <h4>장점</h4>
+              <ul>
+                <li>로봇학습이 실제로 어떤 일인지 가장 깊게 체험합니다.</li>
+                <li>데이터 품질과 성공률의 관계를 직접 확인합니다.</li>
+                <li>다음에 실제 팔을 만들 경우 필요한 데이터 파이프라인 감각을 얻습니다.</li>
+              </ul>
+            </div>
+            <div class="cons">
+              <h4>단점</h4>
+              <ul>
+                <li>ROS·시스템 통합·자율주행 전이성은 가장 낮습니다.</li>
+                <li>학습이 돌아가도 정책이 성공한다는 보장은 없습니다.</li>
+                <li>커뮤니티 튜토리얼의 고정 버전에 의존하므로 최신 LeRobot 학습과는 차이가 있습니다.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="detail-bottom">
+            <div class="note-card">
+              <h4>8GB VRAM 운용</h4>
+              <p>ACT 공식 문서는 batch size 8에서 시작해 메모리에 맞게 조정하라고 안내합니다. 이 PC에서는 Week 0에 batch 4–8을 시험하고, OOM이면 batch를 2까지 낮추되 이미지 구조와 정책은 바꾸지 않습니다.</p>
+            </div>
+            <div class="note-card">
+              <h4>명시적 제외</h4>
+              <p>RL, Isaac Lab, SmolVLA, π₀, 언어 조건, sim-to-real은 제외합니다. 4주 안에 모델 메뉴판을 다 읽는다고 로봇이 더 잘 집지는 않습니다.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="option-detail" id="option-d" data-option="D">
+        <header class="option-head">
+          <span class="option-letter">D</span>
+          <div>
+            <h3>RealSense 디지털 트윈형</h3>
+            <p>D435i로 현실 물체의 3D 좌표를 구해 시뮬레이션 팔이 같은 좌표를 집도록 연결</p>
+          </div>
+          <span class="risk-chip high">완주 위험 · 높음</span>
+        </header>
+        <div class="option-body">
+          <div class="option-overview">
+            <div class="thesis">
+              <span class="mini-label">핵심 설계</span>
+              <h4>실물 팔 없이도<br>현실–시뮬레이션 좌표계를 연결합니다.</h4>
+              <p>AprilTag 보드로 현실 테이블 좌표계를 정의하고, 픽셀+깊이를 3D로 역투영한 뒤 Gazebo 테이블 좌표계로 매핑합니다. 시각적으로 가장 강하지만 캘리브레이션과 WSL USB가 변수입니다.</p>
+            </div>
+            <div>
+              <span class="mini-label">최종 산출물</span>
+              <ul class="output-list">
+                <li><span class="check">✓</span><span>D435i RGB·Depth 기반 물체 3D 좌표</span></li>
+                <li><span class="check">✓</span><span>camera → tabletop → Gazebo world 변환</span></li>
+                <li><span class="check">✓</span><span>현실 물체 이동 → 시뮬 물체 갱신 → 픽앤플레이스</span></li>
+                <li><span class="check">✓</span><span>좌표 오차·지연·시뮬 성공률 측정</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="weekly-plan">
+            <article class="week-card">
+              <span class="week-no">Week 2</span>
+              <h4>시뮬 조작 기준선</h4>
+              <ul>
+                <li>고정 좌표 MoveIt 픽앤플레이스 완성</li>
+                <li>Gazebo 테이블 좌표계와 작업 영역 고정</li>
+                <li>외부 <code>PoseStamped</code> 입력 인터페이스</li>
+                <li>논리적 attach/detach</li>
+              </ul>
+              <div class="deliverable">산출물 · 외부 좌표 입력형 픽앤플레이스</div>
+            </article>
+            <article class="week-card">
+              <span class="week-no">Week 3</span>
+              <h4>D435i·좌표 정합</h4>
+              <ul>
+                <li>RGB·aligned depth·camera intrinsics 수신</li>
+                <li>AprilTag 보드로 tabletop frame 정의</li>
+                <li>색상 블록/태그 중심 픽셀+깊이 → 3D 역투영</li>
+                <li>camera → tabletop 4×4 변환 추정</li>
+                <li>10개 지점 반복 측정과 오차 계산</li>
+              </ul>
+              <div class="deliverable">산출물 · 3D 좌표 오차 표</div>
+            </article>
+            <article class="week-card">
+              <span class="week-no">Week 4</span>
+              <h4>현실–시뮬 연결</h4>
+              <ul>
+                <li>현실 테이블과 Gazebo 테이블 원점·축·척도 대응</li>
+                <li>현실 물체 위치로 시뮬 물체 갱신</li>
+                <li>시뮬 팔 픽앤플레이스 실행</li>
+                <li>지연시간·좌표 반복성·20회 성공률</li>
+                <li>녹화 데이터로 재현 테스트</li>
+              </ul>
+              <div class="deliverable">산출물 · 분할 화면 디지털 트윈 영상</div>
+            </article>
+          </div>
+
+          <div class="pros-cons">
+            <div class="pros">
+              <h4>장점</h4>
+              <ul>
+                <li>보유 D435i와 컴퓨터 비전 경험을 가장 잘 활용합니다.</li>
+                <li>TF·센서·캘리브레이션은 자율주행 비전에도 전이됩니다.</li>
+                <li>발표 시 이해하기 쉽고 시각적 임팩트가 큽니다.</li>
+              </ul>
+            </div>
+            <div class="cons">
+              <h4>단점</h4>
+              <ul>
+                <li>WSL USB, 깊이 노이즈, 좌표축 부호·단위 등 실패 지점이 많습니다.</li>
+                <li>실물 팔이 없으므로 진짜 sim-to-real 조작은 아닙니다.</li>
+                <li>학습 경험은 전혀 남지 않습니다.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="detail-bottom">
+            <div class="note-card">
+              <h4>현재 지원 상태 정정</h4>
+              <p>RealSense ROS 공식 저장소는 현재 ROS 2 Jazzy와 Ubuntu 24.04 설치 경로·CI를 제공합니다. 위험은 Jazzy 미지원이 아니라 WSL에서의 USB 전달과 실제 좌표 정합입니다.</p>
+            </div>
+            <div class="note-card">
+              <h4>축소선</h4>
+              <p>WSL 실시간 연결이 2시간 안에 안정화되지 않으면 Windows에서 프레임을 녹화해 오프라인 처리합니다. 좌표 오차가 크면 AprilTag 부착 물체 하나로 범위를 줄입니다.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section" id="physical-arm" aria-labelledby="physical-arm-title">
+      <div class="section-header">
+        <p class="eyebrow">05 · Why Simulation First</p>
+        <h2 id="physical-arm-title">실물 팔을 선택지에서 뺀 이유입니다.</h2>
+        <p>실물 제작이 불가능해서가 아니라, 현재 장비와 4주 일정에서는 스터디의 중심이 픽앤플레이스에서 로봇팔 제작으로 바뀔 가능성이 높기 때문입니다.</p>
+      </div>
+
+      <div class="hardware-lead">
+        <div>
+          <span class="mini-label">판단 요약</span>
+          <h3>모터는 있지만,<br>아직 바로 쓸 수 있는 팔은 아닙니다.</h3>
+        </div>
+        <p>
+          OpenMANIPULATOR-X는 4개 관절과 그리퍼를 구동하는 액추에이터 구성이 필요합니다.
+          보유한 DYNAMIXEL 3대에 서보·스텝·DC 모터를 섞어 커스텀 팔을 만들 수는 있지만,
+          그 순간부터 기구·전원·드라이버·영점·제어 인터페이스를 모두 새로 해결해야 합니다.
+          이번 판단은 가능성보다 <strong>4주 안에 무엇을 배우고 완주할 수 있는가</strong>를 기준으로 했습니다.
+        </p>
+      </div>
+
+      <div class="hardware-grid">
+        <article class="hardware-card">
+          <span class="hardware-no">01</span>
+          <h3>표준 오픈소스 팔에 바로 맞는 구성이 아닙니다.</h3>
+          <p>혼합 모터 커스텀 팔로 전환하면 다음 작업이 별도 프로젝트로 생깁니다.</p>
+          <ul>
+            <li>링크·브래킷·감속 구조와 그리퍼 설계</li>
+            <li>서로 다른 드라이버·전원·통신 구성</li>
+            <li>엔코더·원점 복귀·관절 제한 처리</li>
+            <li>ROS 2 하드웨어 인터페이스와 URDF 보정</li>
+          </ul>
+        </article>
+        <article class="hardware-card">
+          <span class="hardware-no">02</span>
+          <h3>4주가 하드웨어 디버깅으로 소진될 위험이 큽니다.</h3>
+          <p>
+            부품 선정·주문, 조립·배선, 영점·진동·토크 문제를 순서대로 해결하면
+            MoveIt과 픽앤플레이스 통합은 막판으로 밀립니다. 브래킷 하나나 배송 일정 하나만 틀어져도
+            소프트웨어 학습 목표까지 함께 멈춥니다.
+          </p>
+        </article>
+        <article class="hardware-card">
+          <span class="hardware-no">03</span>
+          <h3>커스텀 팔은 시뮬 결과가 그대로 옮겨지지 않습니다.</h3>
+          <p>
+            실제 영점, 백래시·유격·처짐, 모터별 응답, 충돌 형상, 그리퍼 오차가 시뮬레이션과 다릅니다.
+            검증된 완제품 팔과 달리 시뮬 모델과 실물을 동시에 새로 맞춰야 하므로,
+            이번 단계에서는 sim-to-real보다 하드웨어 캘리브레이션 비중이 더 커집니다.
+          </p>
+        </article>
+        <article class="hardware-card">
+          <span class="hardware-no">04</span>
+          <h3>두 사람의 공통 학습 목표가 갈라질 수 있습니다.</h3>
+          <p>
+            한 명은 기구·배선, 다른 한 명은 ROS·시뮬레이션을 맡게 되기 쉽습니다.
+            제작 효율은 나올 수 있어도 두 사람 모두 TF·MoveIt·픽앤플레이스 전체 구조를 경험한다는
+            스터디 목적에는 불리하며, 통합이 늦어지면 두 파트가 함께 묶입니다.
+          </p>
+        </article>
+      </div>
+
+      <div class="hardware-bottom">
+        <article class="hardware-panel">
+          <h3>D안으로 남겨둔 실물 경험</h3>
+          <ul>
+            <li>D435i 설치와 RGB-D 캘리브레이션</li>
+            <li>픽셀·깊이에서 현실 3D 좌표 계산</li>
+            <li>카메라–테이블–로봇 좌표계 정합</li>
+            <li>센서 노이즈·지연·좌표 오차 측정</li>
+          </ul>
+        </article>
+        <article class="hardware-panel return">
+          <h3>실물 팔 E안으로 전환할 조건</h3>
+          <ul>
+            <li>조립 완료된 팔을 빌리거나 완제품을 확보함</li>
+            <li>필요한 액추에이터·브래킷·전원을 미리 확보함</li>
+            <li>학습·복잡한 인식을 빼고 실물 구동에 집중함</li>
+            <li>4주 이후에도 제작과 디버깅을 계속할 수 있음</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="hardware-note">
+        <b>가능성 자체는 있습니다.</b>
+        <p>
+          현재 장비로도 DYNAMIXEL 3축과 서보 그리퍼를 조합한 단순 탑다운 팔은 만들 수 있습니다.
+          다만 그 경우 목표는 “실물 픽앤플레이스 완주”가 아니라
+          “커스텀 로봇팔을 ROS 2에서 구동하고 시뮬 모델과 맞춰보기”로 다시 정의하는 편이 정직합니다.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="decision" aria-labelledby="decision-title">
+      <div class="section-header">
+        <p class="eyebrow">06 · Decision Guide</p>
+        <h2 id="decision-title">이 질문 하나로 고르시면 됩니다.</h2>
+        <p>팀원과 각자 우선순위를 고른 뒤 비교하십시오. 답이 다르면 A안이 안전한 타협점입니다.</p>
+      </div>
+
+      <div class="decision">
+        <article class="decision-step">
+          <small>Question 01</small>
+          <h3>아직 무엇이 더 재미있는지 모르겠는가?</h3>
+          <p>고전 조작과 학습 조작을 각각 해보고 다음 선택을 미루는 것이 합리적입니다.</p>
+          <span class="decision-answer">YES → A</span>
+        </article>
+        <article class="decision-step">
+          <small>Question 02</small>
+          <h3>2학기 자율주행 준비가 가장 중요한가?</h3>
+          <p>ROS graph, TF, 센서, 상태기계, 로깅 경험의 전이성이 우선입니다.</p>
+          <span class="decision-answer">YES → B</span>
+        </article>
+        <article class="decision-step">
+          <small>Question 03</small>
+          <h3>학습을 깊게 해본 뒤 적성을 판단하고 싶은가?</h3>
+          <p>다른 범위를 줄이고 데이터와 ACT 실험에 시간을 몰아야 합니다.</p>
+          <span class="decision-answer">YES → C</span>
+        </article>
+        <article class="decision-step">
+          <small>Question 04</small>
+          <h3>D435i를 살린 독특한 데모가 최우선인가?</h3>
+          <p>일정 위험을 감수하고 현실–시뮬레이션 좌표 정합에 집중합니다.</p>
+          <span class="decision-answer">YES → D</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="scope-title">
+      <div class="section-header">
+        <p class="eyebrow">07 · Scope Control</p>
+        <h2 id="scope-title">4주를 지키는 범위 규칙입니다.</h2>
+        <p>이번 스터디의 성패는 기술 개수가 아니라, 두 사람이 끝까지 설명하고 재현할 수 있는가로 판단합니다.</p>
+      </div>
+
+      <div class="rules-grid">
+        <article class="rule-panel">
+          <h3>반드시 지킬 것</h3>
+          <ol>
+            <li>Week 0 환경 시험을 본편 전에 끝냅니다.</li>
+            <li>매주 실행 가능한 영상 또는 로그를 남깁니다.</li>
+            <li>최종 주에는 새 기능보다 반복 평가를 우선합니다.</li>
+            <li>성공률과 실패 유형을 숫자로 기록합니다.</li>
+            <li>두 사람 모두 상대방 파트를 설명합니다.</li>
+          </ol>
+        </article>
+        <article class="rule-panel dont">
+          <h3>이번에는 하지 않을 것</h3>
+          <ul>
+            <li>RL·Isaac Lab·6-DoF grasp pose estimation</li>
+            <li>YOLO와 PCL 전체 파이프라인</li>
+            <li>OpenMANIPULATOR-X 실물 제작</li>
+            <li>Gazebo와 LeRobot의 직접 통합</li>
+            <li>접촉 물리 파지를 필수 완료 기준으로 지정</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="sources" aria-labelledby="sources-title">
+      <div class="section-header">
+        <p class="eyebrow">08 · Technical Basis</p>
+        <h2 id="sources-title">기술 구성의 근거입니다.</h2>
+        <p>2026년 7월 24일 기준 공식 문서와 실제 튜토리얼의 현재 상태를 확인했습니다.</p>
+      </div>
+
+      <div class="sources">
+        <a class="source" href="https://docs.ros.org/en/jazzy/Releases/Release-Jazzy-Jalisco.html" target="_blank" rel="noreferrer">
+          <span class="source-no">01</span><span><b>ROS 2 Jazzy 릴리스</b><span>Jazzy의 권장 Gazebo 버전이 Harmonic임을 명시</span></span>
+        </a>
+        <a class="source" href="https://emanual.robotis.com/docs/en/platform/openmanipulator_x/ros_controller_package/" target="_blank" rel="noreferrer">
+          <span class="source-no">02</span><span><b>OpenMANIPULATOR-X ROS 2 Controller</b><span>Jazzy, ros2_control, MoveIt 기반 공식 구성</span></span>
+        </a>
+        <a class="source" href="https://emanual.robotis.com/docs/en/platform/openmanipulator_x/ros_controller_experiment/" target="_blank" rel="noreferrer">
+          <span class="source-no">03</span><span><b>OpenMANIPULATOR-X Gazebo + MoveIt</b><span>공식 시뮬레이션·RViz 실행 절차</span></span>
+        </a>
+        <a class="source" href="https://moveit.picknik.ai/main/doc/tutorials/pick_and_place_with_moveit_task_constructor/pick_and_place_with_moveit_task_constructor.html" target="_blank" rel="noreferrer">
+          <span class="source-no">04</span><span><b>MoveIt Task Constructor Pick &amp; Place</b><span>여러 stage로 픽앤플레이스 작업을 구성하는 공식 튜토리얼</span></span>
+        </a>
+        <a class="source" href="https://moveit.picknik.ai/main/doc/examples/planning_scene_ros_api/planning_scene_ros_api_tutorial.html" target="_blank" rel="noreferrer">
+          <span class="source-no">05</span><span><b>MoveIt Planning Scene API</b><span>충돌 물체 추가·제거와 attach·detach의 의미</span></span>
+        </a>
+        <a class="source" href="https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools/Recording-And-Playing-Back-Data/Recording-And-Playing-Back-Data.html" target="_blank" rel="noreferrer">
+          <span class="source-no">06</span><span><b>ROS 2 rosbag2</b><span>topic 기록·검사·재생 공식 절차</span></span>
+        </a>
+        <a class="source" href="https://github.com/ROBOTIS-GIT/robotis_mujoco_menagerie" target="_blank" rel="noreferrer">
+          <span class="source-no">07</span><span><b>ROBOTIS MuJoCo Menagerie</b><span>OpenMANIPULATOR-X·OMY 등 공식 MuJoCo 모델 모음</span></span>
+        </a>
+        <a class="source" href="https://github.com/jeongeun980906/lerobot-mujoco-tutorial" target="_blank" rel="noreferrer">
+          <span class="source-no">08</span><span><b>LeRobot–MuJoCo OMY Tutorial</b><span>시연 수집·ACT 학습·시뮬 배포를 잇는 커뮤니티 실습</span></span>
+        </a>
+        <a class="source" href="https://github.com/jeongeun980906/lerobot-mujoco-tutorial/blob/master/requirements.txt" target="_blank" rel="noreferrer">
+          <span class="source-no">09</span><span><b>튜토리얼 고정 의존성</b><span>MuJoCo 3.1.6, PyTorch 2.6.0, 지정 LeRobot 커밋</span></span>
+        </a>
+        <a class="source" href="https://huggingface.co/docs/lerobot/act" target="_blank" rel="noreferrer">
+          <span class="source-no">10</span><span><b>LeRobot ACT</b><span>입문 권장 정책, 학습·batch size·평가 안내</span></span>
+        </a>
+        <a class="source" href="https://github.com/realsenseai/realsense-ros" target="_blank" rel="noreferrer">
+          <span class="source-no">11</span><span><b>RealSense ROS 2 Wrapper</b><span>Jazzy·Ubuntu 24.04 설치 경로와 현재 지원 상태</span></span>
+        </a>
+        <a class="source" href="https://emanual.robotis.com/docs/en/platform/openmanipulator_x/overview/" target="_blank" rel="noreferrer">
+          <span class="source-no">12</span><span><b>OpenMANIPULATOR-X Overview</b><span>Gazebo·MoveIt 호환과 공식 오픈 플랫폼 설명</span></span>
+        </a>
+      </div>
+      <p class="source-note">판단 등급은 공식 벤치마크가 아니라 2인·4주·보유 장비 조건을 기준으로 한 커리큘럼 설계 평가입니다.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="wordmark">ISAAC Robotics<span>.</span></div>
+        <p>4주 픽앤플레이스 스터디 방향 비교안</p>
+      </div>
+      <div class="footer-meta">2026.07.25</div>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const toggle = document.querySelector('.nav-toggle');
+      const nav = document.querySelector('.nav');
+      const links = [...document.querySelectorAll('.nav a')];
+      const sections = links
+        .map(link => document.querySelector(link.getAttribute('href')))
+        .filter(Boolean);
+
+      toggle?.addEventListener('click', () => {
+        const open = nav.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.textContent = open ? '×' : '☰';
+      });
+
+      links.forEach(link => link.addEventListener('click', () => {
+        nav.classList.remove('open');
+        toggle?.setAttribute('aria-expanded', 'false');
+        if (toggle) toggle.textContent = '☰';
+      }));
+
+      const observer = new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter(entry => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        links.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === `#${visible.target.id}`);
+        });
+      }, { rootMargin: '-25% 0px -65% 0px', threshold: [0, 0.2, 0.6] });
+
+      sections.forEach(section => observer.observe(section));
+    })();
+  </script>
+</body>
+</html>
