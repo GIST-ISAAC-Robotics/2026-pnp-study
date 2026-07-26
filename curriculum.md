@@ -1,5 +1,5 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.2.5 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.2.6 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
@@ -1051,7 +1051,7 @@ T1에는 다음 위험이 추가로 남는다.
 
 #### Week 2 Session 6B로 넘기는 것
 
-- 20 Hz 이상 주기 sweep과 최대 안정 주기 측정
+- 10 Hz와 20 Hz의 주기 sweep 및 후보 중 최대 안정 주기 측정. 단, Session 6A의 `6A-min` 이관분이 있으면 Session 6B 「시간이 부족할 때」 규칙에 따라 생략하고 Week 0에서 동결한 주기를 유지
 - quaternion 정규화·부호 연속성
 - 요청 pose와 실제 pose의 정량 오차
 - 보간과 예측 적용
@@ -1072,8 +1072,7 @@ T1에는 다음 위험이 추가로 남는다.
 | 증상 | 대응 |
 |---|---|
 | gz 서비스는 있으나 ROS bridge가 안 붙음 | `ros_gz` 버전과 service bridge 지원 범위 확인 후 재시도 |
-| B-1은 되는데 B-2에서 밀리거나 떨림 | 갱신 주기를 10 Hz로 낮추고, 그래도 떨리면 Session 6B에서 보간 또는 pose 예측을 검토 |
-| 20 Hz에서만 밀림 | 10 Hz를 T1 기본값으로 확정하고 Session 6B에 기록 |
+| B-1은 되는데 10 Hz B-2에서 밀리거나 떨림 | 1-in-flight/latest-wins, RTT, timeout을 점검한 뒤 B-2를 재시험. 그래도 불안정하면 T1을 동결하지 않고 T0·`L1-fallback`으로 전환 |
 | 서비스 경로 자체가 없음 | gz topic publish 경로를 검토하고, 그래도 없으면 **T1 설계를 Week 1 전에 재검토** |
 | 어떤 경로로도 물체를 못 옮김 | T0(결과 위치 갱신)로 축소하고 L1-fallback 경로를 기본안으로 전환 |
 | pose는 돌아오지만 속도가 남음 | `SetEntityPose`를 reset backend로 쓰지 말고 B-3의 state/respawn/custom 경로로 전환 |
@@ -1935,7 +1934,7 @@ pick 재실행
 | 항목 | 6A | 6B |
 |---|---|---|
 | follower 동작 구간 | 수직 lift만 | lift · transfer · descend 전체 |
-| 갱신 주기 | Week 0 기본값 그대로 | **20 Hz sweep으로 최대 안정 주기 확정** |
+| 갱신 주기 | Week 0 기본값 그대로 | 원칙적으로 **10·20 Hz sweep으로 안정 주기 확정**. `6A-min` 이관 시 sweep을 생략하고 Week 0 동결값 유지 |
 | quaternion | 정규화만 | **부호 연속성까지 확인** |
 | 오차 | 정성 확인 | **요청 pose와 실제 pose의 정량 오차 기록** |
 | 정지 | 즉시 중지 | 중지 후 최종 pose 정합 확인 |
@@ -1950,7 +1949,7 @@ T1은 grasp 시점의 손끝과 물체 사이 offset을 저장한다.
 T_world_object = T_world_end_effector × T_end_effector_object
 ```
 
-물체를 잡은 상태에서는 이 계산 결과로 Gazebo의 pose 설정 서비스를 주기적으로 호출한다. **갱신 주기는 Week 0 spike B에서 측정한 값을 사용한다.** 기본값은 10 Hz이며, spike에서 20 Hz가 안정적으로 확인된 경우에만 올린다.
+물체를 잡은 상태에서는 이 계산 결과로 Gazebo의 pose 설정 서비스를 주기적으로 호출한다. 기본값은 **Week 0 spike B에서 동결한 10 Hz**다. `6A-min` 이관분이 없을 때만 이 회차의 10·20 Hz sweep에서 20 Hz의 안정성을 확인해 올리고, 이관분이 있으면 sweep 없이 Week 0 동결값을 유지한다.
 
 ### T1 service in-flight 정책
 
@@ -1969,7 +1968,7 @@ T_world_object = T_world_end_effector × T_end_effector_object
 
 1. 6A의 최소 follower를 전 구간 동작하도록 확장
 2. 1 in-flight/latest-wins persistent client 구현
-3. **갱신 주기 sweep** — 10 Hz와 20 Hz에서 안정성 비교 후 확정
+3. **조건부 갱신 주기 sweep** — `6A-min` 이관분이 없을 때만 10 Hz와 20 Hz에서 안정성을 비교해 확정한다. 이관분이 있으면 이 항목을 생략하고 Week 0 동결 주기를 사용하며, 생략 사유를 실험 기록에 남긴다.
 4. quaternion 정규화와 부호 연속성 확인
 5. transfer 경로 실행 중 물체 추종 관찰
 6. 요청 pose와 실제 반영 pose의 이탈량·RTT·dropped update 기록
@@ -2011,7 +2010,7 @@ T0 경로는 1~7 대신 persistent follower를 만들지 않고, pick/lift 완�
 
 #### 물체가 떨리거나 밀리는 경우
 
-- 갱신 주기를 낮춘다 (20 Hz → 10 Hz)
+- sweep으로 20 Hz까지 올린 경우 Week 0 동결 주기(기본 10 Hz)로 낮춘다
 - 물리 업데이트와 pose 덮어쓰기가 경합하지 않는지 확인
 - 한 주기 앞의 EE pose를 예측해 사용하는 방안 검토
 
@@ -2364,6 +2363,13 @@ Z = depth
 - HSV 범위를 일부러 틀림
 - planning 목표를 도달 불가 위치로 설정
 
+### 산출물
+
+- 전체 상태 전이·단계별 timeout·1회 retry·cancel·cleanup을 연결한 `pnp_orchestrator/orchestrator.py`와 `state_machine.py` 완성본
+- 확정 오류 코드 표와 fault injection 결과
+- grasp projection·mode별 목표 생성 함수 단위 테스트 최소 1개
+- `reset → RunTrial → cleanup → 다음 RunTrial` 통합 테스트 최소 1개
+
 ### 완료 기준
 
 - 세 fault가 서로 다른 오류 코드로 분류
@@ -2593,6 +2599,14 @@ total_time_ms
 10. 단위·통합 테스트 clean run
 11. 네 mode 필드와 reset/IK/RGB-D 계약 최종 확인
 12. 최종 시연
+
+### 산출물
+
+- 설치·빌드·실행·종료·재평가 명령을 clean container에서 검증한 README
+- 시스템 구조도·TF tree·상태 전이도·오류 코드 표 최종본
+- Session 11의 raw CSV와 일치하는 최종 평가 요약·오류 코드별 개수
+- 최종 시연 영상과 대표 성공·실패 영상
+- Known issues, 네 mode 필드, 축소한 기능과 이유를 포함한 최종 문서
 
 ### 최종 발표에서 설명할 내용
 
@@ -3014,6 +3028,11 @@ L3는 처음부터 선택하는 것이 아니라 다음 조건을 만족할 때�
 ---
 
 # 18. 개정 이력
+
+## v3.2.6
+
+- `6A-min` 이관 여부를 Week 0 이월·실패 규칙, 6A/6B 비교표, T1 주기 설명, 6B 실습에 연결해 10·20 Hz sweep의 수행·생략 조건을 통일
+- Session 10과 Session 12에 §2.2 최소 완료 세트로 이어지는 상태기계·오류 코드·테스트·README·도식·평가 요약·시연 영상 산출물을 명시
 
 ## v3.2.5
 
