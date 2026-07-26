@@ -1,5 +1,5 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.2.1 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.2.2 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
@@ -70,7 +70,7 @@ ik_mode: position-only | full-pose
 | 주차 | 최소한 이것 |
 |---|---|
 | Week 0 | Docker · Gazebo/RViz · spike 3종 · 프레임/IK/reset/RGB-D 계약 동결 |
-| Week 1 | 상위 launch 하나 · action cancel/timeout · TF tree와 상태기계 소유권 설명 |
+| Week 1 | 상위 launch 하나 · action cancel/timeout · `/task/status` heartbeat · TF tree와 상태기계 소유권 설명 |
 | Week 2 | 고정 좌표 pick-place · 잘못된 파지를 grasp gate가 거부 · T1 또는 T0 |
 | Week 3 | 센서 좌표로 pick-place · P1 또는 문서화된 P2 · 오류 코드 분류 |
 | Week 4 | reset 후 자동 반복 · L2 20회 또는 L1-fallback 10회 CSV · README 재실행 |
@@ -269,7 +269,7 @@ Planning Scene attach도 마찬가지다. attach는 코드가 설정하는 논�
 | 분류되지 않은 오류 | 0건 | 0건 |
 | 재실행 시 환경 재현 | 3회 연속 성공 | 다른 PC에서도 재현 |
 
-평가 횟수는 아래 2.5 표만을 단일 기준으로 사용한다. 다른 절의 5회·10회 시험은 단계 검증 또는 Week 2 Gate이며, 최종 평가 횟수를 대신하지 않는다.
+평가 횟수는 아래 2.5 표만을 단일 기준으로 사용한다. 다른 절의 5회·10회 시험은 단계 검증 또는 Week 2·Week 3 Gate를 위한 횟수이며, 최종 평가 횟수를 대신하지 않는다.
 
 ## 2.5 완료 수준별 평가 계약
 
@@ -422,6 +422,8 @@ ROBOTIS의 공식 패키지는 직접 복사해 프로젝트 패키지 안에 �
 
 `transport_server.py`는 grasp gate와 prepare/start/stop service, `TransportStatus` 발행을 소유한다. T1의 연속 갱신은 `pose_follower.py`, T0의 one-shot 경로는 `t0_transport.py`로 분리한다.
 
+`pnp_orchestrator/orchestrator.py`는 `RunTrial` action server, outer state machine, `/task/status`의 유일한 발행자다. `pnp_evaluation`은 `/task/status`를 구독해 liveness만 감시하며, trial 완료 여부는 계속 `RunTrial` action result로 판정한다.
+
 ## 4.2 실행 데이터 흐름
 
 ```mermaid
@@ -445,7 +447,7 @@ flowchart TD
     O -->|"PickPlace action"| M
     M -->|"prepare/start/stop"| T
     T -->|"SetEntityPose"| G
-    O -->|"result · stage · error"| E
+    O -->|"RunTrial result/feedback · /task/status"| E
 ```
 
 ### Ground truth 생산 경로
@@ -483,7 +485,7 @@ Gazebo PosePublisher
 | 계층 | 소유 노드 | 상태와 책임 |
 |---|---|---|
 | batch/evaluation | `pnp_evaluation` | `RESET → CALL_RUN_TRIAL → COLLECT → SCORE → RECORD` |
-| outer task | `pnp_orchestrator` | `DETECT → TRANSFORM → VALIDATE → CALL_MANIPULATION → COMPLETE` |
+| outer task | `pnp_orchestrator` | `DETECT → TRANSFORM → VALIDATE → CALL_MANIPULATION → COMPLETE`, `TaskStatus` heartbeat 발행 |
 | inner manipulation | `pnp_manipulation` | `PLAN_PICK → EXECUTE_PICK → VERIFY_PICK → PLAN_PLACE → EXECUTE_PLACE` |
 
 - evaluator는 seed 반복, reset, GT 기반 오차·최종 `success` 계산을 소유한다.
@@ -512,7 +514,7 @@ Gazebo PosePublisher
 | `/transport/start` | `std_srvs/srv/Trigger` | 준비된 follower 시작 |
 | `/transport/stop` | `std_srvs/srv/Trigger` | follower 중지와 마지막 요청 완료 확인 |
 | `/transport/state` | `pnp_interfaces/msg/TransportStatus` | state·slip·dropped update·error |
-| `/task/status` | `pnp_interfaces/msg/TaskStatus` | run ID·outer stage·error code |
+| `/task/status` | `pnp_interfaces/msg/TaskStatus` | `pnp_orchestrator`가 heartbeat·outer stage 발행, `pnp_evaluation`이 watchdog 구독 |
 
 ## 4.4 권장 custom interface 정의
 
@@ -598,6 +600,14 @@ uint16 error_code
 string message
 ```
 
+### `/task/status` 배선과 heartbeat 계약
+
+- **유일한 발행자:** `pnp_orchestrator`. 프로세스가 살아 있는 동안 명시적으로 steady clock을 사용하는 timer에서 `task_status_rate_hz` 기본 2.0 Hz로 발행한다. Gazebo pause 중에도 멈추지 않아야 한다.
+- **필수 구독자:** `pnp_evaluation`. active trial 동안 마지막 수신 시각을 evaluator 자신의 steady clock으로 측정한다. `task_status_timeout_s` 기본 2.0초 동안 새 메시지가 없으면 `TASK_HEARTBEAT_TIMEOUT`으로 기록하고 `RunTrial` cancel을 요청한다. `cancel_timeout_s` 안에 종료가 확인된 경우에만 reset하며, 확인되지 않으면 `SAFE_STOP`으로 이동한다.
+- `heartbeat_seq`는 프로세스 수명 동안 매 발행마다 증가한다. liveness는 sequence의 숫자 차이나 ROS sim timestamp가 아니라 **새 메시지 수신 간격**으로 판정한다.
+- active goal에서는 `run_id`가 `RunTrial.goal.run_id`와 같고 `outer_stage`는 현재 outer state다. idle에서는 빈 `run_id`와 `IDLE`을 발행한다.
+- `TaskStatus`는 진단·watchdog용이다. stage 전이, retry, trial 성공·완료 판정의 권위는 상태기계와 `RunTrial` action result에만 있으며, 이 topic을 별도의 제어 상태기계로 사용하지 않는다.
+
 ## 4.5 상태기계
 
 평가 runner:
@@ -666,6 +676,7 @@ Week 3에서 센서 검증이 지연되면 `VERIFY_PICK_BASELINE`을 유지하�
 | `IK_UNREACHABLE_POSE` | 동결한 IK mode에서 목표를 만족하지 못함 | mode별 목표 생성 규칙 확인 후 1회 재시도 |
 | `GRASP_NOT_ELIGIBLE` | 파지 기하 조건 미달로 transport 실행 거부 | trial 실패, `grasp_plausible_success = false` |
 | `EXECUTION_TIMEOUT` | 궤적 실행 시간 초과 | 취소 후 reset |
+| `TASK_HEARTBEAT_TIMEOUT` | active trial 중 `/task/status` liveness 상실 | cancel·종료 확인 후 reset, 확인 실패 시 `SAFE_STOP` |
 | `SCENE_SYNC_FAILED` | Planning Scene 불일치 | reset 후 실패 |
 | `TRANSPORT_FAILED` | 물체가 손을 따라가지 않음 | reset 후 실패 |
 | `RESET_FAILED` | pose·twist 초기화 또는 settle 확인 실패 | trial 시작 금지 |
@@ -1235,14 +1246,16 @@ position_only_ik_effective
 ### 실습
 
 1. `pnp_interfaces` 생성
-2. outer용 `RunTrial.action`과 inner용 `PickPlace.action` 작성
+2. outer용 `RunTrial.action`, inner용 `PickPlace.action`, 진단용 `TaskStatus.msg` 작성
 3. evaluator → orchestrator dummy client/server 작성
 4. orchestrator → manipulation dummy client/server 작성
 5. 두 action에서 각각 outer/inner stage feedback 발행
-6. cancel 처리
-7. steady-clock watchdog timeout 처리
-8. 평가·outer·inner 상태 enum과 허용 전이표 작성
-9. `run_id`, `stage`, `error_code`를 모든 로그에 포함
+6. orchestrator에서 steady-clock timer로 `/task/status`를 기본 2.0 Hz 발행
+7. evaluator에서 `/task/status`를 구독하고 `task_status_timeout_s` watchdog 구현
+8. cancel 처리
+9. steady-clock action watchdog timeout 처리
+10. 평가·outer·inner 상태 enum과 허용 전이표 작성
+11. `run_id`, `stage`, `error_code`를 모든 로그에 포함
 
 dummy server는 로봇을 움직이지 않고 **소유권이 겹치지 않는 세 층**을 순회한다.
 
@@ -1254,14 +1267,17 @@ manipulation: PLAN_PICK → EXECUTE_PICK → VERIFY_PICK → PLAN_PLACE → EXEC
 
 ### 산출물
 
-- `RunTrial.action`, `PickPlace.action`
+- `RunTrial.action`, `PickPlace.action`, `TaskStatus.msg`
 - 2단 dummy server/client 체인
+- `/task/status` publisher와 evaluator watchdog
 - 상태 전이표
 - 오류 코드 초안
 
 ### 완료 기준
 
 - action 실행 중 cancel 가능
+- active `RunTrial` 동안 `/task/status`가 설정 주기로 도착하고 `heartbeat_seq`가 증가
+- status 발행을 의도적으로 멈추면 evaluator가 `TASK_HEARTBEAT_TIMEOUT`으로 종료
 - timeout 후 다음 goal을 받을 수 있음
 - 중복 goal 처리 규칙 존재
 - 허용되지 않은 상태 전이를 거부
@@ -1363,6 +1379,7 @@ manipulation: PLAN_PICK → EXECUTE_PICK → VERIFY_PICK → PLAN_PLACE → EXEC
 
 - 상위 launch 실행
 - action cancel과 timeout
+- `/task/status` publisher와 evaluator steady-clock watchdog
 - TF tree 설명
 - arm·gripper 제어
 - sim time 일관성
@@ -1455,7 +1472,7 @@ executeGoal()   [worker thread]
 
 - action callback을 담당하는 executor가 responsive함
 - blocking `execute()` 중에도 cancel 요청을 수신할 수 있음
-- 별도 steady-clock heartbeat 또는 stage status가 멈추지 않음
+- blocking `execute()` 중에도 orchestrator의 `/task/status`가 설정 주기로 계속 발행되고 `heartbeat_seq`가 증가함
 - 두 번째 goal은 **즉시 거부**됨
 
 ### 산출물
@@ -2441,13 +2458,14 @@ total_time_ms
 3. evaluator → `/task/run_trial` action client 작성
 4. evaluator가 perception pose와 GT를 동시에 수집하는 경로 작성
 5. trial loop 작성
-6. steady-clock timeout과 run ID 연결
-7. ground truth로 perception error 계산
-8. place zone success 판정
-9. CSV 저장
-10. 성공 bag 1개 저장
-11. 실패 유형별 bag 저장
-12. 결과 요약 표 생성
+6. steady-clock action timeout과 run ID 연결
+7. `/task/status` subscriber와 `task_status_timeout_s` watchdog 연결
+8. ground truth로 perception error 계산
+9. place zone success 판정
+10. CSV 저장
+11. 성공 bag 1개 저장
+12. 실패 유형별 bag 저장
+13. 결과 요약 표 생성
 
 ### 완료 기준
 
@@ -2459,6 +2477,7 @@ total_time_ms
 - 평가 중 parameter 변경 없음
 - grasp gate 임계값이 평가 전에 동결됨
 - reset마다 pose·twist threshold 통과
+- active trial에서 `/task/status` 수신 간격이 threshold를 넘으면 `TASK_HEARTBEAT_TIMEOUT`으로 분류
 - evaluator가 perception pose를 직접 구독하며 perception 노드는 GT를 구독하지 않음
 
 ### 실패 시
@@ -2753,7 +2772,7 @@ total_time_ms
 | Gate | 반드시 되는 것 | 실패 시 |
 |---|---|---|
 | Week 0 | 환경 + RGB-D registration, 1-in-flight 추종, pose+twist reset, frame표, IK mode | spike 실패 항목별 판정 규칙 적용 |
-| Week 1 | 3층 action/state skeleton, TF 설명, project world를 받는 상위 launch | 새 기능 추가 금지 |
+| Week 1 | 3층 action/state skeleton, `TaskStatus` heartbeat/watchdog, TF 설명, project world를 받는 상위 launch | 새 기능 추가 금지 |
 | Week 2 | 고정 좌표 pick-place, M3 worker thread 구조, **grasp gate 거부 동작**, attach, T1/T0 | P1 통합 시작 금지 |
 | Week 3 | RGB-D, P1/P2, TF, sensor-to-action | 평가 기능을 줄이고 통합 복구 |
 | Week 4 | 검증된 reset, L2 20회/L1 10회 runner, **성공률 3종**, CSV, README | 기능보다 재현성을 우선 |
@@ -2807,7 +2826,7 @@ L3는 처음부터 선택하는 것이 아니라 다음 조건을 만족할 때�
 - [ ] transport prepare/start/stop
 - [ ] action cancel
 - [ ] timeout
-- [ ] heartbeat/stage status
+- [ ] `/task/status`: orchestrator publisher · evaluator steady-clock watchdog · fault injection
 - [ ] 오류 코드
 - [ ] run ID
 
@@ -2935,6 +2954,12 @@ L3는 처음부터 선택하는 것이 아니라 다음 조건을 만족할 때�
 ---
 
 # 18. 개정 이력
+
+## v3.2.2
+
+- `TaskStatus`를 orchestrator 단일 발행·evaluation watchdog 구독으로 배선하고 steady-clock 주기·timeout·idle/active 의미를 정의
+- Session 2·Week 1 Gate·Session 4·Session 11·최종 체크리스트에 `/task/status` 구현과 fault injection을 연결하고 `TASK_HEARTBEAT_TIMEOUT` 오류 코드를 추가
+- §2.4의 단계 검증 횟수 설명에 Week 3 Gate를 포함해 §9의 최소 10회 trial과 일치시킴
 
 ## v3.2.1
 
