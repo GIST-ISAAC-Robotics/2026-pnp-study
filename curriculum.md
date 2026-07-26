@@ -1,5 +1,5 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.2.3 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.2.4 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
@@ -603,7 +603,7 @@ string message
 ### `/task/status` 배선과 heartbeat 계약
 
 - **유일한 발행자:** `pnp_orchestrator`. 프로세스가 살아 있는 동안 명시적으로 steady clock을 사용하는 timer에서 `task_status_rate_hz` 기본 2.0 Hz로 발행한다. Gazebo pause 중에도 멈추지 않아야 한다.
-- **필수 구독자:** `pnp_evaluation`. active trial 동안 마지막 수신 시각을 evaluator 자신의 steady clock으로 측정한다. `task_status_timeout_s` 기본 2.0초 동안 새 메시지가 없으면 `TASK_HEARTBEAT_TIMEOUT`으로 기록하고 `RunTrial` cancel을 요청한다. `cancel_timeout_s` 기본 5.0초 안에 종료가 확인된 경우에만 reset하며, 확인되지 않으면 `SAFE_STOP`으로 이동한다.
+- **필수 구독자:** `pnp_evaluation`. active trial 동안 마지막 수신 시각을 evaluator 자신의 steady clock으로 측정한다. `task_status_timeout_s` 기본 2.0초 동안 새 메시지가 없으면 `TASK_HEARTBEAT_TIMEOUT`으로 기록하고 `RunTrial` cancel을 요청한다. evaluator는 요청을 보낸 시점부터 steady clock으로 `run_trial_cancel_timeout_s` 기본 7.0초를 기다린다. 그 안에 `RunTrial` terminal state가 확인된 경우에만 reset하며, 확인되지 않으면 `SAFE_STOP`으로 이동한다.
 - `heartbeat_seq`는 프로세스 수명 동안 매 발행마다 증가한다. liveness는 sequence의 숫자 차이나 ROS sim timestamp가 아니라 **새 메시지 수신 간격**으로 판정한다.
 - active goal에서는 `run_id`가 `RunTrial.goal.run_id`와 같고 `outer_stage`는 현재 outer state다. idle에서는 빈 `run_id`와 `IDLE`을 발행한다.
 - `TaskStatus`는 진단·watchdog용이다. stage 전이, retry, trial 성공·완료 판정의 권위는 상태기계와 `RunTrial` action result에만 있으며, 이 topic을 별도의 제어 상태기계로 사용하지 않는다.
@@ -612,8 +612,14 @@ string message
 
 - `pnp_orchestrator`는 active `PickPlace` goal마다 steady-clock action·stage watchdog을 소유한다. `PickPlace.feedback.inner_stage`와 `progress`는 현재 내부 단계를 관측하는 신호이며, 주기적인 heartbeat로 간주하지 않는다.
 - action 또는 stage timeout이면 orchestrator가 `PickPlace` cancel을 요청한다. `pnp_manipulation`의 cancel callback은 즉시 응답하고 cancel flag를 설정하며, blocking `execute()` 뒤에 대기하지 않는 별도 제어 경로에서 `MoveGroupInterface::stop()`을 호출한다. worker는 `execute()`가 풀린 뒤 cancel 상태를 확인해 goal을 canceled 또는 aborted terminal state로 끝낸다.
-- terminal state는 같은 `cancel_timeout_s` 기본 5.0초 안에 확인되어야 한다. 확인되지 않으면 reset하지 않고 `SAFE_STOP`으로 이동한다.
+- terminal state는 `pick_place_cancel_timeout_s` 기본 5.0초 안에 확인되어야 한다. 확인되지 않으면 reset하지 않고 `SAFE_STOP`으로 이동한다.
 - manipulation이 멈춰도 별도 프로세스인 orchestrator의 `/task/status`는 계속 발행될 수 있다. 따라서 `/task/status`를 manipulation liveness나 Session 4 deadlock 통과 증거로 사용하지 않는다.
+
+### 중첩 cancel 예산 계약
+
+- active `PickPlace`가 있을 때 `RunTrial` cancel을 수락한 orchestrator는 outer cancel flag를 설정한 뒤 즉시 inner cancel을 전달한다. `PickPlace` terminal state가 확인되기 전에는 `RunTrial` terminal state를 만들지 않는다.
+- 기본값은 `pick_place_cancel_timeout_s = 5.0`, `cancel_propagation_margin_s = 2.0`, `run_trial_cancel_timeout_s = 7.0`초다. outer 예산은 evaluator가 `RunTrial` cancel을 보낸 시점, inner 예산은 orchestrator가 `PickPlace` cancel을 보낸 시점부터 각각 steady clock으로 잰다.
+- 시작 시 `run_trial_cancel_timeout_s >= pick_place_cancel_timeout_s + cancel_propagation_margin_s`를 검증하고 위반하면 실행을 거부한다. margin은 evaluator→orchestrator cancel 전달과 inner 종료 뒤 outer result 정리에 쓰는 예산이다. inner terminal state가 확인되지 않으면 orchestrator는 outer terminal result를 임의로 만들지 않고 `SAFE_STOP`으로 이동하며, evaluator도 outer timeout 뒤 reset하지 않는다.
 
 ## 4.5 상태기계
 
@@ -682,7 +688,7 @@ Week 3에서 센서 검증이 지연되면 `VERIFY_PICK_BASELINE`을 유지하�
 | `PLANNING_FAILED` | 경로 생성 실패 | 동일 목표 1회 재계획 |
 | `IK_UNREACHABLE_POSE` | 동결한 IK mode에서 목표를 만족하지 못함 | mode별 목표 생성 규칙 확인 후 1회 재시도 |
 | `GRASP_NOT_ELIGIBLE` | 파지 기하 조건 미달로 transport 실행 거부 | trial 실패, `grasp_plausible_success = false` |
-| `EXECUTION_TIMEOUT` | 궤적 실행 시간 초과 | 취소 후 reset |
+| `EXECUTION_TIMEOUT` | 궤적 실행 시간 초과 | `PickPlace` cancel·terminal 확인 후 reset, 확인 실패 시 `SAFE_STOP` |
 | `TASK_HEARTBEAT_TIMEOUT` | active trial 중 `/task/status` liveness 상실 | cancel·종료 확인 후 reset, 확인 실패 시 `SAFE_STOP` |
 | `SCENE_SYNC_FAILED` | Planning Scene 불일치 | reset 후 실패 |
 | `TRANSPORT_FAILED` | 물체가 손을 따라가지 않음 | reset 후 실패 |
@@ -1260,11 +1266,13 @@ position_only_ik_effective
 4. orchestrator → manipulation dummy client/server 작성
 5. 두 action에서 각각 outer/inner stage feedback 발행
 6. orchestrator에서 steady-clock timer로 `/task/status`를 기본 2.0 Hz 발행
-7. evaluator에서 `/task/status`를 구독하고 `task_status_timeout_s` watchdog과 `cancel_timeout_s` 종료 확인 구현
-8. cancel 처리
-9. steady-clock action watchdog timeout 처리
-10. 평가·outer·inner 상태 enum과 허용 전이표 작성
-11. `run_id`, `stage`, `error_code`를 모든 로그에 포함
+7. evaluator에서 `/task/status`를 구독하고 `task_status_timeout_s` watchdog과 `run_trial_cancel_timeout_s` outer 종료 확인 구현
+8. orchestrator에서 active `RunTrial` cancel을 `PickPlace` cancel로 전달하고 `pick_place_cancel_timeout_s` inner 종료 확인 구현
+9. 시작 시 `run_trial_cancel_timeout_s >= pick_place_cancel_timeout_s + cancel_propagation_margin_s` 검증
+10. cancel 처리
+11. steady-clock action watchdog timeout 처리
+12. 평가·outer·inner 상태 enum과 허용 전이표 작성
+13. `run_id`, `stage`, `error_code`를 모든 로그에 포함
 
 dummy server는 로봇을 움직이지 않고 **소유권이 겹치지 않는 세 층**을 순회한다.
 
@@ -1286,9 +1294,12 @@ manipulation: PLAN_PICK → EXECUTE_PICK → VERIFY_PICK → PLAN_PLACE → EXEC
 ### 완료 기준
 
 - action 실행 중 cancel 가능
+- active `PickPlace` 중 `RunTrial` cancel을 보내면 inner cancel이 먼저 전달되고, inner terminal 확인 뒤 outer terminal이 반환됨
+- dummy inner server가 `pick_place_cancel_timeout_s - 0.1초`에 종료하는 경계 시험에서 outer가 잘못 `SAFE_STOP`으로 가지 않음
+- inner terminal을 의도적으로 막으면 outer도 완료로 가장하지 않고 `SAFE_STOP`으로 가며 reset이 호출되지 않음
 - active `RunTrial` 동안 `/task/status`가 설정 주기로 도착하고 `heartbeat_seq`가 증가
 - status 발행을 의도적으로 멈추면 evaluator가 `TASK_HEARTBEAT_TIMEOUT`으로 종료
-- timeout 후 다음 goal을 받을 수 있음
+- cancel terminal state가 정상 확인된 timeout 뒤에는 다음 goal을 받을 수 있고, `SAFE_STOP`에서는 수동 복구 전 새 goal을 거부함
 - 중복 goal 처리 규칙 존재
 - 허용되지 않은 상태 전이를 거부
 - reset·detect·planning 상태가 서로 다른 소유자에 중복 정의되지 않음
@@ -1487,7 +1498,7 @@ executeGoal()   [worker thread]
 
 - action callback을 담당하는 executor가 responsive함
 - `PickPlace.feedback.inner_stage`가 plan·execute 단계 전이를 올바르게 보여 줌
-- blocking `execute()` 중에도 cancel 요청을 수신하고 별도 cancel 경로가 `MoveGroupInterface::stop()`을 호출해 `cancel_timeout_s` 안에 terminal state로 종료함
+- blocking `execute()` 중에도 cancel 요청을 수신하고 별도 cancel 경로가 `MoveGroupInterface::stop()`을 호출해 `pick_place_cancel_timeout_s` 안에 terminal state로 종료함
 - 의도적으로 result를 지연하면 orchestrator 또는 action test client의 steady-clock action·stage timeout이 `EXECUTION_TIMEOUT`으로 판정함
 - 두 번째 goal은 **즉시 거부**됨
 
@@ -1798,24 +1809,29 @@ lateral_error = ||e_lateral||
 
 ### 실습
 
-1. `pnp_transport` 패키지 생성 후 hard-coded pick pose 설정 (동결한 IK mode의 목표 생성 규칙 사용)
-2. open → pre-grasp → approach → close 단계 함수 연결
-3. `grasp_frame`의 current transform으로 접근축을 planning frame에 회전
-4. `desired_axial_offset`을 포함한 `lateral_error`·`axial_error` 계산 구현
-5. transport의 grasp gate, aperture, joint-position 임계값 YAML 작성
-6. manipulation이 목표 grasp geometry에서 `T_ee_object`를 구성해 `/transport/prepare` 호출
-7. `prepared && grasp_eligible` 응답일 때만 Planning Scene attach
-8. T1이면 `/transport/start` 후 수직 lift follower, T0이면 lift 완료 시 one-shot pose 갱신
-9. 짧은 수직 lift 실행
-10. lift 후 물체와 EE의 상대 transform 변화 확인
-11. `VERIFY_PICK_BASELINE` 5개 항목 구현
-12. 정상 경로에서 follower stop → detach → open → home → attached object 제거 확인 → reset
-13. 실패 경로에서도 같은 cleanup을 idempotent하게 실행
-14. **5회 pick-and-lift 시험**
+1. `pnp_transport` 패키지를 만들고 `pnp_interfaces`에 `PrepareTransport.srv`와 `TransportStatus.msg` 추가
+2. `transport_server.py`에 grasp gate, `/transport/prepare`·`/transport/start`·`/transport/stop` service, `/transport/state` publisher 구현
+3. hard-coded pick pose 설정 (동결한 IK mode의 목표 생성 규칙 사용)
+4. open → pre-grasp → approach → close 단계 함수 연결
+5. `grasp_frame`의 current transform으로 접근축을 planning frame에 회전
+6. `desired_axial_offset`을 포함한 `lateral_error`·`axial_error` 계산 구현
+7. transport의 grasp gate, aperture, joint-position 임계값 YAML 작성
+8. manipulation이 목표 grasp geometry에서 `T_ee_object`를 구성해 `/transport/prepare` 호출
+9. `prepared && grasp_eligible` 응답일 때만 Planning Scene attach
+10. T1이면 `/transport/start` 후 lift-only `pose_follower.py`, T0이면 lift 완료 시 `t0_transport.py` one-shot pose 갱신
+11. 짧은 수직 lift 실행
+12. lift 후 물체와 EE의 상대 transform 변화 확인
+13. `VERIFY_PICK_BASELINE` 5개 항목 구현
+14. 정상 경로에서 `/transport/stop` → detach → open → home → attached object 제거 확인 → reset
+15. 실패 경로에서도 같은 cleanup을 idempotent하게 실행
+16. **5회 pick-and-lift 시험**
 
 ### 산출물
 
-- `pnp_transport` 패키지
+- `pnp_transport` 패키지와 `transport_server.py`
+- `PrepareTransport.srv`, `TransportStatus.msg`
+- `/transport/prepare`·`/transport/start`·`/transport/stop` server와 `/transport/state` publisher
+- T1 lift-only `pose_follower.py` 또는 T0 lift one-shot `t0_transport.py`
 - pick 단계 action server
 - grasp gate 판정 함수와 parameter YAML
 - 접근축 벡터 확정값
@@ -1958,8 +1974,8 @@ T0 경로는 1~7 대신 persistent follower를 만들지 않고, pick/lift 완�
 
 ### 산출물
 
-- T1: `pose_follower.py`; T0: `t0_transport.py`
-- `TransportStatus.msg`와 prepare/start/stop service
+- T1: lift·transfer·descend 전 구간으로 확장한 `pose_follower.py`; T0: pick/place 두 one-shot을 구현한 `t0_transport.py`
+- 6A의 `transport_server.py`와 `/transport/state`에 1-in-flight·RTT·dropped update·timeout 진단을 연결한 확장본
 - `transport_max_slip_mm`, `place_error_mm` 기록
 - 5회 전체 시험 결과
 
@@ -2402,7 +2418,7 @@ Z = depth
 
 각 trial 시작 순서:
 
-1. 진행 중 action cancel
+1. 진행 중 `RunTrial`을 cancel하고 §4.4 예산에 따라 active `PickPlace`까지 terminal state임을 확인. 확인 실패 시 `SAFE_STOP`으로 이동하고 아래 reset 순서를 실행하지 않음
 2. Pose follower 중지
 3. gripper open
 4. robot home
@@ -2478,7 +2494,7 @@ total_time_ms
 4. evaluator가 perception pose와 GT를 동시에 수집하는 경로 작성
 5. trial loop 작성
 6. steady-clock action timeout과 run ID 연결
-7. `/task/status` subscriber와 `task_status_timeout_s` watchdog, `cancel_timeout_s` 종료 확인 연결
+7. `/task/status` subscriber와 `task_status_timeout_s` watchdog, `run_trial_cancel_timeout_s` outer 종료 확인, `pick_place_cancel_timeout_s`·`cancel_propagation_margin_s` 불변식 연결
 8. ground truth로 perception error 계산
 9. place zone success 판정
 10. CSV 저장
@@ -2497,6 +2513,7 @@ total_time_ms
 - grasp gate 임계값이 평가 전에 동결됨
 - reset마다 pose·twist threshold 통과
 - active trial에서 `/task/status` 수신 간격이 threshold를 넘으면 `TASK_HEARTBEAT_TIMEOUT`으로 분류
+- nested cancel 경계·실패 fault injection에서 inner→outer 종료 순서와 `SAFE_STOP` 시 reset 금지가 유지됨
 - evaluator가 perception pose를 직접 구독하며 perception 노드는 GT를 구독하지 않음
 
 ### 실패 시
@@ -2780,7 +2797,10 @@ total_time_ms
 4. `handle_accepted()`가 worker thread를 띄우고 즉시 반환하는지 확인
 5. 콜백 안에서 같은 executor의 future를 blocking wait 하고 있지 않은지 확인
 6. 여러 goal이 동시에 같은 MoveGroupInterface 객체에 접근하고 있지 않은지 확인
-7. 단독 실행 파일에서는 되는지 분리 시험 — 되면 구조 문제가 확실하다
+7. action test client에서 cancel을 보내 `handle_cancel()` 로그가 즉시 찍히고 cancel flag가 설정되는지 확인
+8. `handle_cancel()`은 실행됐는데 동작이 계속되면 blocking worker와 분리된 제어 경로에서 `MoveGroupInterface::stop()`이 호출되는지 확인
+9. `stop()` 뒤 worker의 `execute()`가 풀리고 `pick_place_cancel_timeout_s` 안에 canceled 또는 aborted terminal state가 반환되는지 확인. 반환되지 않으면 controller execution과 worker 종료 경로를 분리해 조사
+10. 단독 실행 파일에서는 되는지 분리 시험 — 되면 구조 문제가 확실하다
 
 권장 구조는 Session 4의 「action server 실행 구조」를 따른다.
 
@@ -2844,6 +2864,7 @@ L3는 처음부터 선택하는 것이 아니라 다음 조건을 만족할 때�
 - [ ] RunTrial outer action과 PickPlace inner action
 - [ ] transport prepare/start/stop
 - [ ] action cancel
+- [ ] `run_trial_cancel_timeout_s >= pick_place_cancel_timeout_s + cancel_propagation_margin_s`와 경계·실패 fault injection
 - [ ] timeout
 - [ ] `/task/status`: orchestrator publisher · evaluator steady-clock watchdog · fault injection
 - [ ] 오류 코드
@@ -2974,10 +2995,16 @@ L3는 처음부터 선택하는 것이 아니라 다음 조건을 만족할 때�
 
 # 18. 개정 이력
 
+## v3.2.4
+
+- 중첩 action cancel 예산을 `pick_place_cancel_timeout_s` 5.0초와 `run_trial_cancel_timeout_s` 7.0초로 분리하고 2.0초 전파·정리 margin 불변식 및 경계 시험 추가
+- Session 6A에 transport prepare/start/stop server·status publisher·최소 T1/T0 구현을 산출물로 고정하고, Session 6B는 전 구간 확장·진단 강건화로 정리
+- §12.8 deadlock 진단에 `handle_cancel()` 수락, `MoveGroupInterface::stop()`, inner terminal state 확인 경로 추가
+
 ## v3.2.3
 
 - Session 4의 manipulation liveness를 orchestrator `/task/status`에서 분리하고 `PickPlace` feedback·steady-clock action/stage timeout·cancel terminal state로 검증
-- `cancel_timeout_s` 기본값을 5.0초로 정하고 Session 2·11의 evaluator 구현에 연결
+- 단일 cancel timeout의 기본값을 5.0초로 정하고 Session 2·11의 evaluator 구현에 연결 (v3.2.4에서 계층별 예산으로 분리)
 - §5.1 회차 구간 합계를 150~210분으로 맞추고 Week 0 총량과 하드 캡을 6~7.5시간으로 일치
 - `pnp_evaluation`, `pnp_simulation`, `pnp_transport` 패키지 생성 시점을 최초 사용 회차에 명시
 
