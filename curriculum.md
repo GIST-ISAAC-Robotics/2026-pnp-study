@@ -1,9 +1,9 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.2 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.2.1 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
-> **운영 권장:** 주 3회, 회차당 2.5~3.5시간 + 회차 사이 개인 정리 1~2시간 (Week 2만 4회차)  
+> **운영 권장:** 주 3회, 회차당 2.5~3.5시간 (Week 2만 4회차) + 회차 사이 개인 작업 1인당 주 2시간 상한  
 > **환경:** Windows + WSL2 + ROBOTIS 공식 Docker 환경  
 > **로봇:** OpenMANIPULATOR-X 시뮬레이션 모델  
 > **최종 목표:** RGB-D 카메라로 물체를 찾고, MoveIt으로 경로를 계획하여, Gazebo에서 물체를 집어 지정 위치에 놓는 과정을 반복 실행 가능한 ROS 2 시스템으로 완성한다.
@@ -81,14 +81,19 @@ ik_mode: position-only | full-pose
 - [2. 최종 결과물과 성공 기준](#2-최종-결과물과-성공-기준)
 - [3. 핵심 용어](#3-처음-등장하는-핵심-용어)
 - [4. 시스템 구조와 인터페이스](#4-시스템-구조)
+- [5. 운영 규칙](#5-운영-규칙)
 - [6. Week 0](#6-week-0--환경-구축과-위험-제거)
 - [7. Week 1](#7-week-1--ros-2-시스템-뼈대)
 - [8. Week 2](#8-week-2--moveit-조작과-고정-좌표-픽앤플레이스)
 - [9. Week 3](#9-week-3--p1-hsv--depth-인식)
 - [10. Week 4](#10-week-4--신뢰성-평가-최종-정리)
+- [11. 축소 순서](#11-전체-일정-지연-시-축소-순서)
 - [12. 진단표](#12-예상-문제와-진단-순서)
 - [13. Gate 요약](#13-week별-gate-요약)
+- [14. L3 전환 조건](#14-l3로-전환할-수-있는-조건)
 - [15. 최종 체크리스트](#15-최종-체크리스트)
+- [16. 공식 참고 자료](#16-공식-참고-자료)
+- [17. 한 줄 결론](#17-한-줄-결론)
 - [18. 개정 이력](#18-개정-이력)
 
 ---
@@ -146,7 +151,7 @@ Docker 환경 실행
 
 ## 1.3 전체 일정표
 
-Session 6 분할로 본과정은 **13회**다. Week 2만 주 4회로 운영하는 안을 권장한다. 일정이 고정이면 Session 6B의 반복 시험을 회차 사이 작업으로 이관하되 Week 2 Gate 자체는 낮추지 않는다.
+Session 6 분할로 본과정은 **13회**다. Week 2만 주 4회로 운영하는 안을 권장한다. 일정이 고정이면 회차 내 반복 시험 일부를 §5.5 원칙에 따라 회차 사이 작업 또는 Week 3 첫 30분으로 이관한다. 이관한 full trial은 Week 2의 **10회 연속 전체 trial 한 세트에 포함**하며 별도 횟수로 누적하지 않는다. 6A의 lift-only 축소분과 임계값 튜닝도 §5.5를 따르며, Week 2 Gate 자체는 낮추지 않는다.
 
 | 구간 | 회차 | 핵심 결과 |
 |---|---|---|
@@ -262,8 +267,9 @@ Planning Scene attach도 마찬가지다. attach는 코드가 설정하는 논�
 | 물체 검출률 | 85% 이상 | 95% 이상 |
 | 인식 위치 중앙 오차 | 30 mm 이하 | 20 mm 이하 |
 | 분류되지 않은 오류 | 0건 | 0건 |
-| 연속 무개입 trial | 20회 | 30회 |
 | 재실행 시 환경 재현 | 3회 연속 성공 | 다른 PC에서도 재현 |
+
+평가 횟수는 아래 2.5 표만을 단일 기준으로 사용한다. 다른 절의 5회·10회 시험은 단계 검증 또는 Week 2 Gate이며, 최종 평가 횟수를 대신하지 않는다.
 
 ## 2.5 완료 수준별 평가 계약
 
@@ -369,7 +375,15 @@ RGB 색을 색상(H), 채도(S), 밝기(V)로 표현하는 방식이다. 단순�
 pick_place_ws/
 └── src/
     ├── pnp_interfaces/
-    │   └── PickPlace.action
+    │   ├── action/
+    │   │   ├── PickPlace.action
+    │   │   └── RunTrial.action
+    │   ├── srv/
+    │   │   ├── PrepareTransport.srv
+    │   │   └── ResetTrial.srv
+    │   └── msg/
+    │       ├── TransportStatus.msg
+    │       └── TaskStatus.msg
     ├── pnp_simulation/
     │   ├── worlds/
     │   ├── models/
@@ -386,7 +400,11 @@ pick_place_ws/
     │   ├── include/
     │   └── config/
     ├── pnp_transport/
-    │   └── pose_follower.py
+    │   ├── grasp_gate.py
+    │   ├── transport_server.py
+    │   ├── pose_follower.py
+    │   ├── t0_transport.py
+    │   └── config/
     ├── pnp_orchestrator/
     │   ├── orchestrator.py
     │   └── state_machine.py
@@ -401,6 +419,8 @@ pick_place_ws/
 ```
 
 ROBOTIS의 공식 패키지는 직접 복사해 프로젝트 패키지 안에 넣지 않는다. dependency로 사용하고, 수정이 꼭 필요하면 fork와 commit을 명시한다.
+
+`transport_server.py`는 grasp gate와 prepare/start/stop service, `TransportStatus` 발행을 소유한다. T1의 연속 갱신은 `pose_follower.py`, T0의 one-shot 경로는 `t0_transport.py`로 분리한다.
 
 ## 4.2 실행 데이터 흐름
 
@@ -494,7 +514,7 @@ Gazebo PosePublisher
 | `/transport/state` | `pnp_interfaces/msg/TransportStatus` | state·slip·dropped update·error |
 | `/task/status` | `pnp_interfaces/msg/TaskStatus` | run ID·outer stage·error code |
 
-## 4.4 권장 action 정의
+## 4.4 권장 custom interface 정의
 
 ```text
 # RunTrial.action
@@ -705,6 +725,15 @@ main
 - 오류를 예외 메시지로만 남기지 않고 코드로 분류
 - 최종 평가 seed와 파라미터는 평가 전에 동결
 - 기능 수보다 반복 실행 가능성을 우선
+
+## 5.5 회차 사이 작업 상한과 이관 규칙
+
+- 회차 사이 개인 작업은 **1인당 주 2시간**을 상한으로 한다. 두 사람의 총 상한은 주 4 person-hours다.
+- 사람의 개입 없이 runner가 도는 순수 대기 시간은 상한에서 제외할 수 있지만, 감시·수동 reset·디버깅 시간은 포함한다.
+- 6A·6B에서 5회를 3회로 줄였다고 해서 빠진 횟수를 각각 별도 과제로 누적하지 않는다.
+- Week 2의 반복 의무는 **동결한 설정·reset·scenario에서 수행하는 10회 연속 전체 pick-and-place trial 한 세트**다.
+- 6B의 전체 trial은 같은 설정에서 무개입 연속 실행한 경우에만 이 10회에 포함한다. 6A의 lift-only trial은 포함하지 않지만, 빠진 lift-only 횟수를 별도로 보충할 필요도 없다.
+- 상한 안에 10회를 끝내지 못하면 Week 3 첫 30분을 사용하거나 §11 순서대로 낮은 우선순위 작업을 줄인다. 수동 개입 trial을 끼워 넣어 Gate를 통과한 것으로 세지 않는다.
 
 ---
 
@@ -1345,7 +1374,7 @@ Gate 실패 시 Week 2 기능을 추가하지 않는다.
 
 # 8. Week 2 — MoveIt 조작과 고정 좌표 픽앤플레이스
 
-Week 2는 **네 회차**로 구성한다. v1에서는 세 회차였으나, Session 6에 pick·transport·place·반복 시험이 모두 들어가 두 사람이 한 회차에 소화하기 어려웠다.
+Week 2는 **네 회차**로 구성한다. pick·transport·place·반복 시험을 한 회차에 몰아넣으면 두 사람이 소화하기 어려우므로 Session 6을 6A와 6B로 나눈다.
 
 | 회차 | 내용 | 끝났을 때 확인되는 것 |
 |---|---|---|
@@ -1643,7 +1672,7 @@ position-only에서는 `base_yaw_deg`와 `orientation_error_deg`를 `NA`로 둘 
 
 인식 없이 알려진 좌표를 사용해 **집어서 들어올리는 데까지** 완성한다. 운반은 다음 회차에서 다룬다.
 
-v1에서는 pick·transport·place·반복 시험을 한 회차에 넣었으나, 두 사람이 2.5~3.5시간 안에 처음부터 완성하기에는 과도하다. 6A와 6B로 나누어 각 회차가 끝날 때 확인 가능한 결과를 남긴다.
+pick·transport·place·반복 시험을 한 회차에 넣는 것은 두 사람이 2.5~3.5시간 안에 처음부터 완성하기에 과도하다. 6A와 6B로 나누어 각 회차가 끝날 때 확인 가능한 결과를 남긴다.
 
 ### 작업 단계
 
@@ -1711,8 +1740,8 @@ lateral_error = ||e_lateral||
 
 1. `lateral_error`가 허용 범위 이내
 2. `abs(axial_error)`가 허용 범위 안
-3. close action이 정상 종료되고 실제 joint position이 commanded close target 허용오차 안
-4. 물체가 Planning Scene에 존재
+3. close 동작이 명령대로 수행됨: close action 정상 종료 + 실제 joint position이 commanded close target 허용오차 안. **이는 명령 실행 확인일 뿐 파지의 증거가 아님**
+4. 물체가 Planning Scene에 **world collision object로 등록되어 있고 아직 attach되지 않음**
 5. 접근·실행 단계가 정상 종료
 
 그리퍼의 open aperture는 큐브보다 넓고 close target aperture는 큐브보다 좁게 설정한다. “충분히 닫혔다”는 값은 접촉 센서가 아니므로 물체 존재의 독립 증거로 사용하지 않는다.
@@ -1787,8 +1816,9 @@ lateral_error = ||e_lateral||
 
 ### 시간이 부족할 때
 
-- 5회 시험을 3회로 축소
-- 임계값 튜닝은 회차 사이 작업으로 이관
+- 회차 내 pick-and-lift 시험을 5회에서 3회로 축소
+- 빠진 lift-only 2회는 별도 의무로 누적하지 않고, 6B 이후의 전체 trial에서 pick·lift 단계 검증으로 대체
+- 임계값 튜닝은 §5.5의 개인 작업 상한 안에서만 이관
 - `VERIFY_PICK_BASELINE`의 4번 항목만 남기고 나머지는 다음 회차
 
 ### 시간이 남을 때
@@ -1932,7 +1962,8 @@ T0 경로는 1~7 대신 persistent follower를 만들지 않고, pick/lift 완�
 
 ### 시간이 부족할 때
 
-- 5회 시험을 3회로 축소하고 나머지는 회차 사이 작업으로 이관
+- 회차 내 전체 시험을 5회에서 3회로 축소
+- 같은 동결 설정·reset·scenario에서 무개입 연속 실행한 6B trial은 §5.5의 Week 2 10회 세트에 포함하고, 별도 보충 횟수를 만들지 않음
 - place 영역 하나만 사용
 - retry는 Week 4로 이동
 
@@ -1947,7 +1978,9 @@ T0 경로는 1~7 대신 persistent follower를 만들지 않고, pick/lift 완�
 
 ### Week 2 반복 시험 (회차 사이 또는 Week 3 첫 30분)
 
-6A와 6B에서 각각 5회씩 시험했으므로, **고정 좌표 10회 연속 시험**은 회차 사이 개인 작업 또는 Week 3 시작 30분으로 이관한다.
+6A의 pick-and-lift 5회와 6B의 전체 trial 5회는 서로 다른 단계 검증이므로, 단순 합계만으로 **10회 연속 전체 시험**이 되지는 않는다. Week 2 Gate의 반복 의무는 동결한 설정·reset·scenario에서 사람의 개입 없이 수행하는 고정 좌표 full pick-and-place 10회 한 세트다.
+
+6B의 전체 trial이 위 조건을 만족하며 연속 실행됐다면 그 횟수부터 포함한다. 6A의 lift-only trial은 포함하지 않으며, 6A·6B의 회차 내 시험을 축소한 경우에도 별도 보충분을 더하지 않는다. 남은 횟수만 §5.5 상한 안에서 회차 사이 또는 Week 3 첫 30분에 수행한다.
 
 기록 항목:
 
@@ -1964,7 +1997,7 @@ transport_max_slip_mm, place_error_mm, cleanup_ok, success, error_code
 - **grasp gate가 잘못된 파지를 거부함**
 - Planning Scene attach/detach
 - T1 또는 문서화된 T0 비상 경로
-- 10회 반복 가능 (이관분 포함)
+- 동결한 설정·reset·scenario로 **10회 연속 full pick-and-place trial 완료** (조건을 충족한 6B 실행분 포함)
 - reset 후 다음 trial 진행
 
 이 Gate를 통과하지 못하면 P1 인식 통합을 시작하지 않는다.
@@ -2315,6 +2348,20 @@ Z = depth
 
 평가 전에 각 위치와 seed를 YAML 또는 CSV로 고정한다.
 
+#### 완료 수준별 표본 축소 규칙
+
+30회에서 20회 또는 10회로 줄일 때 어려운 그룹을 통째로 빼지 않는다. 표본은 다음처럼 **계층별 비율을 유지하고, 정수 나머지는 더 어려운 그룹에 우선 배정**한다.
+
+| 평가 규모 | 중앙 | 좌우 | 경계 | 합계 |
+|---|---:|---:|---:|---:|
+| 권장 30회 | 10 | 10 | 10 | 30 |
+| 20회 (L2 최소 · L1-fallback 권장) | 6 | 7 | 7 | 20 |
+| L1-fallback 최소 10회 | 3 | 3 | 4 | 10 |
+
+- 20회·10회 subset의 위치와 seed는 평가 전에 함께 고정한다.
+- 결과를 본 뒤 성공한 seed만 남기거나 경계 그룹을 제거하지 않는다.
+- 평가 규모를 바꾸면 새 `config_hash`를 기록하고 해당 규모의 고정 seed 전체를 처음부터 실행한다. 코드가 바뀌지 않았다면 `git_commit`은 유지한다.
+
 ### Reset contract
 
 각 trial 시작 순서:
@@ -2334,7 +2381,7 @@ Z = depth
 
 ### CSV 권장 필드
 
-v3에서 파지 품질과 성공 정의를 분리했으므로 필드를 다음과 같이 확장한다.
+파지 품질과 성공 정의를 분리했으므로 필드를 다음과 같이 구성한다.
 
 ```text
 run_id
@@ -2888,6 +2935,16 @@ L3는 처음부터 선택하는 것이 아니라 다음 조건을 만족할 때�
 ---
 
 # 18. 개정 이력
+
+## v3.2.1
+
+- `pnp_interfaces`의 action·service·message 6개와 `pnp_transport`의 gate·server·T0/T1 구현을 4.1 패키지 트리에 반영
+- 최종 평가 30·20·10회의 중앙/좌우/경계 표본 비율과 고정 seed 축소 규칙 추가
+- 회차 사이 개인 작업을 1인당 주 2시간으로 제한하고 6A·6B 축소분과 Week 2 10회 시험의 중복 누적 제거
+- grasp gate의 close 조건이 명령 실행 확인일 뿐 파지 증거가 아님을 명시
+- Planning Scene 존재 조건을 attach 전 world collision object 등록으로 구체화
+- 목차에 §5·§11·§14·§16·§17 추가
+- 본문의 과거 버전 참조를 제거하고 최종 평가 횟수의 단일 기준을 §2.5로 통합
 
 ## v3.2
 
