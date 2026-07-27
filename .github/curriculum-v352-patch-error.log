@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+  File "embedded_curriculum_patch.py", line 292, in <module>
+  File "embedded_curriculum_patch.py", line 13, in once
+AssertionError: checklist gripper fields: expected 1 occurrence, found 0
