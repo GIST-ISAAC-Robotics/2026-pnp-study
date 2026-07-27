@@ -12,7 +12,7 @@
 
 | 단계 | 상태 | 현재 결과 / 진입 조건 |
 |---|---|---|
-| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.3 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리; 구현은 아직 시작 전 |
+| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.4 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리; 구현은 아직 시작 전 |
 | Week 0 — 환경·위험 제거 | 대기 | Docker, 공식 smoke test, RGB-D·pose follower·reset·IK spike |
 | Week 1 — ROS 2 시스템 뼈대 | 대기 | Week 0 Gate 통과 후 시작 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
@@ -33,6 +33,16 @@
 세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 0](./curriculum.md#6-week-0--환경-구축과-위험-제거)을 따른다.
 
 ## 회차 로그
+
+### 2026-07-28 — 커리큘럼 v3.5.4 최종 문서 경로·존재성 계약 검토
+
+- **상태:** 완료
+- **수행:** `curriculum.md`를 처음부터 끝까지 다시 읽고 최소 완료 세트, 회차별 산출물, `docs/README.md` 경로표, Session 12 최종화 책임과 평가 artifact 존재성 계약을 교차 검토
+- **결과:** `docs/system_architecture.md`를 시스템 구조도·상태 전이도·오류 코드 표의 단일 원본으로, `docs/frames.md`를 TF tree 원본으로 연결했다. S0-2 smoke test와 S5·S7·S9 frame/world 갱신, 누락됐던 S9 통합 산출물의 경로를 복구했다. 최종 README의 Known issues·축소 사유·후속 확장 경로, `PICK_LIFT_ONLY`의 final GT 비필수 계약, `week0_spike.md`의 실제 최초 작성 회차도 교정했다. HTML/Pages 파일은 검토·수정 범위에서 제외했다.
+- **문제:** ROS 구현 전이므로 각 전문 문서의 실제 내용과 runtime 산출물은 해당 회차에서 검증해야 함
+- **결정:** 실행 명세 v3.5.4를 Week 0 기준으로 사용
+- **다음:** Session 0-1에서 Docker 환경 구축 시작
+- **증빙:** [curriculum.md](./curriculum.md), [README](./README.md), [문서 산출물 경로](./docs/README.md)
 
 ### 2026-07-28 — 커리큘럼 v3.5.3 batch 산출물·문서 정책 회귀 검토
 
