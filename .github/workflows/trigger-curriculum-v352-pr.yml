@@ -25,10 +25,7 @@ jobs:
             echo 'Patch already applied.'
             exit 0
           fi
-          if test -f .github/curriculum-v352-patch-error.log; then
-            echo 'Previous patch error is preserved in the branch.'
-            exit 0
-          fi
+          rm -f .github/curriculum-v352-patch-error.log
           set +e
           python - <<'PY' > /tmp/curriculum-v352-patch.log 2>&1
           from pathlib import Path
@@ -38,6 +35,13 @@ jobs:
           marker_start = "          python - <<'PY'\n"
           marker_end = "\n          PY\n"
           body = workflow.split(marker_start, 1)[1].split(marker_end, 1)[0]
+          body = body.replace(
+              "              '- **grasp gate·aperture·joint target 임계값 YAML**',",
+              "              '- [ ] **grasp gate·aperture·joint target 임계값 YAML**',",
+          ).replace(
+              "              '- **grasp gate·open aperture·`min_close_travel_m`·`gate_max_final_aperture_m` YAML**',",
+              "              '- [ ] **grasp gate·open aperture·`min_close_travel_m`·`gate_max_final_aperture_m` YAML**',",
+          )
           exec(compile(textwrap.dedent(body), 'embedded_curriculum_patch.py', 'exec'))
           PY
           status=$?
@@ -63,6 +67,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add curriculum.md README.md docs/README.md progress.md
+          git add curriculum.md README.md docs/README.md progress.md .github/curriculum-v352-patch-error.log
           git commit -m "docs: fix curriculum v3.5.2 contract regressions"
           git push origin HEAD:${{ github.head_ref }}
