@@ -1,5 +1,5 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.5.3 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.5.4 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
@@ -34,7 +34,7 @@ Week 1을 시작하기 전에 다음 다섯 가지를 `docs/setup/week0_spike.md
 
 `ik_mode_status=provisional`은 Week 0에서 안전한 1점만 검증한 비상 통과 상태다. 최종 동결이 아니며, Session 5에서 축소 workspace를 포함한 grid로 재판정해 `final`로 바꾸기 전에는 Session 6A를 시작하지 않는다.
 
-문서 산출물의 **저장소 기준 경로와 최초 작성 회차**는 [`docs/README.md`](./docs/README.md)를 단일 경로표로 사용한다. 회차별 진행·문제·해결 기록은 번호만 붙인 반복 문서를 중복 생성하지 않고 루트의 [`progress.md`](./progress.md)에 남긴다. 전문 문서가 필요한 회차만 경로표에 적힌 `docs/...` 파일을 만들며, 첫 작성자가 부모 디렉터리까지 함께 생성한다.
+문서 산출물의 **저장소 기준 경로와 작성·갱신 회차**는 [`docs/README.md`](./docs/README.md)를 단일 경로표로 사용한다. 회차별 진행·문제·해결 기록은 번호만 붙인 반복 문서를 중복 생성하지 않고 루트의 [`progress.md`](./progress.md)에 남긴다. 전문 문서가 필요한 회차만 경로표에 적힌 `docs/...` 파일을 만들며, 첫 작성자가 부모 디렉터리까지 함께 생성한다.
 
 ## 프레임 고정표
 
@@ -207,7 +207,7 @@ Session 6 분할로 본과정은 **13회**다. Week 2만 주 4회로 운영하�
 - MoveGroupInterface 기반 manipulation action server
 - orchestrator, reset 경로, 평가 runner
 - 고정 seed 반복 평가 raw CSV·batch summary와 오류 코드별 개수
-- 오류 코드 표, 시스템 구조도, TF tree, 상태 전이도
+- `docs/system_architecture.md`의 시스템 구조도·상태 전이도·오류 코드 표와 `docs/frames.md`의 TF tree
 - 최종 시연 영상
 - 최소 1개의 단위 테스트와 1개의 reset 후 재실행 통합 테스트
 - `completion_level`, `perception_mode`, `transport_mode`, `ik_mode`, `ik_mode_status=final`, 최종 `runner_profile=perception_evaluation`, `target_mode=perception`과 축소 이유
@@ -929,7 +929,8 @@ profile별 metric도 분리한다. `week2_baseline`은 perception pose·detectio
 | `reset_ok = false`, `state_measured = false` | `ResetTrial` 응답과 rejection/query-failure 원인 | 네 reset 측정값과 downstream metric은 `NA`; `pipeline_success=false`, `grasp_plausible_success=false`, `place_success=NA`, 최종 `success=false`인 유효한 `RESET_FAILED` row |
 | `reset_ok = false`, `state_measured = true` | `ResetTrial` 응답과 실제 position·orientation error, linear/angular speed 측정값 | threshold 실패 측정값은 보존; `RunTrial`·transport/perception/place metric은 `NA`, 최종 `success=false`인 유효한 `RESET_FAILED` row |
 | 분류된 watchdog/cancel 실패로 outer terminal 미확인 | watchdog·cancel 증거와 error code | `run_trial_result_received = false`, downstream metric `NA`, success=false 후 `SAFE_STOP`; 단순 데이터 조인 오류로 바꾸지 않음 |
-| `trial_started = true`이고 분류된 no-terminal liveness 실패가 아님 | `RunTrial` terminal result와 cleanup 뒤 final GT | 예상 없이 result 또는 final GT가 사라지면 `EVALUATION_DATA_MISSING` |
+| `trial_started = true`이고 분류된 no-terminal liveness 실패가 아님 | `RunTrial` terminal result | 예상 없이 result가 사라지면 `EVALUATION_DATA_MISSING` |
+| `task_scope = FULL_PICK_PLACE`이고 `RunTrial` terminal과 필요한 cleanup이 확인됨 | terminal 경계 뒤의 fresh final GT | `PICK_LIFT_ONLY`는 final GT를 필수로 요구하지 않고 place/full-task 필드를 `NA`; full scope에서 예상 없이 final GT가 사라지면 `EVALUATION_DATA_MISSING` |
 | `perception_source_accepted = true` | result의 source stamp·frame과 일치하는 perception sample 및 허용 slop 안의 GT sample | false이면 source pose와 perception error `NA`; true여도 TF가 실패하면 `detection_ok=true`, `tf_ok=false`, perception error는 `NA` 가능 |
 | `transport_prepare_attempted = true` | 같은 `run_id`의 `REJECTED`, `STOPPED`, `ERROR` 중 하나인 terminal `TransportStatus` | false이면 `grasp_evaluated=false`, grasp/transport 세부 metric `NA` |
 
@@ -1205,6 +1206,10 @@ ros2 launch open_manipulator_moveit_config open_manipulator_x_moveit.launch.py u
 7. `/joint_states`, `/tf`, `/tf_static`, `/clock` 확인
 8. 5분간 실행 유지
 9. 종료 후 같은 절차를 다시 실행
+
+### 산출물
+
+- `docs/setup/docker.md` S0-2 갱신본 — 정확한 Gazebo·MoveIt launch 명령, arm/gripper·`/clock` 확인 결과, 두 차례 재실행 증빙
 
 ### 완료 기준
 
@@ -1552,7 +1557,7 @@ position_only_ik_effective
 
 ### 회차 사이 작업
 
-- 장기 보존용 전문 문서 `docs/system_architecture.md`에 현재 node/topic graph를 최초 작성하고, action/service·cancel/timeout·`/task/status` 내용은 Session 2~3에서 갱신
+- 최종 “시스템 구조도”의 단일 원본인 `docs/system_architecture.md`에 현재 node/topic graph를 최초 작성하고, action/service·상태 전이도·오류 코드 표·cancel/timeout·`/task/status`는 Session 2~3·10에서 갱신한 뒤 Session 12에서 최종화
 - 각자 새 terminal에서 workspace source와 실행 재현
 - ROS graph를 말로 설명하는 3분 녹화
 
@@ -1609,6 +1614,7 @@ manipulation: IDLE → SETUP_SCENE → PLAN_PICK → EXECUTE_PICK → PREPARE_TR
 - `/task/status` publisher와 evaluator watchdog
 - `target_mode` 분기와 `runner_profile` 호환성 표를 포함한 상태 전이표
 - 오류 코드 초안
+- `docs/system_architecture.md` S2 갱신본 — 두 action과 service의 데이터 흐름, 3층 상태 전이도 초안, cancel/timeout·`/task/status` heartbeat, 오류 코드 초안
 
 ### 완료 기준
 
@@ -1683,6 +1689,7 @@ manipulation: IDLE → SETUP_SCENE → PLAN_PICK → EXECUTE_PICK → PREPARE_TR
 - TF tree 이미지
 - controller 목록
 - `pnp_system.launch.py` 초안
+- `docs/system_architecture.md` S3 갱신본 — controller·상위 launch 연결과 실제 ROS graph 반영
 
 ### 완료 기준
 
@@ -2027,6 +2034,7 @@ position-only에서는 `base_yaw_deg`와 `orientation_error_deg`를 `NA`로 둘 
 - `pnp_interfaces/srv/ResetTrial.srv`, backend-private `reset_state_adapter.py`, `/simulation/reset_trial`을 제공하는 `reset_trial_node.py`; `state_measured`와 3회 settle 로그
 - `docs/world_layout.md` — 카메라 위치·frame 이름·조명 설정
 - `docs/world_layout.md` 안의 perception/evaluation geometry 절 — cube 높이·table normal·surface/tag-to-center offset·canonical orientation, zone/object 치수, yaw 처리, 세 uncertainty, safety margin, 선언 목표와 Week 2 threshold 계산
+- `docs/frames.md` S5 갱신본 — 최종 world의 fixed camera mount와 선언한 camera link·optical frame 연결
 - `pnp_bringup`의 정적 테이블 setup과 manipulation scene manager의 `object_pose` 기반 trial별 동적 object 등록·attach·detach·제거 함수
 - IK mode별 목표 생성 함수, effective 설정, 필요 시 tool-frame offset
 - 도달 영역 CSV와 IK 실패 영역 표시
@@ -2508,6 +2516,7 @@ Gazebo의 RGB·depth·CameraInfo를 ROS topic으로 받고, 서로 같은 시점
 - synchronized subscriber
 - RGB-D sample bag
 - `docs/rgbd_topics.md`
+- `docs/frames.md` S7 갱신본 — 실제 optical frame 이름·축 규약과 camera mount의 static transform 검증 결과
 
 ### 완료 기준
 
@@ -2690,6 +2699,13 @@ p_object_center_source =
 12. Session 6B의 runner를 `runner_profile=perception_evaluation`, `target_mode=perception`으로 전환해 sensor-to-action 경로를 10~15회 반복
 13. 대표 실패 bag 저장
 
+### 산출물
+
+- camera → runtime `planning_frame` TF와 sensor-derived object center·EEF pose 생성을 연결한 인식 기반 픽앤플레이스 통합본
+- `runner_profile=perception_evaluation`, `target_mode=perception`의 sensor-to-action 10~15회 CSV와 대표 실패 bag
+- `docs/frames.md` S9 갱신본 — 실제 camera optical frame → `planning_frame` 변환 경로, known-point 축·부호·timestamp 검증
+- `docs/world_layout.md` S9 갱신본 — 최종 perception evaluation의 zone/object 치수 재확인, yaw 처리·세 uncertainty·safety margin·품질 한계와 `place_success_threshold_mm`
+
 ### 완료 기준
 
 - 원본 인식 pose의 `header.frame_id`·timestamp가 보존되고 orchestrator/evaluator 소비 시 `planning_frame`으로 변환
@@ -2784,6 +2800,7 @@ p_object_center_source =
 - 숫자가 동결된 `ErrorCode.msg`, 확정 오류 코드 표와 fault injection·unknown code 시험 결과
 - grasp projection·mode별 목표 생성 함수 단위 테스트 최소 1개
 - `reset → RunTrial → cleanup → 다음 RunTrial` 통합 테스트 최소 1개
+- `docs/system_architecture.md` S10 갱신본 — 최종 상태 전이도·오류 코드 표와 timeout/retry/cancel·cleanup 경계
 
 ### 완료 기준
 
@@ -3091,24 +3108,23 @@ CSV의 `error_code`는 `ErrorCode.msg` 숫자 하나인 primary code이고 `erro
 
 1. clean container에서 처음부터 실행
 2. README 명령 검증
-3. 시스템 구조도 최신화
-4. TF tree 저장
+3. `docs/system_architecture.md`의 시스템 구조도·상태 전이도·오류 코드 표 최종화
+4. `docs/frames.md`의 TF tree 최종본 저장
 5. 최종 CSV 분석
 6. 오류 분포 작성
 7. 성공·실패 영상 정리
-8. Known issues 작성
-9. 축소한 기능과 이유 기록
+8. 루트 `README.md`에 Known issues 작성
+9. 루트 `README.md`에 축소한 기능·이유와 후속 확장 기록
 10. 단위·통합 테스트 clean run
 11. 일곱 최종 실행 구성 필드—`completion_level`, `perception_mode`, `transport_mode`, `ik_mode`, `ik_mode_status=final`, `runner_profile=perception_evaluation`, `target_mode=perception`—와 reset/IK/RGB-D 계약 확인
 12. 최종 시연
 
 ### 산출물
 
-- 설치·빌드·실행·종료·재평가 명령을 clean container에서 검증한 README
-- 시스템 구조도·TF tree·상태 전이도·오류 코드 표 최종본
+- 설치·빌드·실행·종료·재평가 명령, Known issues, 일곱 최종 실행 구성 필드, 축소한 기능·이유와 후속 확장을 담고 clean container에서 검증한 루트 `README.md`
+- `docs/system_architecture.md`의 시스템 구조도·상태 전이도·오류 코드 표 최종본과 `docs/frames.md`의 TF tree 최종본
 - Session 11의 completed `batch_summary.yaml`·raw CSV와 일치하는 최종 평가 요약·오류 코드별 개수
 - 최종 시연 영상과 대표 성공·실패 영상
-- Known issues, 일곱 최종 실행 구성 필드, 축소한 기능과 이유를 포함한 최종 문서
 
 ### 최종 발표에서 설명할 내용
 
@@ -3505,15 +3521,11 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 
 ## 문서
 
-- [ ] README
+- [ ] 루트 `README.md`: 설치·빌드·실행·종료·재평가 명령, Known issues, 일곱 최종 실행 구성 필드, 축소한 기능·이유, 후속 확장
 - [ ] `docs/README.md` 경로표와 실제 전문 문서 경로 일치
 - [ ] 회차 진행·문제·해결은 `progress.md`에만 기록하고 회차별 반복 문서를 중복 요구하지 않음
-- [ ] architecture
-- [ ] TF tree
-- [ ] state diagram
-- [ ] known issues
-- [ ] 축소한 기능
-- [ ] 후속 확장
+- [ ] `docs/system_architecture.md`: 시스템 구조도·상태 전이도·오류 코드 표 최종본
+- [ ] `docs/frames.md`: TF tree 최종본
 - [ ] 단위 테스트와 reset 후 재실행 통합 테스트
 
 ---
@@ -3583,6 +3595,14 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 ---
 
 # 18. 개정 이력
+
+## v3.5.4 — 2026-07-28
+
+- `docs/system_architecture.md`를 최종 시스템 구조도·상태 전이도·오류 코드 표의 단일 원본으로, `docs/frames.md`를 TF tree 원본으로 명시하고 S1·S2·S3·S10·S12의 실제 작성·갱신 책임을 연결
+- S0-2의 Docker smoke-test 문서 갱신과 S9의 통합·TF·평가 geometry 산출물 절을 복구하고 `docs/frames.md`·`docs/world_layout.md` 갱신 회차를 경로표와 일치시킴
+- Session 12의 Known issues·최종 실행 구성·축소 사유·후속 확장을 루트 `README.md`에 귀속해 최종 문서 산출물의 파일 경로를 닫음
+- §4.5 존재성 표에서 final GT 필수 조건을 `FULL_PICK_PLACE`로 한정해 `PICK_LIFT_ONLY`의 place/full-task `NA` 계약과 일치시킴
+- `docs/setup/week0_spike.md`의 최초 작성 회차를 실제 산출 회차인 S0-3으로 교정하고 README·문서 경로표를 동기화
 
 ## v3.5.3 — 2026-07-28
 

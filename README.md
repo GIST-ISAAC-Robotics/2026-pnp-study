@@ -4,7 +4,7 @@ ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤
 
 > **현재 상태 — 2026-07-28**
 >
-> 실행 커리큘럼 `v3.5.3` 확정 · 저장소/Pages 정리 완료 · **Week 0 시작 전**
+> 실행 커리큘럼 `v3.5.4` 확정 · 저장소/Pages 정리 완료 · **Week 0 시작 전**
 
 ## 바로가기
 
@@ -13,7 +13,7 @@ ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤
 | [커리큘럼 웹 뷰](https://gist-isaac-robotics.github.io/2026-pnp-study/) | 검색·자동 목차·장별 접기를 지원하는 기본 열람 페이지 |
 | [실행 커리큘럼](./curriculum.md) | 구현 계약과 회차별 실습을 담은 원본 Markdown |
 | [진행 상황과 로그](./progress.md) | 현재 단계, 다음 작업, 회차별 결과와 증빙 기록 |
-| [문서 산출물 경로](./docs/README.md) | `docs/` 전문 문서의 정확한 경로와 최초 작성 회차 |
+| [문서 산출물 경로](./docs/README.md) | `docs/` 전문 문서의 정확한 경로와 작성·갱신 회차 |
 
 ## 스터디 개요
 
@@ -60,10 +60,10 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 │   ├── README.md                     # 전문 산출물 경로표
 │   ├── setup/
 │   │   ├── docker.md                 # S0-1에서 최초 작성
-│   │   └── week0_spike.md            # S0-2~S0-3에서 최초 작성
-│   ├── system_architecture.md        # S1 최초 작성 · S2~S3 갱신
-│   ├── frames.md                     # S3에서 최초 작성
-│   ├── world_layout.md               # S5에서 최초 작성
+│   │   └── week0_spike.md            # S0-3에서 최초 작성
+│   ├── system_architecture.md        # S1 최초 작성 · S2~S3·S10 갱신 · S12 최종화
+│   ├── frames.md                     # S3 최초 작성 · S5·S7·S9 갱신 · S12 최종화
+│   ├── world_layout.md               # S5 최초 작성 · S9 갱신
 │   └── rgbd_topics.md                # S7에서 최초 작성
 ├── index.html                        # GitHub Pages 커리큘럼 뷰어
 ├── assets/                           # 웹 뷰어의 로컬 의존성
