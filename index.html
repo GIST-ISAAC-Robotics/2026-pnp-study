@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="GIST ISAAC Robotics 2026 여름 픽앤플레이스 스터디 커리큘럼과 진행 상황">
+  <meta name="theme-color" content="#171717">
+  <title>2026 픽앤플레이스 스터디 · ISAAC Robotics</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css">
+  <style>
+    :root {
+      --crimson: #bf2b25;
+      --crimson-deep: #971e19;
+      --crimson-dark: #6b1411;
+      --gradient-start: #4f100e;
+      --gradient-mid: #7b1815;
+      --ink: #171717;
+      --body: #4d4d4d;
+      --mute: #888888;
+      --canvas: #ffffff;
+      --canvas-soft: #fafafa;
+      --canvas-soft-2: #f5f5f5;
+      --accent-soft: #f3f1f1;
+      --accent-border: #d8cfcf;
+      --hairline: #ebebeb;
+      --hairline-strong: #a1a1a1;
+      --positive: #1a7f4b;
+      --warning: #b06a00;
+      --negative: #971e19;
+      --content: 1440px;
+      --reader: 1180px;
+      --topbar-height: 68px;
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --shadow-1: 0 1px 1px #00000005, 0 2px 2px #0000000a, inset 0 0 0 1px #00000008;
+      --shadow-2: 0 1px 2px #00000008, 0 8px 28px #0000000a, inset 0 0 0 1px #00000008;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-height) + 22px); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas-soft);
+      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      letter-spacing: -0.12px;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    a { color: inherit; }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    img { max-width: 100%; }
+    ::selection { color: var(--ink); background: #d8cfcf; }
+
+    .skip-link {
+      position: fixed;
+      z-index: 200;
+      top: 10px;
+      left: 10px;
+      padding: 10px 14px;
+      color: white;
+      background: var(--ink);
+      border-radius: 8px;
+      transform: translateY(-150%);
+      transition: transform .18s ease;
+    }
+    .skip-link:focus { transform: translateY(0); }
+    .visually-hidden {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0 0 0 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    .scroll-progress {
+      position: fixed;
+      z-index: 180;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background: var(--crimson);
+      transition: width .08s linear;
+    }
+
+    .topbar {
+      position: sticky;
+      z-index: 100;
+      top: 0;
+      height: var(--topbar-height);
+      border-bottom: 1px solid #ffffff14;
+      background: #171717ed;
+      backdrop-filter: blur(18px);
+    }
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: min(calc(100% - 48px), var(--content));
+      height: 100%;
+      margin: 0 auto;
+    }
+    .wordmark {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      color: white;
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: .25px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .wordmark-mark {
+      width: 11px;
+      height: 11px;
+      background: var(--crimson);
+      border-radius: 50%;
+      box-shadow: 0 0 0 5px #bf2b2524;
+    }
+    .topnav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .topnav a {
+      padding: 9px 12px;
+      color: #ffffffa8;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 560;
+      text-decoration: none;
+      transition: color .18s ease, background .18s ease;
+    }
+    .topnav a:hover,
+    .topnav a:focus-visible {
+      color: white;
+      background: #ffffff0d;
+    }
+    .topnav .topnav-accent {
+      margin-left: 6px;
+      color: white;
+      background: var(--crimson);
+    }
+    .topnav .topnav-accent:hover,
+    .topnav .topnav-accent:focus-visible { background: var(--crimson-deep); }
+    .menu-button {
+      display: none;
+      width: 42px;
+      height: 42px;
+      color: white;
+      border: 1px solid #ffffff1f;
+      background: #ffffff0a;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .hero {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      color: white;
+      background:
+        linear-gradient(125deg, var(--gradient-start) 0%, var(--gradient-mid) 42%, var(--crimson) 100%);
+    }
+    .hero::before {
+      position: absolute;
+      z-index: -2;
+      inset: -40%;
+      content: "";
+      opacity: .28;
+      filter: blur(110px);
+      background:
+        radial-gradient(circle at 18% 42%, #007cf0 0 12%, transparent 34%),
+        radial-gradient(circle at 48% 12%, #7928ca 0 10%, transparent 31%),
+        radial-gradient(circle at 79% 36%, #ff0080 0 8%, transparent 29%),
+        radial-gradient(circle at 70% 72%, #f9cb28 0 7%, transparent 27%);
+      transform: scale(1.05);
+    }
+    .hero::after {
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      content: "";
+      background:
+        linear-gradient(90deg, #2e0909b8 0%, #4f100e70 52%, #6b141130 100%),
+        linear-gradient(180deg, transparent 62%, #17171736 100%);
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(310px, .55fr);
+      gap: 56px;
+      align-items: end;
+      width: min(calc(100% - 48px), var(--content));
+      min-height: 570px;
+      margin: 0 auto;
+      padding: 92px 0 70px;
+    }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 22px;
+      color: #ffffffad;
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .75px;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      width: 28px;
+      height: 2px;
+      content: "";
+      background: currentColor;
+    }
+    .hero h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(46px, 6.2vw, 82px);
+      font-weight: 700;
+      line-height: .99;
+      letter-spacing: clamp(-3.2px, -.045em, -1.6px);
+    }
+    .hero h1 span {
+      display: block;
+      margin-top: 12px;
+      color: #ffffffa8;
+      font-size: .57em;
+      line-height: 1.15;
+      letter-spacing: -1.7px;
+    }
+    .hero-lead {
+      max-width: 760px;
+      margin: 28px 0 0;
+      color: #ffffffc2;
+      font-size: clamp(17px, 1.6vw, 21px);
+      line-height: 1.65;
+      letter-spacing: -.35px;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 34px;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 650;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .18s ease, color .18s ease, background .18s ease, border-color .18s ease;
+    }
+    .button:hover { transform: translateY(-1px); }
+    .button-light { color: var(--ink); background: white; }
+    .button-light:hover { background: #f3f3f3; }
+    .button-ghost-light {
+      color: white;
+      border-color: #ffffff2b;
+      background: #ffffff0b;
+    }
+    .button-ghost-light:hover { background: #ffffff15; }
+    .button-crimson { color: white; background: var(--crimson); }
+    .button-crimson:hover { background: var(--crimson-deep); }
+    .button-secondary {
+      color: var(--ink);
+      border-color: var(--hairline);
+      background: white;
+    }
+
+    .hero-panel {
+      padding: 28px;
+      border: 1px solid #ffffff1d;
+      background: #1717178a;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 28px 80px #2c05072e, inset 0 0 0 1px #ffffff08;
+      backdrop-filter: blur(18px);
+    }
+    .hero-panel-label {
+      margin: 0;
+      color: #ffffff7d;
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: .75px;
+      text-transform: uppercase;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+      padding: 7px 11px;
+      color: white;
+      background: #ffffff0d;
+      border: 1px solid #ffffff1c;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 620;
+    }
+    .status-pill::before {
+      width: 8px;
+      height: 8px;
+      content: "";
+      background: #e4b34a;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px #e4b34a1f;
+    }
+    .hero-panel h2 {
+      margin: 18px 0 0;
+      color: white;
+      font-size: 27px;
+      line-height: 1.25;
+      letter-spacing: -.8px;
+    }
+    .hero-panel > p:not(.hero-panel-label) {
+      margin: 12px 0 0;
+      color: #ffffff9c;
+      font-size: 14px;
+    }
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .hero-stat {
+      padding: 14px 10px;
+      text-align: center;
+      background: #ffffff08;
+      border-radius: 12px;
+    }
+    .hero-stat b {
+      display: block;
+      color: white;
+      font-size: 18px;
+      line-height: 1.15;
+      font-feature-settings: "tnum";
+    }
+    .hero-stat span {
+      display: block;
+      margin-top: 5px;
+      color: #ffffff6d;
+      font-size: 10px;
+      letter-spacing: .35px;
+    }
+
+    .status-strip {
+      border-bottom: 1px solid var(--hairline);
+      background: white;
+    }
+    .status-strip-inner {
+      display: grid;
+      grid-template-columns: 1.4fr repeat(3, minmax(120px, .6fr));
+      width: min(calc(100% - 48px), var(--content));
+      margin: 0 auto;
+    }
+    .strip-copy,
+    .strip-stat {
+      min-height: 96px;
+      padding: 22px 24px;
+      border-right: 1px solid var(--hairline);
+    }
+    .strip-copy { padding-left: 0; }
+    .strip-stat:last-child { border-right: 0; }
+    .strip-copy b,
+    .strip-stat b {
+      display: block;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+    .strip-copy span,
+    .strip-stat span {
+      display: block;
+      margin-top: 6px;
+      color: var(--mute);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .strip-stat b { color: var(--crimson); font-size: 18px; }
+
+    main { overflow: clip; }
+    .section {
+      width: min(calc(100% - 48px), var(--content));
+      margin: 0 auto;
+      padding: 104px 0;
+    }
+    .section-tight { padding-top: 80px; padding-bottom: 80px; }
+    .section-header {
+      max-width: 900px;
+      margin-bottom: 42px;
+    }
+    .section-header .eyebrow {
+      margin-bottom: 18px;
+      color: var(--crimson);
+    }
+    .section-header h2 {
+      margin: 0;
+      font-size: clamp(34px, 4vw, 54px);
+      font-weight: 700;
+      line-height: 1.09;
+      letter-spacing: clamp(-2.1px, -.04em, -1.1px);
+    }
+    .section-header > p:not(.eyebrow) {
+      max-width: 760px;
+      margin: 20px 0 0;
+      color: var(--body);
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 18px;
+    }
+    .card {
+      padding: 28px;
+      border: 1px solid var(--hairline);
+      background: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-1);
+    }
+    .card-label {
+      margin: 0;
+      color: var(--crimson);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: .72px;
+      text-transform: uppercase;
+    }
+    .card h3 {
+      margin: 10px 0 0;
+      font-size: 24px;
+      line-height: 1.3;
+      letter-spacing: -.7px;
+    }
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      margin-top: 28px;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid var(--hairline);
+      background: var(--hairline);
+      border-radius: 12px;
+      list-style: none;
+    }
+    .pipeline-step {
+      min-height: 126px;
+      padding: 18px;
+      background: var(--canvas-soft);
+    }
+    .pipeline-step b {
+      display: block;
+      color: var(--crimson);
+      font-size: 12px;
+      letter-spacing: .5px;
+    }
+    .pipeline-step span {
+      display: block;
+      margin-top: 18px;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+    .snapshot-list {
+      display: grid;
+      gap: 0;
+      margin-top: 20px;
+    }
+    .snapshot-row {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 18px;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--hairline);
+      font-size: 14px;
+    }
+    .snapshot-row:last-child { border-bottom: 0; }
+    .snapshot-row b { font-size: 12px; letter-spacing: .35px; }
+    .snapshot-row span { color: var(--body); }
+    .callout {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 24px 28px;
+      border: 1px solid var(--accent-border);
+      border-left: 4px solid var(--crimson);
+      background: var(--accent-soft);
+      border-radius: var(--radius-sm);
+    }
+    .callout p { margin: 0; color: var(--body); font-size: 14px; }
+    .callout strong { color: var(--ink); }
+
+    .progress-section {
+      color: white;
+      background: var(--ink);
+    }
+    .progress-section .section-header h2 { color: white; }
+    .progress-section .section-header > p:not(.eyebrow) { color: #ffffff9a; }
+    .progress-meta {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .progress-tile {
+      min-height: 126px;
+      padding: 24px;
+      border: 1px solid #ffffff12;
+      background: #ffffff08;
+      border-radius: var(--radius-md);
+    }
+    .progress-tile small {
+      display: block;
+      color: #ffffff6d;
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: .65px;
+      text-transform: uppercase;
+    }
+    .progress-tile b {
+      display: block;
+      margin-top: 14px;
+      color: white;
+      font-size: 20px;
+      line-height: 1.35;
+      letter-spacing: -.45px;
+    }
+    .progress-card {
+      padding: 34px;
+      color: var(--ink);
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 24px 70px #0000002b;
+    }
+
+    .reader-section {
+      width: 100%;
+      padding: 104px 0 120px;
+      background: var(--canvas-soft);
+    }
+    .reader-heading {
+      width: min(calc(100% - 48px), var(--content));
+      margin: 0 auto 44px;
+    }
+    .reader-heading-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .reader-section-header { margin-bottom: 0; }
+    .reader-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .reader-grid {
+      display: grid;
+      grid-template-columns: 282px minmax(0, var(--reader));
+      gap: 28px;
+      justify-content: center;
+      width: min(calc(100% - 48px), calc(var(--reader) + 310px));
+      margin: 0 auto;
+    }
+    .reader-rail {
+      position: sticky;
+      top: calc(var(--topbar-height) + 20px);
+      align-self: start;
+      max-height: calc(100vh - var(--topbar-height) - 40px);
+      padding: 18px;
+      overflow: auto;
+      border: 1px solid var(--hairline);
+      background: #ffffffdd;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-1);
+      backdrop-filter: blur(14px);
+    }
+    .rail-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 12px;
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .rail-toggle {
+      display: none;
+      padding: 4px 8px;
+      border: 1px solid var(--hairline);
+      background: white;
+      border-radius: 7px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .search-wrap { position: relative; }
+    .search-input {
+      width: 100%;
+      height: 42px;
+      padding: 0 36px 0 13px;
+      color: var(--ink);
+      outline: none;
+      border: 1px solid var(--hairline);
+      background: var(--canvas-soft);
+      border-radius: 10px;
+      font-size: 13px;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    .search-input:focus {
+      border-color: var(--accent-border);
+      box-shadow: 0 0 0 3px #bf2b2510;
+    }
+    .search-clear {
+      position: absolute;
+      top: 6px;
+      right: 5px;
+      width: 30px;
+      height: 30px;
+      color: var(--mute);
+      border: 0;
+      background: transparent;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+    .search-status {
+      min-height: 30px;
+      margin: 8px 2px 0;
+      color: var(--mute);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    .rail-tools {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin: 6px 0 14px;
+    }
+    .rail-tool {
+      min-height: 34px;
+      border: 1px solid var(--hairline);
+      background: white;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .toc {
+      display: grid;
+      gap: 2px;
+      padding-top: 14px;
+      border-top: 1px solid var(--hairline);
+    }
+    .toc a {
+      display: block;
+      padding: 8px 9px;
+      color: var(--body);
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+      text-decoration: none;
+      transition: color .16s ease, background .16s ease;
+    }
+    .toc a:hover { color: var(--ink); background: var(--canvas-soft-2); }
+    .toc a.active {
+      color: var(--crimson-deep);
+      background: var(--accent-soft);
+      font-weight: 650;
+    }
+    .toc a.is-hidden { display: none; }
+
+    .curriculum-shell {
+      min-width: 0;
+      padding: 44px;
+      border: 1px solid var(--hairline);
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-2);
+    }
+    .loading {
+      display: grid;
+      gap: 12px;
+      padding: 16px 0;
+    }
+    .loading-line {
+      height: 14px;
+      background: linear-gradient(90deg, var(--canvas-soft-2) 20%, #eeeeee 50%, var(--canvas-soft-2) 80%);
+      background-size: 220% 100%;
+      border-radius: 999px;
+      animation: shimmer 1.35s infinite linear;
+    }
+    .loading-line:nth-child(2n) { width: 82%; }
+    .loading-line:nth-child(3n) { width: 64%; }
+    @keyframes shimmer { to { background-position: -220% 0; } }
+    .load-error {
+      padding: 24px;
+      color: var(--negative);
+      border: 1px solid var(--accent-border);
+      background: var(--accent-soft);
+      border-radius: 12px;
+    }
+
+    .chapter {
+      border-bottom: 1px solid var(--hairline);
+      scroll-margin-top: calc(var(--topbar-height) + 18px);
+    }
+    .chapter:last-child { border-bottom: 0; }
+    .chapter.is-hidden { display: none; }
+    .chapter-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 42px 0 28px;
+    }
+    .chapter:first-child .chapter-head { padding-top: 0; }
+    .chapter-head h1 {
+      margin: 0;
+      font-size: clamp(29px, 3.3vw, 43px);
+      font-weight: 700;
+      line-height: 1.16;
+      letter-spacing: -1.4px;
+      scroll-margin-top: calc(var(--topbar-height) + 20px);
+    }
+    .chapter-toggle {
+      flex: 0 0 auto;
+      min-width: 58px;
+      height: 34px;
+      margin-top: 4px;
+      color: var(--body);
+      border: 1px solid var(--hairline);
+      background: var(--canvas-soft);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .chapter-toggle:hover { color: var(--crimson-deep); border-color: var(--accent-border); }
+    .chapter-body { padding: 0 0 46px; }
+    .chapter.is-collapsed .chapter-body { display: none; }
+    .chapter.is-collapsed .chapter-head { padding-bottom: 30px; }
+
+    .markdown-body { overflow-wrap: anywhere; }
+    .markdown-body > :first-child { margin-top: 0; }
+    .markdown-body > :last-child { margin-bottom: 0; }
+    .markdown-body h2,
+    .markdown-body h3,
+    .markdown-body h4 {
+      color: var(--ink);
+      scroll-margin-top: calc(var(--topbar-height) + 24px);
+    }
+    .markdown-body h2 {
+      margin: 52px 0 18px;
+      padding-top: 8px;
+      font-size: 27px;
+      font-weight: 650;
+      line-height: 1.25;
+      letter-spacing: -.75px;
+    }
+    .markdown-body h3 {
+      margin: 38px 0 14px;
+      font-size: 20px;
+      font-weight: 650;
+      line-height: 1.35;
+      letter-spacing: -.4px;
+    }
+    .markdown-body h4 {
+      margin: 30px 0 12px;
+      color: var(--crimson-dark);
+      font-size: 16px;
+      font-weight: 650;
+    }
+    .markdown-body p { margin: 14px 0; color: var(--body); }
+    .markdown-body strong { color: var(--ink); font-weight: 650; }
+    .markdown-body a {
+      color: var(--crimson-deep);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+    .markdown-body ul,
+    .markdown-body ol {
+      margin: 14px 0;
+      padding-left: 24px;
+      color: var(--body);
+    }
+    .markdown-body li { margin: 7px 0; padding-left: 3px; }
+    .markdown-body li::marker { color: var(--crimson); font-weight: 650; }
+    .markdown-body blockquote {
+      margin: 22px 0;
+      padding: 17px 20px;
+      border: 1px solid var(--accent-border);
+      border-left: 4px solid var(--crimson);
+      background: var(--accent-soft);
+      border-radius: 0 10px 10px 0;
+    }
+    .markdown-body blockquote p { margin: 0; color: var(--ink); }
+    .markdown-body hr {
+      margin: 44px 0;
+      border: 0;
+      border-top: 1px solid var(--hairline);
+    }
+    .markdown-body code {
+      padding: .16em .4em;
+      color: var(--crimson-dark);
+      background: var(--accent-soft);
+      border: 1px solid var(--hairline);
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: .9em;
+      font-feature-settings: "tnum";
+    }
+    .code-wrap {
+      position: relative;
+      margin: 22px 0;
+    }
+    .markdown-body pre {
+      margin: 0;
+      padding: 22px;
+      overflow: auto;
+      color: #f6f6f6;
+      background: var(--ink);
+      border-radius: 12px;
+      box-shadow: inset 0 0 0 1px #ffffff0b;
+    }
+    .markdown-body pre code {
+      padding: 0;
+      color: inherit;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre;
+    }
+    .code-copy {
+      position: absolute;
+      z-index: 2;
+      top: 9px;
+      right: 9px;
+      height: 30px;
+      padding: 0 10px;
+      color: #ffffff8f;
+      border: 1px solid #ffffff14;
+      background: #ffffff0b;
+      border-radius: 7px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .code-copy:hover { color: white; background: #ffffff14; }
+    .table-scroll {
+      margin: 22px 0;
+      overflow-x: auto;
+      border: 1px solid var(--hairline);
+      border-radius: 12px;
+    }
+    .markdown-body table {
+      width: 100%;
+      min-width: 660px;
+      border-collapse: collapse;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .markdown-body th,
+    .markdown-body td {
+      padding: 12px 14px;
+      border-right: 1px solid var(--hairline);
+      border-bottom: 1px solid var(--hairline);
+      text-align: left;
+      vertical-align: top;
+    }
+    .markdown-body tr:last-child td { border-bottom: 0; }
+    .markdown-body th:last-child,
+    .markdown-body td:last-child { border-right: 0; }
+    .markdown-body th {
+      color: var(--ink);
+      background: var(--canvas-soft-2);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: .35px;
+    }
+    .markdown-body td { color: var(--body); background: white; }
+    .markdown-body tbody tr:hover td { background: #fcfcfc; }
+    .markdown-body input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      margin: 0 6px 0 0;
+      accent-color: var(--crimson);
+      vertical-align: -2px;
+    }
+
+    .archive-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+    .archive-card {
+      position: relative;
+      min-height: 280px;
+      padding: 32px;
+      overflow: hidden;
+      border: 1px solid var(--hairline);
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-1);
+    }
+    .archive-card::after {
+      position: absolute;
+      right: -30px;
+      bottom: -70px;
+      color: var(--canvas-soft-2);
+      content: attr(data-no);
+      font-size: 190px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -12px;
+      pointer-events: none;
+    }
+    .archive-badge {
+      display: inline-flex;
+      padding: 6px 9px;
+      color: var(--crimson-deep);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: .55px;
+      text-transform: uppercase;
+    }
+    .archive-card h3 {
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+      margin: 22px 0 0;
+      font-size: 27px;
+      line-height: 1.25;
+      letter-spacing: -.85px;
+    }
+    .archive-card p {
+      position: relative;
+      z-index: 1;
+      max-width: 580px;
+      margin: 14px 0 26px;
+      color: var(--body);
+      font-size: 14px;
+    }
+    .archive-card a { position: relative; z-index: 1; }
+
+    footer {
+      color: white;
+      background: var(--ink);
+    }
+    .footer-inner {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      width: min(calc(100% - 48px), var(--content));
+      margin: 0 auto;
+      padding: 54px 0;
+    }
+    .footer-inner p {
+      margin: 8px 0 0;
+      color: #ffffff72;
+      font-size: 12px;
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: flex-end;
+    }
+    .footer-links a {
+      color: #ffffff82;
+      font-size: 12px;
+      text-decoration: none;
+    }
+    .footer-links a:hover { color: white; }
+
+    .back-to-top {
+      position: fixed;
+      z-index: 80;
+      right: 24px;
+      bottom: 24px;
+      width: 44px;
+      height: 44px;
+      color: white;
+      border: 0;
+      background: var(--crimson);
+      border-radius: 50%;
+      box-shadow: 0 10px 32px #6b141140;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      cursor: pointer;
+      transition: opacity .18s ease, transform .18s ease, background .18s ease;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .back-to-top:hover { background: var(--crimson-deep); }
+    .toast {
+      position: fixed;
+      z-index: 160;
+      left: 50%;
+      bottom: 24px;
+      max-width: calc(100% - 48px);
+      padding: 10px 15px;
+      color: white;
+      background: #171717f2;
+      border: 1px solid #ffffff18;
+      border-radius: 999px;
+      box-shadow: 0 12px 40px #00000035;
+      font-size: 12px;
+      opacity: 0;
+      transform: translate(-50%, 10px);
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 1160px) {
+      .topnav a:not(.topnav-accent) { display: none; }
+      .hero-inner { grid-template-columns: 1fr .48fr; gap: 28px; }
+      .overview-grid { grid-template-columns: 1fr; }
+      .reader-grid {
+        grid-template-columns: 246px minmax(0, 1fr);
+        width: min(calc(100% - 36px), var(--content));
+      }
+      .curriculum-shell { padding: 36px; }
+      .pipeline { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 860px) {
+      :root { --topbar-height: 62px; }
+      .topbar-inner,
+      .hero-inner,
+      .status-strip-inner,
+      .section,
+      .reader-heading,
+      .footer-inner { width: min(calc(100% - 28px), var(--content)); }
+      .topnav {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 14px;
+        display: none;
+        width: min(280px, calc(100vw - 28px));
+        padding: 10px;
+        border: 1px solid #ffffff16;
+        background: #171717f7;
+        border-radius: 14px;
+        box-shadow: 0 18px 50px #00000038;
+      }
+      .topnav.open { display: grid; }
+      .topnav a,
+      .topnav a:not(.topnav-accent) {
+        display: block;
+        margin: 0;
+        padding: 11px 12px;
+      }
+      .menu-button { display: inline-grid; place-items: center; }
+      .hero-inner {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        padding: 76px 0 48px;
+      }
+      .hero-panel { max-width: 560px; }
+      .status-strip-inner { grid-template-columns: repeat(3, 1fr); }
+      .strip-copy {
+        grid-column: 1 / -1;
+        min-height: auto;
+        padding: 18px 0;
+        border-right: 0;
+        border-bottom: 1px solid var(--hairline);
+      }
+      .strip-stat { min-height: 82px; padding: 17px 12px; }
+      .section { padding: 76px 0; }
+      .section-tight { padding-top: 62px; padding-bottom: 62px; }
+      .progress-meta { grid-template-columns: 1fr; }
+      .progress-tile { min-height: auto; }
+      .reader-heading-row { align-items: flex-start; flex-direction: column; }
+      .reader-actions { justify-content: flex-start; }
+      .reader-grid {
+        display: block;
+        width: min(calc(100% - 28px), var(--reader));
+      }
+      .reader-rail {
+        position: static;
+        max-height: none;
+        margin-bottom: 14px;
+      }
+      .rail-toggle { display: inline-block; }
+      .reader-rail .rail-tools,
+      .reader-rail .toc { display: none; }
+      .reader-rail.open .rail-tools { display: grid; }
+      .reader-rail.open .toc { display: grid; }
+      .curriculum-shell { padding: 28px; border-radius: var(--radius-md); }
+      .archive-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 580px) {
+      body { font-size: 15px; }
+      .hero h1 { font-size: clamp(42px, 13vw, 60px); }
+      .hero h1 span { letter-spacing: -1px; }
+      .hero-panel { padding: 22px; }
+      .hero-stats { grid-template-columns: 1fr 1fr 1fr; }
+      .status-strip-inner { grid-template-columns: 1fr; }
+      .strip-stat {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        align-items: center;
+        min-height: 68px;
+        padding: 13px 0;
+        border-right: 0;
+        border-bottom: 1px solid var(--hairline);
+      }
+      .strip-stat span { margin-top: 0; }
+      .section-header { margin-bottom: 30px; }
+      .pipeline { grid-template-columns: 1fr; }
+      .pipeline-step { min-height: auto; }
+      .pipeline-step span { margin-top: 8px; }
+      .callout { align-items: flex-start; flex-direction: column; }
+      .progress-card { padding: 22px; border-radius: var(--radius-md); }
+      .curriculum-shell { padding: 20px; }
+      .chapter-head { gap: 10px; padding: 34px 0 22px; }
+      .chapter-head h1 { font-size: 29px; }
+      .chapter-toggle { min-width: 52px; }
+      .markdown-body h2 { margin-top: 42px; font-size: 23px; }
+      .markdown-body h3 { font-size: 18px; }
+      .markdown-body blockquote { padding: 14px 16px; }
+      .archive-card { min-height: 250px; padding: 24px; }
+      .footer-inner { align-items: flex-start; flex-direction: column; }
+      .footer-links { justify-content: flex-start; }
+      .back-to-top { right: 14px; bottom: 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+
+    @media print {
+      :root { --topbar-height: 0px; }
+      body { color: #111; background: white; font-size: 10pt; }
+      .topbar,
+      .scroll-progress,
+      .hero,
+      .status-strip,
+      #overview,
+      #progress,
+      .reader-heading,
+      .reader-rail,
+      #archive,
+      footer,
+      .back-to-top,
+      .toast,
+      .chapter-toggle,
+      .code-copy { display: none !important; }
+      .reader-section { padding: 0; background: white; }
+      .reader-grid { display: block; width: 100%; }
+      .curriculum-shell { padding: 0; border: 0; box-shadow: none; }
+      .chapter,
+      .chapter-body { display: block !important; }
+      .chapter { break-before: page; border: 0; }
+      .chapter:first-child { break-before: auto; }
+      .chapter-head { padding-top: 0; }
+      .chapter-head h1 { font-size: 23pt; }
+      .markdown-body h2 { break-after: avoid; }
+      .table-scroll { overflow: visible; }
+      .markdown-body table { min-width: 0; font-size: 7.5pt; }
+      .markdown-body pre { white-space: pre-wrap; }
+      a { text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+  <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="wordmark" href="#top" aria-label="페이지 맨 위로">
+        <span class="wordmark-mark" aria-hidden="true"></span>
+        ISAAC Robotics · PnP Study
+      </a>
+      <nav class="topnav" id="topnav" aria-label="주요 메뉴">
+        <a href="#overview">개요</a>
+        <a href="#progress">진행 상황</a>
+        <a href="#curriculum">커리큘럼</a>
+        <a href="#archive">의사결정 기록</a>
+        <a class="topnav-accent" href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study">GitHub ↗</a>
+      </nav>
+      <button class="menu-button" id="menu-button" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="topnav">☰</button>
+    </div>
+  </header>
+
+  <div id="top"></div>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-inner">
+      <div>
+        <p class="eyebrow">2026 Summer · Pick and Place</p>
+        <h1 id="hero-title">끝까지 움직이는 시스템.<span>인식부터 반복 평가까지.</span></h1>
+        <p class="hero-lead">
+          ROS 2, Gazebo, MoveIt 2와 RGB-D를 하나의 실행 루프로 연결합니다.
+          이 페이지는 원본 Markdown을 직접 읽어 언제나 저장소의 최신 커리큘럼과 진행 기록을 보여줍니다.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-light" href="#curriculum">커리큘럼 읽기</a>
+          <a class="button button-ghost-light" href="#progress">현재 진행 보기</a>
+        </div>
+      </div>
+      <aside class="hero-panel" aria-label="현재 스터디 상태">
+        <p class="hero-panel-label">Current checkpoint</p>
+        <span class="status-pill" id="hero-status">진행 정보 불러오는 중</span>
+        <h2 id="hero-stage">Week 0 시작 전</h2>
+        <p>다음 판정: <strong id="hero-next-gate">Week 0 Gate</strong></p>
+        <div class="hero-stats">
+          <div class="hero-stat"><b>4주</b><span>본과정</span></div>
+          <div class="hero-stat"><b>13회</b><span>본 세션</span></div>
+          <div class="hero-stat"><b>2명</b><span>교차 검토</span></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="status-strip" aria-label="커리큘럼 요약">
+    <div class="status-strip-inner">
+      <div class="strip-copy">
+        <b>실행 계약과 진행 기록을 분리했습니다.</b>
+        <span><code>curriculum.md</code>는 기준, <code>progress.md</code>는 실제 수행 결과입니다.</span>
+      </div>
+      <div class="strip-stat"><b id="strip-version">최신본</b><span>실행 커리큘럼</span></div>
+      <div class="strip-stat"><b id="strip-updated">확인 중</b><span>진행 기록 갱신</span></div>
+      <div class="strip-stat"><b>Week 0 + 4</b><span>환경 검증부터 최종 평가</span></div>
+    </div>
+  </section>
+
+  <main id="main">
+    <section class="section section-tight" id="overview" aria-labelledby="overview-title">
+      <header class="section-header">
+        <p class="eyebrow">01 · Study map</p>
+        <h2 id="overview-title">한 번 움직이는 데모보다, 다시 실행되는 시스템을 만듭니다.</h2>
+        <p>고정 좌표 baseline으로 조작을 먼저 닫고, RGB-D 인식과 평가를 순서대로 연결합니다. 각 주의 Gate가 다음 주의 입력 계약을 보장합니다.</p>
+      </header>
+
+      <div class="overview-grid">
+        <article class="card">
+          <p class="card-label">End-to-end loop</p>
+          <h3 id="pipeline-title">reset에서 CSV까지 이어지는 한 회의 실행</h3>
+          <ol class="pipeline">
+            <li class="pipeline-step"><b>01</b><span>Reset<br>초기 상태 복원</span></li>
+            <li class="pipeline-step"><b>02</b><span>Perception<br>RGB-D 목표 추정</span></li>
+            <li class="pipeline-step"><b>03</b><span>Planning<br>검증·경로 생성</span></li>
+            <li class="pipeline-step"><b>04</b><span>Manipulation<br>pick·transport·place</span></li>
+            <li class="pipeline-step"><b>05</b><span>Evaluation<br>GT·로그·CSV</span></li>
+          </ol>
+        </article>
+
+        <article class="card">
+          <p class="card-label">Fixed scope</p>
+          <h3>이번 스터디의 고정 범위</h3>
+          <div class="snapshot-list">
+            <div class="snapshot-row"><b>환경</b><span>Ubuntu 24.04 · ROS 2 Jazzy · Gazebo Harmonic</span></div>
+            <div class="snapshot-row"><b>조작</b><span>OpenMANIPULATOR-X · MoveIt 2</span></div>
+            <div class="snapshot-row"><b>인지</b><span>RGB-D · HSV + depth · TF2</span></div>
+            <div class="snapshot-row"><b>완료</b><span>반복 runner · 오류 분류 · CSV · 재실행 문서</span></div>
+          </div>
+        </article>
+
+        <aside class="callout" aria-label="문서 우선순위">
+          <p><strong>문서 우선순위:</strong> 구현·평가 기준은 커리큘럼, 실제 수행 판정은 진행 로그를 따릅니다.</p>
+          <a class="button button-secondary" href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study#readme">저장소 안내 보기</a>
+        </aside>
+      </div>
+    </section>
+
+    <section class="progress-section" id="progress" aria-labelledby="progress-title">
+      <div class="section">
+        <header class="section-header">
+          <p class="eyebrow">02 · Live progress</p>
+          <h2 id="progress-title">현재 위치와 다음 행동.</h2>
+          <p><code>progress.md</code>의 내용을 그대로 불러옵니다. 회차 로그 한 곳만 갱신하면 이 화면도 함께 바뀝니다.</p>
+        </header>
+
+        <div class="progress-meta">
+          <div class="progress-tile"><small>Current stage</small><b id="progress-stage">불러오는 중</b></div>
+          <div class="progress-tile"><small>Next gate</small><b id="progress-gate">불러오는 중</b></div>
+          <div class="progress-tile"><small>Last updated</small><b id="progress-updated">불러오는 중</b></div>
+        </div>
+
+        <article class="progress-card markdown-body" id="progress-content" aria-live="polite">
+          <div class="loading" role="status" aria-label="진행 상황 불러오는 중">
+            <span class="loading-line"></span><span class="loading-line"></span><span class="loading-line"></span>
+            <span class="loading-line"></span><span class="loading-line"></span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="reader-section" id="curriculum" aria-labelledby="curriculum-title">
+      <div class="reader-heading">
+        <p class="eyebrow">03 · Curriculum reader</p>
+        <div class="reader-heading-row">
+          <header class="section-header reader-section-header">
+            <h2 id="curriculum-title">실행 커리큘럼 전체.</h2>
+            <p>장별 접기, 전체 검색, 자동 목차와 코드 복사를 지원합니다. 내용은 <code>curriculum.md</code>가 유일한 원본입니다.</p>
+          </header>
+          <div class="reader-actions">
+            <button class="button button-secondary" type="button" id="copy-markdown">MD 전체 복사</button>
+            <button class="button button-secondary" type="button" id="print-page">인쇄</button>
+            <a class="button button-crimson" href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/blob/main/curriculum.md">원본 열기</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="reader-grid">
+        <aside class="reader-rail" id="reader-rail" aria-label="커리큘럼 탐색">
+          <p class="rail-title">
+            Document map
+            <button class="rail-toggle" id="rail-toggle" type="button" aria-expanded="false">목차 열기</button>
+          </p>
+          <div class="search-wrap">
+            <label class="visually-hidden" for="document-search">커리큘럼 검색</label>
+            <input class="search-input" id="document-search" type="search" placeholder="장 전체 검색 · Ctrl K" autocomplete="off">
+            <button class="search-clear" id="search-clear" type="button" aria-label="검색어 지우기">×</button>
+          </div>
+          <p class="search-status" id="search-status">커리큘럼을 불러오는 중입니다.</p>
+          <div class="rail-tools">
+            <button class="rail-tool" id="expand-all" type="button">모두 펼치기</button>
+            <button class="rail-tool" id="collapse-all" type="button">모두 접기</button>
+          </div>
+          <nav class="toc" id="toc" aria-label="커리큘럼 자동 목차"></nav>
+        </aside>
+
+        <article class="curriculum-shell markdown-body" id="curriculum-content" aria-live="polite">
+          <div class="loading" role="status" aria-label="커리큘럼 불러오는 중">
+            <span class="loading-line"></span><span class="loading-line"></span><span class="loading-line"></span>
+            <span class="loading-line"></span><span class="loading-line"></span><span class="loading-line"></span>
+            <span class="loading-line"></span><span class="loading-line"></span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="archive" aria-labelledby="archive-title">
+      <header class="section-header">
+        <p class="eyebrow">04 · Decision archive</p>
+        <h2 id="archive-title">결론보다 과정이 필요할 때.</h2>
+        <p>아래 문서는 현재 실행 지침이 아니라, 왜 이 커리큘럼을 택했는지 보여 주는 의사결정 기록입니다. 다음 스터디의 선택지를 설계할 때 재사용합니다.</p>
+      </header>
+
+      <div class="archive-grid">
+        <article class="archive-card" data-no="01">
+          <span class="archive-badge">Archive · Direction</span>
+          <h3>스터디 방향 선택지</h3>
+          <p>4주 동안 무엇을 남길지 여러 방향을 비교하고, 각 안의 범위·장점·위험을 정리한 최초 선택 문서입니다.</p>
+          <a class="button button-secondary" href="./01_study_direction_options.html">아카이브 열기</a>
+        </article>
+        <article class="archive-card" data-no="02">
+          <span class="archive-badge">Archive · Decisions</span>
+          <h3>B안 세부 결정 기록</h3>
+          <p>ROS 시스템 완주형을 선택한 뒤 난이도, 인식, 운반, 평가 방식을 확정하는 데 사용한 상세 의사결정 문서입니다.</p>
+          <a class="button button-secondary" href="./02_curriculum_B_decisions.html">아카이브 열기</a>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <a class="wordmark" href="#top">
+          <span class="wordmark-mark" aria-hidden="true"></span>
+          ISAAC Robotics · PnP Study
+        </a>
+        <p>GIST 로봇 동아리 ISAAC · 2026 여름 픽앤플레이스 스터디</p>
+      </div>
+      <nav class="footer-links" aria-label="하단 링크">
+        <a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study#readme">README</a>
+        <a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/blob/main/curriculum.md">Curriculum MD</a>
+        <a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/blob/main/progress.md">Progress MD</a>
+        <a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study">GitHub</a>
+      </nav>
+    </div>
+  </footer>
+
+  <button class="back-to-top" id="back-to-top" type="button" aria-label="맨 위로">↑</button>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="./assets/marked.umd.js"></script>
+  <script src="./assets/purify.min.js"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const state = {
+        curriculumRaw: "",
+        progressRaw: "",
+        chapters: [],
+      };
+
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+      function showToast(message) {
+        const toast = $("#toast");
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add("visible");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => toast.classList.remove("visible"), 1900);
+      }
+
+      async function copyText(text, message) {
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (error) {
+          const area = document.createElement("textarea");
+          area.value = text;
+          area.setAttribute("readonly", "");
+          area.style.position = "fixed";
+          area.style.opacity = "0";
+          document.body.append(area);
+          area.select();
+          document.execCommand("copy");
+          area.remove();
+        }
+        showToast(message);
+      }
+
+      function markdownToHtml(source) {
+        if (!window.marked || !window.DOMPurify) {
+          throw new Error("Markdown renderer unavailable");
+        }
+        marked.setOptions({ gfm: true, breaks: false });
+        return DOMPurify.sanitize(marked.parse(source), {
+          USE_PROFILES: { html: true },
+        });
+      }
+
+      function slugify(text) {
+        return text
+          .trim()
+          .toLocaleLowerCase("ko")
+          .replace(/[^\p{L}\p{N}\s-]/gu, "")
+          .replace(/\s/g, "-");
+      }
+
+      function assignHeadingIds(root) {
+        const seen = new Map();
+        $$("h1, h2, h3, h4, h5, h6", root).forEach((heading) => {
+          const base = slugify(heading.textContent) || "section";
+          const count = seen.get(base) || 0;
+          seen.set(base, count + 1);
+          heading.id = count ? `${base}-${count}` : base;
+        });
+      }
+
+      function decorateMarkdown(root) {
+        assignHeadingIds(root);
+
+        $$("table", root).forEach((table) => {
+          if (table.parentElement?.classList.contains("table-scroll")) return;
+          const wrap = document.createElement("div");
+          wrap.className = "table-scroll";
+          table.before(wrap);
+          wrap.append(table);
+        });
+
+        $$("pre", root).forEach((pre) => {
+          if (pre.parentElement?.classList.contains("code-wrap")) return;
+          const wrap = document.createElement("div");
+          wrap.className = "code-wrap";
+          const button = document.createElement("button");
+          button.className = "code-copy";
+          button.type = "button";
+          button.textContent = "복사";
+          button.addEventListener("click", () => {
+            copyText(pre.textContent, "코드 블록을 복사했습니다.");
+          });
+          pre.before(wrap);
+          wrap.append(pre, button);
+        });
+
+        $$("a", root).forEach((link) => {
+          if (/^https?:\/\//i.test(link.getAttribute("href") || "")) {
+            link.target = "_blank";
+            link.rel = "noreferrer";
+          }
+        });
+      }
+
+      function fieldFromProgress(raw, label) {
+        const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const match = raw.match(new RegExp(`\\*\\*${escaped}:\\*\\*\\s*([^\\n]+)`));
+        return match ? match[1].trim().replace(/\s{2,}$/, "") : "";
+      }
+
+      function renderProgress(raw) {
+        state.progressRaw = raw;
+        const stage = fieldFromProgress(raw, "현재 단계") || "progress.md 확인";
+        const gate = fieldFromProgress(raw, "다음 Gate") || "미정";
+        const updated = fieldFromProgress(raw, "마지막 업데이트") || "미정";
+
+        $("#progress-stage").textContent = stage;
+        $("#progress-gate").textContent = gate;
+        $("#progress-updated").textContent = updated;
+        $("#hero-stage").textContent = stage;
+        $("#hero-next-gate").textContent = gate;
+        $("#hero-status").textContent = stage.split("—")[0].trim();
+        $("#strip-updated").textContent = updated;
+
+        const content = $("#progress-content");
+        content.innerHTML = markdownToHtml(raw);
+        decorateMarkdown(content);
+      }
+
+      function setChapterCollapsed(chapter, collapsed) {
+        chapter.classList.toggle("is-collapsed", collapsed);
+        const button = $(".chapter-toggle", chapter);
+        if (button) {
+          button.textContent = collapsed ? "펼치기" : "접기";
+          button.setAttribute("aria-expanded", String(!collapsed));
+        }
+      }
+
+      function buildChapters(root) {
+        const nodes = Array.from(root.childNodes);
+        root.replaceChildren();
+        state.chapters = [];
+
+        let chapter = null;
+        let body = null;
+
+        nodes.forEach((node) => {
+          const isH1 = node.nodeType === Node.ELEMENT_NODE && node.tagName === "H1";
+          if (isH1) {
+            const nextChapter = document.createElement("section");
+            nextChapter.className = "chapter";
+            nextChapter.dataset.title = node.textContent;
+
+            const head = document.createElement("header");
+            head.className = "chapter-head";
+            const toggle = document.createElement("button");
+            toggle.className = "chapter-toggle";
+            toggle.type = "button";
+            toggle.textContent = "접기";
+            toggle.setAttribute("aria-expanded", "true");
+            toggle.setAttribute("aria-controls", `${node.id}-body`);
+
+            body = document.createElement("div");
+            body.className = "chapter-body";
+            body.id = `${node.id}-body`;
+
+            toggle.addEventListener("click", () => {
+              setChapterCollapsed(nextChapter, !nextChapter.classList.contains("is-collapsed"));
+            });
+
+            head.append(node, toggle);
+            nextChapter.append(head, body);
+            root.append(nextChapter);
+            state.chapters.push(nextChapter);
+            chapter = nextChapter;
+          } else if (body) {
+            body.append(node);
+          } else {
+            root.append(node);
+          }
+        });
+      }
+
+      function buildToc() {
+        const toc = $("#toc");
+        toc.replaceChildren();
+
+        state.chapters.forEach((chapter) => {
+          const heading = $("h1", chapter);
+          if (!heading) return;
+          const link = document.createElement("a");
+          link.href = `#${heading.id}`;
+          link.textContent = heading.textContent;
+          link.dataset.chapterId = heading.id;
+          toc.append(link);
+        });
+      }
+
+      function initChapterObserver() {
+        if (!("IntersectionObserver" in window)) return;
+        const headings = state.chapters.map((chapter) => $("h1", chapter)).filter(Boolean);
+        const observer = new IntersectionObserver((entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (!visible) return;
+          $$(".toc a").forEach((link) => {
+            link.classList.toggle("active", link.dataset.chapterId === visible.target.id);
+          });
+        }, { rootMargin: "-16% 0px -72% 0px", threshold: [0, .05, .3] });
+        headings.forEach((heading) => observer.observe(heading));
+      }
+
+      function applySearch() {
+        const input = $("#document-search");
+        const term = input.value.trim().toLocaleLowerCase("ko");
+        let visible = 0;
+
+        state.chapters.forEach((chapter) => {
+          const match = !term || chapter.textContent.toLocaleLowerCase("ko").includes(term);
+          chapter.classList.toggle("is-hidden", !match);
+          const heading = $("h1", chapter);
+          const tocLink = heading ? $(`.toc a[data-chapter-id="${CSS.escape(heading.id)}"]`) : null;
+          tocLink?.classList.toggle("is-hidden", !match);
+          if (match) {
+            visible += 1;
+            if (term) setChapterCollapsed(chapter, false);
+          }
+        });
+
+        $("#search-status").textContent = term
+          ? `${visible}개 장에서 “${input.value.trim()}”을 찾았습니다.`
+          : `${state.chapters.length}개 장 전체를 표시합니다.`;
+      }
+
+      function renderCurriculum(raw) {
+        state.curriculumRaw = raw;
+        const version = raw.match(/v\d+\.\d+\.\d+/i)?.[0] || "최신본";
+        $("#strip-version").textContent = version;
+        document.title = `${version} · 2026 픽앤플레이스 스터디`;
+
+        const content = $("#curriculum-content");
+        content.innerHTML = markdownToHtml(raw);
+        decorateMarkdown(content);
+        buildChapters(content);
+        buildToc();
+        initChapterObserver();
+        applySearch();
+
+        if (window.location.hash) {
+          window.requestAnimationFrame(() => {
+            const target = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+            target?.scrollIntoView();
+          });
+        }
+      }
+
+      function renderLoadError(target, fileName, error) {
+        target.innerHTML = `
+          <div class="load-error">
+            <strong>${fileName}을 불러오지 못했습니다.</strong><br>
+            잠시 후 새로고침하거나 <a href="./${fileName}">원본 파일</a>을 직접 열어 주세요.
+          </div>`;
+        console.error(error);
+      }
+
+      async function loadDocuments() {
+        const curriculumTarget = $("#curriculum-content");
+        const progressTarget = $("#progress-content");
+        const requests = [
+          fetch("./curriculum.md", { cache: "no-cache" }).then((response) => {
+            if (!response.ok) throw new Error(`curriculum.md: ${response.status}`);
+            return response.text();
+          }),
+          fetch("./progress.md", { cache: "no-cache" }).then((response) => {
+            if (!response.ok) throw new Error(`progress.md: ${response.status}`);
+            return response.text();
+          }),
+        ];
+
+        const [curriculumResult, progressResult] = await Promise.allSettled(requests);
+
+        if (curriculumResult.status === "fulfilled") {
+          renderCurriculum(curriculumResult.value);
+        } else {
+          renderLoadError(curriculumTarget, "curriculum.md", curriculumResult.reason);
+          $("#search-status").textContent = "원문을 불러오지 못했습니다.";
+        }
+
+        if (progressResult.status === "fulfilled") {
+          renderProgress(progressResult.value);
+        } else {
+          renderLoadError(progressTarget, "progress.md", progressResult.reason);
+          $("#hero-status").textContent = "진행 기록 확인 필요";
+        }
+      }
+
+      function initNavigation() {
+        const button = $("#menu-button");
+        const nav = $("#topnav");
+        button.addEventListener("click", () => {
+          const open = nav.classList.toggle("open");
+          button.setAttribute("aria-expanded", String(open));
+          button.textContent = open ? "×" : "☰";
+        });
+        $$("#topnav a").forEach((link) => link.addEventListener("click", () => {
+          nav.classList.remove("open");
+          button.setAttribute("aria-expanded", "false");
+          button.textContent = "☰";
+        }));
+
+        const rail = $("#reader-rail");
+        const railToggle = $("#rail-toggle");
+        railToggle.addEventListener("click", () => {
+          const open = rail.classList.toggle("open");
+          railToggle.setAttribute("aria-expanded", String(open));
+          railToggle.textContent = open ? "목차 닫기" : "목차 열기";
+        });
+      }
+
+      function initReaderTools() {
+        const search = $("#document-search");
+        search.addEventListener("input", applySearch);
+        $("#search-clear").addEventListener("click", () => {
+          search.value = "";
+          applySearch();
+          search.focus();
+        });
+        document.addEventListener("keydown", (event) => {
+          if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === "k") {
+            event.preventDefault();
+            search.focus();
+            document.getElementById("curriculum").scrollIntoView();
+          }
+        });
+        $("#expand-all").addEventListener("click", () => {
+          state.chapters.forEach((chapter) => setChapterCollapsed(chapter, false));
+        });
+        $("#collapse-all").addEventListener("click", () => {
+          state.chapters.forEach((chapter) => setChapterCollapsed(chapter, true));
+        });
+        $("#copy-markdown").addEventListener("click", () => {
+          if (state.curriculumRaw) copyText(state.curriculumRaw, "커리큘럼 Markdown 전체를 복사했습니다.");
+        });
+        $("#print-page").addEventListener("click", () => window.print());
+      }
+
+      function initScrollUi() {
+        const progress = $("#scroll-progress");
+        const back = $("#back-to-top");
+        const update = () => {
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          const ratio = max > 0 ? window.scrollY / max : 0;
+          progress.style.width = `${Math.min(100, ratio * 100)}%`;
+          back.classList.toggle("visible", window.scrollY > 900);
+        };
+        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("resize", update);
+        back.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+        update();
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        initNavigation();
+        initReaderTools();
+        initScrollUi();
+        loadDocuments();
+      });
+    })();
+  </script>
+</body>
+</html>
