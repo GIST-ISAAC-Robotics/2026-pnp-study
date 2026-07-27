@@ -1291,7 +1291,7 @@
           <p class="card-label">Fixed scope</p>
           <h3>이번 스터디의 고정 범위</h3>
           <div class="snapshot-list">
-            <div class="snapshot-row"><b>환경</b><span>Ubuntu 24.04 · ROS 2 Jazzy · Gazebo Harmonic</span></div>
+            <div class="snapshot-row"><b>환경</b><span>Windows + WSL2 · ROBOTIS Docker · ROS 2 Jazzy</span></div>
             <div class="snapshot-row"><b>조작</b><span>OpenMANIPULATOR-X · MoveIt 2</span></div>
             <div class="snapshot-row"><b>인지</b><span>RGB-D · HSV + depth · TF2</span></div>
             <div class="snapshot-row"><b>완료</b><span>반복 runner · 오류 분류 · CSV · 재실행 문서</span></div>
@@ -1720,11 +1720,13 @@
         button.addEventListener("click", () => {
           const open = nav.classList.toggle("open");
           button.setAttribute("aria-expanded", String(open));
+          button.setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
           button.textContent = open ? "×" : "☰";
         });
         $$("#topnav a").forEach((link) => link.addEventListener("click", () => {
           nav.classList.remove("open");
           button.setAttribute("aria-expanded", "false");
+          button.setAttribute("aria-label", "메뉴 열기");
           button.textContent = "☰";
         }));
 

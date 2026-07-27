@@ -12,7 +12,7 @@
 
 | 단계 | 상태 | 현재 결과 / 진입 조건 |
 |---|---|---|
-| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.0 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리; 구현은 아직 시작 전 |
+| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.1 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리; 구현은 아직 시작 전 |
 | Week 0 — 환경·위험 제거 | 대기 | Docker, 공식 smoke test, RGB-D·pose follower·reset·IK spike |
 | Week 1 — ROS 2 시스템 뼈대 | 대기 | Week 0 Gate 통과 후 시작 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
@@ -33,6 +33,14 @@
 세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 0](./curriculum.md#6-week-0--환경-구축과-위험-제거)을 따른다.
 
 ## 회차 로그
+
+### 2026-07-27 — 커리큘럼 v3.5.1 교차 계약 재검토
+
+- **상태:** 완료
+- **수행:** RGB-D 관측점→물체 중심 변환, 고정 object orientation과 reset 검증, 6A outer/inner action 경로, Planning Scene 소유권, 중단 batch 규칙을 처음부터 다시 추적
+- **결과:** sensor surface·tag 원점이 collision object 중심으로 오인될 여지를 제거하고, reset orientation 응답→CSV, `RunTrial → PickPlace` scope 전파와 static/dynamic scene 경계를 문서 전체에서 일치시킴. 문서 계약 교정만 완료했으며 ROS 구현은 아직 미착수
+- **다음:** Session 0-1에서 Docker 환경 구축 시작
+- **증빙:** [curriculum.md](./curriculum.md), [문서 산출물 경로](./docs/README.md)
 
 ### 2026-07-27 — 커리큘럼 v3.5.0 계약 개정
 

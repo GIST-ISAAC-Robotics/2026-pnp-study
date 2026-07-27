@@ -4,7 +4,7 @@ ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤
 
 > **현재 상태 — 2026-07-27**
 >
-> 실행 커리큘럼 `v3.5.0` 확정 · 저장소/Pages 정리 완료 · **Week 0 시작 전**
+> 실행 커리큘럼 `v3.5.1` 확정 · 저장소/Pages 정리 완료 · **Week 0 시작 전**
 
 ## 바로가기
 
@@ -21,7 +21,7 @@ ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤
 |---|---|
 | 기간 | 시작 전 Week 0 + 본과정 4주 |
 | 인원 | 2명 |
-| 환경 | Ubuntu 24.04 · ROS 2 Jazzy · Gazebo Harmonic · MoveIt 2 |
+| 환경 | Windows + WSL2 Ubuntu 24.04 · ROBOTIS 공식 Docker · ROS 2 Jazzy · Gazebo Harmonic · MoveIt 2 |
 | 대상 | OpenMANIPULATOR-X 시뮬레이션 |
 | 최종 목표 | RGB-D 인식 → TF 변환 → pick → transport/place → 반복 평가·CSV |
 | 운영 방식 | 매 회차 실행 증빙과 로그를 남기고 Week별 Gate로 다음 단계 진입 여부 판정 |

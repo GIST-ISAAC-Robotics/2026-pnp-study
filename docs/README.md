@@ -22,7 +22,7 @@ docs/
 | `docs/setup/week0_spike.md` | S0-2~S0-3 | `ik_mode`와 status, `planning_frame`, `reset_backend`, RGB-depth registration/frame, T1/T0 spike 결과, 관련 config hash와 측정 로그 링크 |
 | `docs/session01_ros_graph.md` | S1 | node/topic/service/action 목록, QoS, action cancel/timeout, `/task/status` heartbeat, ROS graph 캡처 또는 명령 결과 |
 | `docs/frames.md` | S3 | `planning_frame`, `link1`, `eef_frame`, `grasp_frame`, camera optical frame, world frame, TF tree, 접근축과 부호 규약 |
-| `docs/world_layout.md` | S5 | table/cube/camera 위치와 치수, model/object ID, frame 이름, 조명, reset initial pose, PosePublisher와 GT bridge 설정, place threshold 계산 입력 |
+| `docs/world_layout.md` | S5 | table/cube/camera 위치와 치수, model/object ID, frame 이름, 조명, reset initial pose와 position/orientation/속도 threshold, PosePublisher와 GT bridge 설정, `surface_to_center_offset_source`와 P2 `tag_to_object_center_offset_tag`, 고정 yaw·canonical object orientation, place threshold 계산 입력 |
 | `docs/rgbd_topics.md` | S7 | RGB/depth/CameraInfo topic, 해상도, QoS, registration 방식, optical frame, timestamp 동기화 설정 |
 
 ## 작성 원칙
