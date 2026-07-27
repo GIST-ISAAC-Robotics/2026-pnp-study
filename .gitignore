@@ -1,0 +1,51 @@
+# ROS 2 / colcon
+build/
+install/
+log/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# ROS bag and large media
+rosbag2_*/
+*.bag
+*.db3
+*.mcap
+*.mp4
+*.mov
+*.avi
+
+# Temporary files
+*.tmp
+*.temp

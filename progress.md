@@ -12,7 +12,7 @@
 
 | 단계 | 상태 | 현재 결과 / 진입 조건 |
 |---|---|---|
-| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.4.0 확정, README·Pages·로그 구조 정리 |
+| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.0 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리; 구현은 아직 시작 전 |
 | Week 0 — 환경·위험 제거 | 대기 | Docker, 공식 smoke test, RGB-D·pose follower·reset·IK spike |
 | Week 1 — ROS 2 시스템 뼈대 | 대기 | Week 0 Gate 통과 후 시작 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
@@ -27,11 +27,20 @@
 - [ ] Session 0-1: ROBOTIS Docker 환경 구축
 - [ ] Session 0-2: 공식 Gazebo·MoveIt smoke test
 - [ ] Session 0-3: RGB-D, pose 추종/reset, pose goal·IK mode spike
+- [ ] `docs/setup/docker.md`에 S0-1 환경과 smoke test 기록
 - [ ] `docs/setup/week0_spike.md`에 동결값과 Gate 판정 기록
 
 세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 0](./curriculum.md#6-week-0--환경-구축과-위험-제거)을 따른다.
 
 ## 회차 로그
+
+### 2026-07-27 — 커리큘럼 v3.5.0 계약 개정
+
+- **상태:** 완료
+- **수행:** transport control·task scope·Planning Scene 소유권·cleanup·평가 threshold의 문서 계약을 전면 교정하고 `docs/` 경로표와 `.gitignore` 추가
+- **결과:** T0 one-shot과 pick verify의 service 호출 계약, lift-only/full 평가 분리, evaluator·simulation·manipulation 소유권을 문서상 확정. ROS 구현은 Week 0 전으로 아직 미착수
+- **다음:** Session 0-1에서 Docker 환경 구축 시작
+- **증빙:** [curriculum.md](./curriculum.md), [문서 산출물 경로](./docs/README.md)
 
 ### 2026-07-27 — 커리큘럼과 저장소 구조 확정
 
