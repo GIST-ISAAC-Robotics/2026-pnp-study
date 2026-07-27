@@ -1,5 +1,5 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.5.4 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.5.5 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
@@ -483,7 +483,8 @@ pick_place_ws/
     ├── pnp_evaluation/
     │   ├── scenario_runner.py
     │   ├── evaluator.py
-    │   └── scenarios/
+    │   ├── scenarios/
+    │   └── test/
     └── pnp_bringup/
         ├── launch/
         ├── config/
@@ -676,7 +677,7 @@ p_object_center_source =
 
 따라서 P2가 downstream에 object yaw를 제공하지 않더라도 offset 회전 계산에는 검출한 tag orientation이 필요하다. 두 offset과 적용 frame·부호·단위는 known pose로 검증하고 `config_hash` 입력에 넣는다.
 
-본과정은 object yaw를 추정하지 않으므로 scenario의 yaw를 `fixed_config`로 유지한다. `/perception/target_pose.orientation`은 finite한 unit quaternion으로 채우되 P1 실행 방향의 권위로 쓰지 않는다. orchestrator가 중심 위치를 `planning_frame`으로 변환한 뒤 같은 frame에 표현해 동결한 canonical object orientation을 넣어 `PickPlace.object_pose`를 만들고, EEF `pick_pose`의 방향은 raw source quaternion이 아니라 §5의 `ik_mode` 목표 생성 규칙에서 만든다. 허용 scenario에서 yaw를 변화시키려면 먼저 orientation estimator를 추가하거나, 허용 yaw 전 범위를 덮는 collision/grasp clearance를 별도로 검증해야 한다.
+본과정은 object yaw를 추정하지 않으므로 scenario의 yaw를 `fixed_config`로 유지한다. `/perception/target_pose.orientation`은 finite한 unit quaternion으로 채우되 P1 실행 방향의 권위로 쓰지 않는다. orchestrator가 중심 위치를 `planning_frame`으로 변환한 뒤 같은 frame에 표현해 동결한 canonical object orientation을 넣어 `PickPlace.object_pose`를 만들고, EEF `pick_pose`의 방향은 raw source quaternion이 아니라 Session 5의 `ik_mode` 목표 생성 규칙에서 만든다. 허용 scenario에서 yaw를 변화시키려면 먼저 orientation estimator를 추가하거나, 허용 yaw 전 범위를 덮는 collision/grasp clearance를 별도로 검증해야 한다.
 
 `pick_pose`는 이 물체 중심 위치와 동결한 grasp offset, `ik_mode` 방향 규칙에서 계산한 EEF 명령 pose다. manipulation은 `object_pose`로 Planning Scene 동적 object를 등록하고 두 pose를 GT로 보정하지 않는다. 이 분리가 없으면 evaluator가 reset 정답 pose로 collision object를 등록하거나 EEF pose를 object pose처럼 쓰게 되므로, goal 수신 시 두 frame·모든 position의 finite 여부·quaternion norm과 `object_id`를 검증한다.
 
@@ -910,7 +911,7 @@ IDLE → SELECT_TARGET
 
 | `runner_profile` | 허용 `target_mode` | 용도 |
 |---|---|---|
-| `week2_baseline` | `fixed` | Session 6B의 fixed pose·initial pose·seed를 유지한 Week 2 Gate와 이후 회귀 시험 |
+| `week2_baseline` | `fixed` | Session 6A 분리 시험과, Session 6B의 fixed pose·initial pose·seed를 유지한 Week 2 Gate·이후 회귀 시험 |
 | `perception_evaluation` | `perception` | Week 3 sensor-to-action 시험과 Session 11에서 확장하는 최종 평가 |
 
 `runner_profile`은 evaluator의 batch parameter이고 `target_mode`는 orchestrator의 parameter다. runner는 batch 시작 시 ROS parameter service로 orchestrator의 effective `target_mode`를 읽어 위 조합을 검증하며, batch가 끝날 때까지 두 값을 변경하지 않는다. 두 값은 시작 로그·CSV·`config_hash` 입력에 함께 포함하고, orchestrator도 시작 시 `target_mode` enum을 검증한다. 알 수 없는 값 또는 profile/mode 불일치는 attempt 할당·reset 전에 `INVALID_TARGET_MODE`로 시작을 거부하며 `/simulation/reset_trial`과 `RunTrial`을 호출하지 않는다. 최종 평가 분모에는 `runner_profile=perception_evaluation` 행만 포함하고, `week2_baseline` 결과는 별도 regression CSV로 남긴다.
@@ -1828,16 +1829,6 @@ executeGoal()   [worker thread]
 - 공유 MoveGroupInterface 객체의 일반 plan/execute 동시 접근은 막는다. cancel 경로의 `stop()`만 blocking worker와 분리된 제어 경로로 허용한다
 - **동시에 하나의 pick-place goal만 허용**하고 나머지는 거부한다
 
-### 완료 기준에 추가
-
-- action callback을 담당하는 executor가 responsive함
-- `PickPlace.feedback.inner_stage`가 plan·execute 단계 전이를 올바르게 보여 줌
-- blocking `execute()` 중에도 cancel 요청을 수신하고 별도 cancel 경로가 `MoveGroupInterface::stop()`을 호출해 `pick_place_cancel_timeout_s` 안에 terminal state로 종료함
-- 의도적으로 result를 지연하면 orchestrator 또는 action test client의 steady-clock action·stage timeout이 `EXECUTION_TIMEOUT`으로 판정함
-- 두 번째 goal은 **즉시 거부**됨
-
-`/task/status`는 orchestrator 자체의 liveness만 나타낸다. 이 회차의 manipulation deadlock·cancel 검증에는 `PickPlace` feedback, action·stage timeout, terminal state를 사용한다.
-
 ### 산출물
 
 - `pnp_manipulation` 패키지
@@ -1853,6 +1844,16 @@ executeGoal()   [worker thread]
 - action result는 `pipeline_success` 의미로만 사용
 - 도달 불가 pose가 crash가 아니라 오류 코드 반환
 - gripper open/close 함수 작동
+
+### 완료 기준에 추가
+
+- action callback을 담당하는 executor가 responsive함
+- `PickPlace.feedback.inner_stage`가 plan·execute 단계 전이를 올바르게 보여 줌
+- blocking `execute()` 중에도 cancel 요청을 수신하고 별도 cancel 경로가 `MoveGroupInterface::stop()`을 호출해 `pick_place_cancel_timeout_s` 안에 terminal state로 종료함
+- 의도적으로 result를 지연하면 orchestrator 또는 action test client의 steady-clock action·stage timeout이 `EXECUTION_TIMEOUT`으로 판정함
+- 두 번째 goal은 **즉시 거부**됨
+
+`/task/status`는 orchestrator 자체의 liveness만 나타낸다. 이 회차의 manipulation deadlock·cancel 검증에는 `PickPlace` feedback, action·stage timeout, terminal state를 사용한다.
 
 ### 실패 시
 
@@ -2600,7 +2601,7 @@ p_object_center_source =
 7. registered depth에서 중심 한 픽셀이 아닌 중심부 ROI의 유효 depth 중앙값을 사용해 observed surface point 계산
 8. Session 7에서 확정한 CameraInfo로 3차원 표면 좌표를 계산하고, Session 5의 `surface_to_center_offset_source`를 적용해 cube 중심 위치로 변환
 9. known pose에서 중심 위치 오차와 offset 부호를 검증하고, source quaternion은 finite unit 값으로 채우되 P1 실행 방향의 비권위 값으로 취급
-10. Week 0·Session 7에서 실제 이름을 동결한 optical frame의 **object-center** `PoseStamped` 발행. 논리명 `camera_optical_frame`을 런타임 frame 이름처럼 하드코딩하지 않음
+10. Session 5·7에서 실제 이름을 확정·동결한 optical frame의 **object-center** `PoseStamped` 발행. 논리명 `camera_optical_frame`을 런타임 frame 이름처럼 하드코딩하지 않음
 11. debug image에 contour 중심·surface point·보정된 object center를 구분해 표시
 12. `pnp_evaluation/evaluator.py` 최소판이 perception/GT buffer를 유지하고 선택한 perception sensor stamp의 최근접 GT를 `evaluation_gt_sync_slop_s` 안에서 고른 뒤 각 **object-center** pose를 자기 header stamp의 `planning_frame`으로 독립 변환해 위치 오차·`perception_gt_dt_ms` 계산
 
@@ -2615,7 +2616,7 @@ p_object_center_source =
 
 - 중앙·좌·우 위치에서 검출
 - invalid depth를 안전하게 거부
-- `/perception/target_pose`에 Week 0·Session 7에서 동결한 실제 optical frame 이름과 sensor timestamp를 보존한 **보정된 물체 중심** 3D 좌표와 valid unit quaternion 발행
+- `/perception/target_pose`에 Session 5·7에서 동결한 실제 optical frame 이름과 sensor timestamp를 보존한 **보정된 물체 중심** 3D 좌표와 valid unit quaternion 발행
 - raw surface point를 collision center나 GT center와 직접 비교하지 않고, offset·frame·고정 yaw 정책이 config hash에 포함됨
 - perception 노드가 GT를 구독하지 않은 상태에서 evaluator가 허용 slop 내 최근접 GT와 timestamp 차이를 기록하며 오차 계산
 - bag 재생에서도 동일 결과
@@ -3325,8 +3326,6 @@ CSV의 `error_code`는 `ErrorCode.msg` 숫자 하나인 primary code이고 `erro
 8. 다음 `SETUP_SCENE`가 sensor/fixed `object_pose`로 동적 object를 재등록하는지 확인
 9. run ID가 새로 생성되는지 확인
 
----
-
 ## 12.7 특정 위치에서만 IK가 실패함
 
 이 로봇은 팔 4 DoF이므로 손끝의 위치와 방향을 모두 독립적으로 지정할 수 없다.
@@ -3595,6 +3594,15 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 ---
 
 # 18. 개정 이력
+
+## v3.5.5 — 2026-07-28
+
+- §4.4의 EEF `pick_pose` 방향 규칙 참조를 운영 규칙 장이 아니라 실제 정의 위치인 Session 5의 `ik_mode` 목표 생성 규칙으로 교정
+- Session 4의 「완료 기준에 추가」 절을 기본 완료 기준 뒤로 이동해, 추가 대상 절보다 먼저 나오던 역순 구조를 해소
+- Session 2가 명시한 `pnp_evaluation/test/` dummy server 경로를 §4.1 권장 패키지 트리에 반영
+- Session 8의 optical frame 이름 동결 회차를 프레임 고정표와 일치하는 Session 5·7로 교정 (Week 0 spike A는 공식 demo world 기준이므로 프로젝트 world frame 이름의 동결 회차가 아님)
+- `runner_profile` 용도표에 Session 6A 분리 시험의 `week2_baseline` 사용을 명시
+- §12.6과 §12.7 사이의 불필요한 구분선을 제거해 진단표 하위 절 서식을 통일
 
 ## v3.5.4 — 2026-07-28
 

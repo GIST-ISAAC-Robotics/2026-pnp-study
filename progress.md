@@ -12,7 +12,7 @@
 
 | 단계 | 상태 | 현재 결과 / 진입 조건 |
 |---|---|---|
-| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.4 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리; 구현은 아직 시작 전 |
+| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.5 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리; 구현은 아직 시작 전 |
 | Week 0 — 환경·위험 제거 | 대기 | Docker, 공식 smoke test, RGB-D·pose follower·reset·IK spike |
 | Week 1 — ROS 2 시스템 뼈대 | 대기 | Week 0 Gate 통과 후 시작 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
@@ -33,6 +33,16 @@
 세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 0](./curriculum.md#6-week-0--환경-구축과-위험-제거)을 따른다.
 
 ## 회차 로그
+
+### 2026-07-28 — 커리큘럼 v3.5.5 참조·구조 일관성 검토
+
+- **상태:** 완료
+- **수행:** `curriculum.md` v3.5.4 전문과 README·`docs/README.md`·`progress.md`를 다시 교차 검토해 절 참조, 회차 귀속, 권장 패키지 트리, 표 서식과 기존 계약의 일관성을 확인
+- **결과:** §4.4의 `ik_mode` 목표 생성 규칙 참조를 Session 5로 교정하고, Session 4의 「완료 기준에 추가」를 기본 완료 기준 뒤로 이동했다. §4.1 트리에 `pnp_evaluation/test/`를 반영하고, Session 8의 optical frame 동결 회차를 프레임 고정표와 같은 Session 5·7로 맞췄으며, `runner_profile` 용도표에 6A 분리 시험을 명시하고 §12의 불필요한 구분선을 제거했다. 오류 코드 표와 `ErrorCode.msg`, 일곱 최종 실행 구성 필드, cancel 예산 불변식, 표본 축소 표, `docs/README.md` 경로표는 모순 없음을 재확인했다. HTML/Pages 파일은 검토·수정 범위에서 제외했다.
+- **문제:** ROS 구현 전이므로 각 계약의 runtime 검증은 해당 회차에서 수행해야 함
+- **결정:** 실행 명세 v3.5.5를 Week 0 기준으로 사용
+- **다음:** Session 0-1에서 Docker 환경 구축 시작
+- **증빙:** [curriculum.md](./curriculum.md), [README](./README.md), [문서 산출물 경로](./docs/README.md)
 
 ### 2026-07-28 — 커리큘럼 v3.5.4 최종 문서 경로·존재성 계약 검토
 
