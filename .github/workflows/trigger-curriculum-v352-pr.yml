@@ -1,0 +1,51 @@
+name: Trigger curriculum v3.5.2 audit on PR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Apply embedded audit patch
+        shell: bash
+        run: |
+          if grep -q '^## 최종 실행 커리큘럼 v3.5.2' curriculum.md; then
+            echo 'Patch already applied.'
+            exit 0
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          import textwrap
+
+          workflow = Path('.github/workflows/apply-curriculum-v352.yml').read_text(encoding='utf-8')
+          marker_start = "          python - <<'PY'\n"
+          marker_end = "\n          PY\n"
+          body = workflow.split(marker_start, 1)[1].split(marker_end, 1)[0]
+          exec(compile(textwrap.dedent(body), 'embedded_curriculum_patch.py', 'exec'))
+          PY
+
+      - name: Commit changes when present
+        shell: bash
+        run: |
+          git diff --check
+          if git diff --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add curriculum.md README.md docs/README.md progress.md
+          git commit -m "docs: fix curriculum v3.5.2 contract regressions"
+          git push origin HEAD:${{ github.head_ref }}
