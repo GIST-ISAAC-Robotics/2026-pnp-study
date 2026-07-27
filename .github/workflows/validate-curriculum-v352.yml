@@ -1,0 +1,153 @@
+name: Validate curriculum v3.5.2 regression contracts
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run cross-document contract audit
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import subprocess
+
+          c = Path('curriculum.md').read_text(encoding='utf-8')
+          r = Path('README.md').read_text(encoding='utf-8')
+          d = Path('docs/README.md').read_text(encoding='utf-8')
+          p = Path('progress.md').read_text(encoding='utf-8')
+
+          assert c.startswith('# 2026 여름 픽앤플레이스 스터디\n## 최종 실행 커리큘럼 v3.5.2')
+          assert '실행 커리큘럼 `v3.5.2` 확정' in r
+          assert '`curriculum.md` v3.5.2 문서 계약 확정' in p
+          assert '## v3.5.2 — 2026-07-27' in c
+
+          stale = [
+              '다음 네 가지를 `docs/setup/week0_spike.md`에 고정한다',
+              '이 네 값은 문서의 예시 이름보다',
+              'actual joint position이 commanded close target 허용오차 안',
+              '고정 bag으로 인식 개발을 계속하되 live sensor-to-action Gate는 미통과',
+              'project world의 resolved 절대 경로를 공식 launch의 `world` argument로 전달',
+              'Session 5부터 동작하는 `/simulation/reset_trial`, stamped `world_frame` initial pose',
+          ]
+          for phrase in stale:
+              assert phrase not in c, phrase
+
+          required = {
+              'reset_state_source': 12,
+              'state_measured': 10,
+              'TASK_CANCELED': 5,
+              'final_gt_stamp_ns': 2,
+              'final_gt_receive_seq': 3,
+              'project_world_file': 5,
+              'min_close_travel_m': 4,
+              'gate_max_final_aperture_m': 4,
+              'sensor_path_status=deferred': 4,
+          }
+          for token, minimum in required.items():
+              count = c.count(token)
+              assert count >= minimum, (token, count, minimum)
+
+          # Interface declarations and ownership/first-use assignment.
+          interfaces = [
+              'RunTrial.action', 'PickPlace.action',
+              'ResetTrial.srv', 'PrepareTransport.srv', 'ControlTransport.srv',
+              'TaskStatus.msg', 'StageStatus.msg', 'ErrorCode.msg', 'TransportStatus.msg',
+          ]
+          for name in interfaces:
+              assert name in c, name
+          assert 'Session 2 — Action과 상태기계 골격' in c
+          assert 'Session 5 — 최종 world, simulation I/O, Planning Scene, 안전 작업 영역' in c
+          assert 'Session 6A — Pick 동작과 파지 적합성 판정' in c
+
+          # Canonical numeric registries.
+          error_block = re.search(r'# ErrorCode\.msg\n(.*?)uint16 value', c, re.S).group(1)
+          errors = re.findall(r'uint16\s+([A-Z0-9_]+)=(\d+)', error_block)
+          assert ('TASK_CANCELED', '403') in errors
+          error_values = [int(v) for _, v in errors]
+          assert len(error_values) == len(set(error_values)), errors
+
+          stage_block = re.search(r'# StageStatus\.msg\n(.*?)uint32 reached_mask', c, re.S).group(1)
+          stages = re.findall(r'uint32\s+([A-Z0-9_]+)=(\d+)', stage_block)
+          stage_values = [int(v) for _, v in stages]
+          assert len(stages) == 7, stages
+          assert len(stage_values) == len(set(stage_values))
+          assert all(v > 0 and (v & (v - 1)) == 0 for v in stage_values)
+
+          # Reset producer -> propagation -> consumer chain.
+          for phrase in [
+              'reset_state_adapter.py',
+              'backend-private state query',
+              'bool state_measured',
+              'reset_state_measured',
+              '`reset_ok=true`는 `state_measured=true`',
+              'state_measured = false',
+              'zero-stamp `world_frame` initial pose',
+          ]:
+              assert phrase in c, phrase
+          assert 'reset_state_source' in d
+
+          # Cancel and final-GT semantics.
+          assert 'uint16 TASK_CANCELED=403' in c
+          assert 'manual cancel은 `TASK_CANCELED`' in c
+          assert 'receive sequence가 snapshot보다 크고' in c
+          assert 'header.stamp`도 pre-terminal 최신 stamp보다 엄격히 새로우며' in c
+          assert '늦게 도착한 pre-terminal sample' in c
+          assert 'final_gt_age_ms              # terminal→final GT steady receive gap; header age가 아님' in c
+
+          # World launch suffix contract.
+          assert 'ROBOTIS `open_manipulator_x_gazebo.launch.py`는 이 값 뒤에 `.sdf`를 붙이므로' in c
+          assert '공식 launch에는 마지막 `.sdf`를 제거한 `world` 값을 넘긴다' in c
+          assert 'extensionless official `world` argument' in d
+
+          # Gripper actuation is not treated as contact evidence.
+          assert '정상 접촉이 있으면 joint가 그 target에 정확히 도달하지 않는 것이 자연스럽다' in c
+          assert '구동이 수행됐다는 확인일 뿐 파지의 증거가 아님' in c
+          assert 'gripper close-travel/final-aperture envelope' in d
+
+          # Fixed bag remains development-only, never final P2.
+          assert c.count('이는 최종 P2가 아니며') == 2
+          assert '고정 bag은 개발용이며 최종 P2가 아님' in c
+          assert 'live source로 검증된** P2 fallback' in c
+
+          # Repository record management stays single-source.
+          assert '진행 기록의 단일 원본은 [progress.md](./progress.md)' in r
+          assert '실제 진행 상황과 회차 로그의 단일 원본은 [`progress.md`](../progress.md)' in d
+          assert 'HTML/Pages 파일은 검토·수정 범위에서 제외' in p
+          assert 'S0-1 최초 작성 · S0-2 갱신' in d
+
+          # No HTML/Pages file changed in this PR.
+          changed = subprocess.check_output(
+              ['git', 'diff', '--name-only', 'origin/main...HEAD'], text=True
+          ).splitlines()
+          forbidden = [x for x in changed if x.endswith('.html') or x.startswith('assets/')]
+          assert not forbidden, forbidden
+
+          # Relative markdown links in the repository entry documents must resolve.
+          for path in ['README.md', 'docs/README.md', 'progress.md']:
+              text = Path(path).read_text(encoding='utf-8')
+              for target in re.findall(r'\[[^\]]+\]\((?!https?://|#)([^)#]+)', text):
+                  candidate = (Path(path).parent / target).resolve()
+                  assert candidate.exists(), (path, target)
+
+          print('curriculum v3.5.2 cross-document regression audit: PASS')
+          PY
+
+      - name: Markdown and whitespace sanity
+        shell: bash
+        run: |
+          git diff --check origin/main...HEAD
+          test "$(grep -c '^# 18. 개정 이력$' curriculum.md)" -eq 1
+          test "$(grep -c '^## v3.5.2 — 2026-07-27$' curriculum.md)" -eq 1
