@@ -1,5 +1,5 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.5.1 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.5.2 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
@@ -18,16 +18,19 @@
 
 ## 바로 확인할 것
 
-Week 1을 시작하기 전에 다음 네 가지를 `docs/setup/week0_spike.md`에 고정한다.
+Week 1을 시작하기 전에 다음 다섯 가지를 `docs/setup/week0_spike.md`에 고정한다.
 
 | 고정 항목 | 확인 방법 | 기록값 |
 |---|---|---|
 | `ik_mode` | effective MoveIt parameter와 position-only/full-pose 비교 | `position-only` 또는 `full-pose` + `ik_mode_status` (`final` 또는 `provisional`) |
 | `planning_frame` | `move_group.getPlanningFrame()` | 런타임 출력 |
-| `reset_backend` | position·orientation과 twist를 함께 초기화·검증할 수 있는 경로 시험 | `set_entity_state` · `respawn` · `custom_reset` 중 하나 |
-| RGB-depth 좌표계 | 해상도·registration·CameraInfo·optical frame 시험 | 역투영에 쓸 image/CameraInfo/frame |
+| `reset_backend` | position·orientation과 twist를 함께 초기화할 명령 경로 시험 | `set_entity_state` · `respawn` · `custom_reset` 중 하나 |
+| `reset_state_source` | reset 뒤 실제 pose·twist를 읽는 backend-private query 시험 | `get_entity_state` · `backend_state_query` · `custom_state_query` 중 하나 |
+| RGB-depth 좌표계 | 해상도·registration·CameraInfo·optical frame 시험 | 역투영에 쓸 image/CameraInfo/frame + `sensor_path_status` (`live` 또는 `deferred`) |
 
-이 네 값은 문서의 예시 이름보다 **실제 런타임 결과가 우선**이다. 특히 `position_only_ik`는 설치된 ROBOTIS commit과 생성된 MoveIt parameter를 직접 확인한다. 소스 YAML에 키가 없거나 다른 값이 있어도 추측으로 보충하지 않는다.
+이 다섯 값은 문서의 예시 이름보다 **실제 런타임 결과가 우선**이다. 특히 `position_only_ik`는 설치된 ROBOTIS commit과 생성된 MoveIt parameter를 직접 확인한다. 소스 YAML에 키가 없거나 다른 값이 있어도 추측으로 보충하지 않는다.
+
+`reset_backend`는 상태를 **바꾸는 경로**, `reset_state_source`는 바뀐 뒤의 실제 pose·twist를 **측정하는 경로**다. service 응답의 성공 boolean이나 명령값 자체를 측정값으로 재사용하지 않는다. `reset_trial_node.py`는 `pnp_simulation` 내부의 backend-private query로 실제 상태를 읽고, 이 경로를 perception·orchestrator·manipulation에 노출하지 않는다. RGB 전체가 실패해 고정 bag만 쓸 수 있으면 `sensor_path_status=deferred`로 기록하며, 이는 개발 이관 상태이지 최종 `P2`가 아니다.
 
 `ik_mode_status=provisional`은 Week 0에서 안전한 1점만 검증한 비상 통과 상태다. 최종 동결이 아니며, Session 5에서 축소 workspace를 포함한 grid로 재판정해 `final`로 바꾸기 전에는 Session 6A를 시작하지 않는다.
 
@@ -57,7 +60,7 @@ Week 1을 시작하기 전에 다음 네 가지를 `docs/setup/week0_spike.md`�
 | `E1` | Docker GUI 복구가 불가능할 때만 쓰는 host 설치 비상 경로 |
 | `M3` | MoveGroupInterface C++ 조작 |
 | `P1` | HSV + registered depth 인식 |
-| `P2` | 원인별 센서 fallback. AprilTag의 위치 성분 또는 고정 intrinsics 등을 사용 |
+| `P2` | 원인별 **live sensor fallback**. AprilTag의 위치 성분 또는 해상도를 검증한 고정 intrinsics 등을 사용. 고정 bag은 개발용이며 최종 P2가 아님 |
 | `P0` | Gazebo ground truth. 실행 pose 생성·보정에는 사용 금지 |
 | `T1` | EE pose를 따라 물체 pose를 연속 갱신 |
 | `T0` | `/transport/control UPDATE_ONCE`로 lift/place phase에서만 물체 pose를 갱신하는 운반 fallback. ROS 경로의 one-shot pose 갱신이 먼저 검증되어야 함 |
@@ -437,6 +440,7 @@ pick_place_ws/
     │   ├── models/
     │   ├── config/
     │   ├── ground_truth_adapter.py
+    │   ├── reset_state_adapter.py
     │   ├── reset_trial_node.py
     │   └── launch/
     ├── pnp_perception/
@@ -471,7 +475,7 @@ ROBOTIS의 공식 패키지는 직접 복사해 프로젝트 패키지 안에 �
 
 `transport_server.py`는 grasp gate, `/transport/prepare`, 단일 `/transport/control` service와 `TransportStatus` 발행을 소유한다. T1의 연속 갱신은 `pose_follower.py`, T0의 `UPDATE_ONCE` 경로는 `t0_transport.py`로 분리한다.
 
-`pnp_simulation/ground_truth_adapter.py`와 `reset_trial_node.py`는 Session 5의 `simulation-min`에서 함께 구현한다. 전자는 scoped cube 하나를 `world_frame` GT로 정규화하고, 후자는 `/simulation/reset_trial`의 유일한 service server로서 Week 0에서 동결한 `reset_backend`로 object pose와 linear/angular velocity를 초기화한다. `initial_pose.header.frame_id == world_frame`, position이 finite, orientation이 finite unit quaternion이고 position·orientation·twist settle threshold를 모두 통과한 경우에만 `ResetTrial.response.reset_ok = true`를 반환한다.
+`pnp_simulation/ground_truth_adapter.py`, `reset_state_adapter.py`, `reset_trial_node.py`는 Session 5의 `simulation-min`에서 함께 구현한다. `ground_truth_adapter.py`는 scoped cube 하나를 `world_frame`의 공개 평가 GT로 정규화한다. `reset_state_adapter.py`는 Week 0에서 동결한 `reset_state_source`를 감싸 reset 직후 실제 object pose와 linear/angular velocity를 읽는 **pnp_simulation 내부 전용 query**다. `reset_trial_node.py`는 `/simulation/reset_trial`의 유일한 service server로서 `reset_backend`로 상태를 초기화한 뒤 이 private query로 검증한다. `initial_pose.header.frame_id == world_frame`, `header.stamp == 0`, position이 finite, orientation이 finite unit quaternion이고, 실제 상태가 측정되어 position·orientation·twist settle threshold를 모두 통과한 경우에만 `ResetTrial.response.reset_ok = true`를 반환한다.
 
 `pnp_orchestrator/orchestrator.py`는 `RunTrial` action server, outer state machine, `/task/status`의 유일한 발행자다. `pnp_evaluation`은 `/task/status`를 구독해 liveness만 감시하며, trial 완료 여부는 계속 `RunTrial` action result로 판정한다.
 
@@ -536,7 +540,7 @@ Gazebo PosePublisher
   - pnp_manipulation   (실행 pose·Planning Scene을 GT로 보정할 수 있게 됨)
 ```
 
-이 제한은 코드 리뷰 항목으로 둔다. 규칙만 적어두고 배선을 그리지 않으면 구현자가 임의로 연결하게 된다.
+이 제한은 코드 리뷰 항목으로 둔다. 규칙만 적어두고 배선을 그리지 않으면 구현자가 임의로 연결하게 된다. `reset_trial_node.py`는 이 공개 topic을 구독하지 않고 `pnp_simulation/reset_state_adapter.py`의 backend-private state query만 사용한다. 따라서 reset 검증에 필요한 pose·twist 측정은 수행하되 GT firewall의 공개 subscriber 목록은 넓히지 않는다.
 
 ### 제어 흐름 소유권
 
@@ -585,6 +589,7 @@ Gazebo PosePublisher
 | `relative_pose_ok` | transport의 fresh GT/TF 계산 | `ControlTransport` response | manipulation `VERIFY_PICK` |
 | terminal `TransportStatus` | transport | `/transport/state` | evaluator 진단·CSV |
 | final GT | simulation adapter | `/simulation/object_ground_truth` | evaluator place scoring 전용 |
+| reset actual state | `pnp_simulation/reset_state_adapter.py` | backend-private state query | `reset_trial_node.py`의 settle 판정과 `ResetTrial` response |
 
 ## 4.4 권장 custom interface 정의
 
@@ -670,7 +675,7 @@ p_object_center_source =
 
 `PICK_LIFT_ONLY`의 CSV stage 변환에서는 forbidden `PLACE` bit가 0인 정상 결과를 `place_ok=NA`로 기록한다. 같은 scope의 `place_error_mm`, `place_success`, 최종 full-task `success`도 `NA`다. 반대로 `FULL_PICK_PLACE`에서는 `PLACE`가 required bit이고 fresh final GT로 `place_error_mm`와 `place_success`를 계산한다.
 
-`RunTrial.result.trial_completed = true`는 성공이 아니라 **정상 성공 또는 코드화된 실패가 필요한 cleanup까지 끝나 기록 가능한 terminal outcome에 도달했다**는 뜻이다. manipulation에 도달하지 않은 outer 입력 실패는 cleanup이 필요 없는 terminal이다. terminal state가 확인된 cancel은 result를 반환하되 `trial_completed = false`로 둔다. inner terminal을 확인하지 못해 outer terminal을 만들지 않는 경우에는 result 자체가 없으므로, evaluator가 CSV의 `run_trial_result_received = false`, `trial_completed = false`를 기록하고 `SAFE_STOP`으로 간다. `pipeline_success`는 이와 별도로 outer pipeline이 `COMPLETE`에 도달했는지를 뜻한다. 최종 CSV의 `success`는 `FULL_PICK_PLACE`에서만 evaluator가 `pipeline_success AND grasp_plausible_success AND place_success`로 계산한다.
+`RunTrial.result.trial_completed = true`는 성공이 아니라 **정상 성공 또는 코드화된 실패가 필요한 cleanup까지 끝나 기록 가능한 terminal outcome에 도달했다**는 뜻이다. manipulation에 도달하지 않은 outer 입력 실패는 cleanup이 필요 없는 terminal이다. terminal state가 확인된 cancel은 result를 반환하되 `trial_completed = false`, `pipeline_success=false`로 둔다. 사용자가 직접 취소했다면 `TASK_CANCELED`, watchdog·execution timeout이 취소를 시작했다면 원래 initiating code를 반환한다. inner terminal을 확인하지 못해 outer terminal을 만들지 않는 경우에는 result 자체가 없으므로, evaluator가 CSV의 `run_trial_result_received = false`, `trial_completed = false`를 기록하고 `SAFE_STOP`으로 간다. `pipeline_success`는 이와 별도로 outer pipeline이 `COMPLETE`에 도달했는지를 뜻한다. 최종 CSV의 `success`는 `FULL_PICK_PLACE`에서만 evaluator가 `pipeline_success AND grasp_plausible_success AND place_success`로 계산한다.
 
 `RunTrial.goal.place_pose`와 `PickPlace.goal.pick_pose`·full-scope `place_pose`는 모두 런타임 `planning_frame`의 **EEF 명령 pose**만 수락한다. `PickPlace.goal.object_pose`는 같은 frame의 collision object 중심 pose다. orchestrator가 source-frame의 sensor-derived 중심 위치를 변환·검증하고 canonical object orientation·grasp offset·`ik_mode` 방향 규칙을 적용해 이들을 구분해 넘기며, manipulation은 다시 TF fallback이나 GT 보정을 하지 않는다. evaluator가 물체의 최종 위치를 채점하는 `place_target_pose`와 §2.4 규칙으로 계산한 `place_success_threshold_mm`는 scenario YAML의 별도 scoring-only 필드다. 실행용 EEF pose와 함께 평가 전에 동결하되 서로 같은 pose라고 간주하지 않고, GT로 어느 쪽도 런타임 보정하지 않는다. `ResetTrial.initial_pose`만 `world_frame` 계약이다.
 
@@ -721,6 +726,7 @@ string object_id
 geometry_msgs/PoseStamped initial_pose
 ---
 bool reset_ok
+bool state_measured
 float32 position_error_mm
 float32 orientation_error_deg
 float32 linear_speed_mps
@@ -729,14 +735,14 @@ uint16 error_code
 string message
 ```
 
-`ResetTrial.position_error_mm`는 initial/actual object center의 3D 거리이고, `orientation_error_deg`는 두 unit quaternion의 부호 동치를 반영한 shortest angular distance다.
+`ResetTrial.initial_pose`는 시간에 따라 변환할 명령이 아니라 `world_frame`에 이미 표현된 reset 목표이므로 `header.stamp == 0`만 허용한다. `position_error_mm`는 initial/actual object center의 3D 거리이고, `orientation_error_deg`는 두 unit quaternion의 부호 동치를 반영한 shortest angular distance다.
 
 ```text
 orientation_error_deg =
   degrees(2 * acos(clamp(abs(dot(q_initial, q_actual)), 0, 1)))
 ```
 
-두 quaternion을 먼저 정규화하며 zero/NaN/Inf quaternion은 request 또는 측정 실패로 거부한다. `reset_backend`, `reset_position_tolerance_mm`, `reset_orientation_tolerance_deg`, linear/angular speed threshold와 quaternion norm tolerance는 평가 전 동결해 `config_hash` 입력에 포함한다.
+두 quaternion을 먼저 정규화하며 zero/NaN/Inf quaternion은 request 또는 측정 실패로 거부한다. `state_measured = true`는 backend 명령 뒤 `reset_state_source`가 actual pose와 linear/angular velocity를 모두 finite 값으로 읽었다는 뜻이다. wrong frame·nonzero stamp·invalid quaternion처럼 명령 전에 request를 거부했거나 state query가 실패하면 `reset_ok=false`, `state_measured=false`, 네 측정 float는 IEEE `NaN`, CSV는 `NA`다. 실제 상태를 읽었지만 threshold를 넘으면 `state_measured=true`, 측정값을 보존한 채 `reset_ok=false`다. `reset_ok=true`는 `state_measured=true`와 네 threshold 통과를 모두 요구한다. `reset_backend`, `reset_state_source`, `reset_position_tolerance_mm`, `reset_orientation_tolerance_deg`, linear/angular speed threshold와 quaternion norm tolerance는 평가 전 동결해 `config_hash` 입력에 포함한다.
 
 ```text
 # TransportStatus.msg
@@ -801,11 +807,12 @@ uint16 TRANSPORT_FAILED=302
 uint16 RESET_FAILED=400
 uint16 TASK_HEARTBEAT_TIMEOUT=401
 uint16 EVALUATION_DATA_MISSING=402
+uint16 TASK_CANCELED=403
 uint16 INTERNAL_ERROR=999
 uint16 value
 ```
 
-모든 action·service·status의 `uint16 error_code`는 위 상수만 사용한다. `OK=0` 외의 임의 숫자나 노드별 enum을 만들지 않으며, unknown 값은 수신 측에서 `INTERNAL_ERROR`로 정규화한다.
+모든 action·service·status의 `uint16 error_code`는 위 상수만 사용한다. `OK=0` 외의 임의 숫자나 노드별 enum을 만들지 않으며, unknown 값은 수신 측에서 `INTERNAL_ERROR`로 정규화한다. 사용자가 직접 요청한 정상 확인 cancel은 `TASK_CANCELED`를 사용한다. `TASK_HEARTBEAT_TIMEOUT`·`EXECUTION_TIMEOUT`처럼 다른 오류가 먼저 cancel을 유발했다면 그 initiating code를 유지하고 `TASK_CANCELED`로 덮어쓰지 않는다.
 
 ```text
 # TaskStatus.msg
@@ -818,7 +825,7 @@ string message
 
 ### transport 준비·평가 지표 계약
 
-- `pnp_transport`는 `/transport/prepare` 시 fresh ground truth와 같은 timestamp의 `grasp_frame`·`eef_frame` TF를 사용해 gate를 계산한다. `ground_truth_max_age_s` 기본 0.2초를 넘거나 TF를 얻지 못하면 `prepared = false`, `grasp_evaluated = false`로 거부한다.
+- `pnp_transport`는 `/transport/prepare` 시 fresh ground truth와 같은 timestamp의 `grasp_frame`·`eef_frame` TF를 사용해 gate를 계산한다. `ground_truth_max_age_s` 기본 0.2초를 넘거나 TF를 얻지 못하면 `prepared = false`, `grasp_evaluated = false`로 거부한다. gate를 계산하지 못한 response의 `grasp_lateral_error_mm`·`grasp_axial_error_mm`는 IEEE `NaN`, CSV는 `NA`다.
 - `PrepareTransport.transport_mode`는 `T1 | T0`만 허용한다. fresh GT/TF로 gate를 계산해 통과하면 `prepared = true`, `grasp_evaluated = true`, `grasp_eligible = true`다. gate를 계산했지만 탈락하면 `false, true, false`, freshness·TF 실패로 계산하지 못하면 `false, false, false`다. `START_FOLLOW | UPDATE_ONCE | CHECK_RELATIVE_POSE`는 세 값이 모두 true인 active run에서만 성공하며, `STOP`은 terminal rejection/error cleanup도 idempotent하게 확인할 수 있다.
 - gate가 통과한 경우에만 transport가 실제 `T_eef_object = T_planning_eef⁻¹ × T_planning_object_gt`를 내부에 저장한다. manipulation이 목표 pose에서 만든 offset을 넘기거나 GT pose·저장된 transform을 되돌려 받지 않는다.
 - `TransportStatus.state` 허용값은 `IDLE | PREPARED | FOLLOWING | REJECTED | STOPPED | ERROR`로 고정한다.
@@ -895,12 +902,13 @@ profile별 metric도 분리한다. `week2_baseline`은 perception pose·detectio
 
 `RunTrial` goal/result와 `TransportStatus`는 `run_id`로 결합한다. 반면 `/perception/target_pose`와 `/simulation/object_ground_truth`는 표준 `PoseStamped`라 `run_id` 필드가 없다. evaluator는 reset 성공 직후 pre-reset pose buffer를 비우고 자신의 수신 sequence·steady clock으로 active attempt window를 열어 다음 reset 전에 닫는다. **attempt 소속은 수신 window, pose 간 동기화와 TF lookup은 `header.stamp`**로 판정하며 두 clock domain을 섞지 않는다. 그 창 안의 pose sample만 active `run_id`에 로컬로 연결한다. `perception_source_accepted = true`이면 result의 source stamp·frame과 정확히 일치하는 저장 perception sample을 먼저 찾고, 그 stamp에 가장 가까운 GT sample을 `evaluation_gt_sync_slop_s` 안에서 고른 뒤 `perception_gt_dt_ms`를 기록한다. 이 slop은 Session 8에서 관측한 두 stream 중 느린 쪽 한 주기 이하로 동결한다.
 
-`FULL_PICK_PLACE`의 place error는 `RunTrial` terminal과 cleanup 뒤에 **새로 수신된** final GT 중 evaluator steady receive gap이 `evaluation_final_gt_max_age_s` 기본 0.2초 이내이고 다음 reset 전인 sample을 그 `header.stamp`의 `planning_frame`으로 변환하고, scenario의 scoring-only `place_target_pose` 위치와 비교해 `1000 × ||p_final_object - p_place_target||`로 계산한다. `place_success = place_error_mm <= place_success_threshold_mm`이며 `place_ok`와 AND하지 않는다. PLACE가 미도달·실패했어도 final GT가 threshold 안이면 물리 지표는 true일 수 있지만 pipeline은 false다. initial pose가 target threshold 안인 scenario는 attempt 할당 전에 invalid로 거부한다. `PICK_LIFT_ONLY`에서는 이 네 place/full-task 필드를 `NA`로 둔다. 두 시간 parameter와 place target·threshold 및 initial-target validation 결과는 `config_hash` 입력이다.
+`FULL_PICK_PLACE`의 place error는 `RunTrial` terminal과 cleanup이 확인된 순간 evaluator가 `terminal_gt_receive_seq`와 그때까지의 최신 `terminal_gt_header_stamp`를 snapshot한 뒤 계산한다. final GT는 **receive sequence가 snapshot보다 크고, `header.stamp`도 pre-terminal 최신 stamp보다 엄격히 새로우며**, terminal 뒤 steady receive gap이 `evaluation_final_gt_max_age_s` 기본 0.2초 이내이고 다음 reset 전인 sample만 수락한다. 단순히 늦게 도착한 pre-terminal sample은 채점에 쓰지 않는다. Gazebo pause 등으로 sim stamp가 전진하지 않으면 이전 sample을 재사용하지 않고 final GT 누락으로 처리한다. 수락한 sample을 그 `header.stamp`의 `planning_frame`으로 변환하고, scenario의 scoring-only `place_target_pose` 위치와 비교해 `1000 × ||p_final_object - p_place_target||`로 계산한다. `final_gt_age_ms`는 header age가 아니라 terminal→수신의 steady-clock gap이다. `place_success = place_error_mm <= place_success_threshold_mm`이며 `place_ok`와 AND하지 않는다. PLACE가 미도달·실패했어도 final GT가 threshold 안이면 물리 지표는 true일 수 있지만 pipeline은 false다. initial pose가 target threshold 안인 scenario는 attempt 할당 전에 invalid로 거부한다. `PICK_LIFT_ONLY`에서는 이 네 place/full-task 필드를 `NA`로 둔다. 두 시간 parameter와 place target·threshold 및 initial-target validation 결과는 `config_hash` 입력이다.
 
 | attempt 조건 | 반드시 있어야 하는 입력 | 의도적으로 생산되지 않는 값 |
 |---|---|---|
 | profile 검증 실패 | `INVALID_TARGET_MODE` 시작 로그 | attempt 자체를 만들지 않음 |
-| `reset_ok = false` | `ResetTrial` 응답과 position·orientation error, linear/angular speed 측정값 | `RunTrial` result·transport/perception/place metric과 `place_success`는 `NA`; `pipeline_success=false`, `grasp_plausible_success=false`, 최종 `success=false`인 유효한 `RESET_FAILED` row |
+| `reset_ok = false`, `state_measured = false` | `ResetTrial` 응답과 rejection/query-failure 원인 | 네 reset 측정값과 downstream metric은 `NA`; `pipeline_success=false`, `grasp_plausible_success=false`, `place_success=NA`, 최종 `success=false`인 유효한 `RESET_FAILED` row |
+| `reset_ok = false`, `state_measured = true` | `ResetTrial` 응답과 실제 position·orientation error, linear/angular speed 측정값 | threshold 실패 측정값은 보존; `RunTrial`·transport/perception/place metric은 `NA`, 최종 `success=false`인 유효한 `RESET_FAILED` row |
 | 분류된 watchdog/cancel 실패로 outer terminal 미확인 | watchdog·cancel 증거와 error code | `run_trial_result_received = false`, downstream metric `NA`, success=false 후 `SAFE_STOP`; 단순 데이터 조인 오류로 바꾸지 않음 |
 | `trial_started = true`이고 분류된 no-terminal liveness 실패가 아님 | `RunTrial` terminal result와 cleanup 뒤 final GT | 예상 없이 result 또는 final GT가 사라지면 `EVALUATION_DATA_MISSING` |
 | `perception_source_accepted = true` | result의 source stamp·frame과 일치하는 perception sample 및 허용 slop 안의 GT sample | false이면 source pose와 perception error `NA`; true여도 TF가 실패하면 `detection_ok=true`, `tf_ok=false`, perception error는 `NA` 가능 |
@@ -977,6 +985,7 @@ source 영역에서 물체가 사라졌는지, 관측 높이가 증가했는지,
 | 400 | `RESET_FAILED` | position·orientation·twist 초기화 또는 settle 확인 실패 | trial 시작 금지 |
 | 401 | `TASK_HEARTBEAT_TIMEOUT` | active trial 중 `/task/status` liveness 상실 | cancel·종료 확인 후 reset, 확인 실패 시 `SAFE_STOP` |
 | 402 | `EVALUATION_DATA_MISSING` | §4.5 존재성 계약상 도달한 stage의 action result·transport snapshot·pose sample 중 필수 입력이 누락됨 | batch 중단, 원인 수정 후 고정 seed 전체 재시작 |
+| 403 | `TASK_CANCELED` | 사용자가 요청했고 inner→outer terminal이 정상 확인된 cancel | 실패 row 기록. 평가 batch에서는 운영자가 의도적으로 취소한 경우 batch 중단·새 batch 재시작 |
 | 999 | `INTERNAL_ERROR` | 분류되지 않은 오류·unknown numeric code·계층 간 code 불일치 또는 stage mask·scope 불변식 위반 | partial CSV와 진단을 flush하고 batch 중단, 원인 수정·새 코드 추가 후 고정 seed 전체 재시작 |
 
 ---
@@ -1267,10 +1276,10 @@ Gazebo 카메라 영상이 ROS 2 topic으로 넘어오는 경로 자체가 성�
 |---|---|
 | depth만 실패 | AprilTag pose에 동결한 `tag_to_object_center_offset_tag`를 회전·적용 |
 | RGB-depth registration만 실패 | RGB의 AprilTag pose에 동결한 `tag_to_object_center_offset_tag`를 회전·적용하거나 depth 좌표계에서 별도 검출 |
-| RGB 전체 실패 | 고정 bag으로 인식 개발을 계속하되 live sensor-to-action Gate는 미통과로 기록. P0는 진단에만 사용 |
+| RGB 전체 실패 | 고정 bag으로 Session 8의 알고리즘 개발만 계속하고 `sensor_path_status=deferred`로 기록. 이는 최종 P2가 아니며 live source 복구 전에는 Session 9·Week 3 Gate·최종 평가를 통과할 수 없음. P0는 진단에만 사용 |
 | CameraInfo 실패 | 고정 intrinsics를 YAML에 명시하고 해상도 일치 검증 |
 
-AprilTag의 6-DoF 결과를 쓰더라도 이번 범위에서 downstream object pose에는 보정된 중심 위치만 전달한다. 다만 tag-frame offset을 source frame으로 회전시키기 위해 검출 orientation을 내부 계산에 사용한다. tag 원점을 물체 중심으로 간주하지 않으며, `tag_to_object_center_offset_tag`의 frame·부호·단위를 config에 기록한다. P0 ground truth는 인식 결과를 만드는 fallback이 아니다.
+AprilTag의 6-DoF 결과를 쓰더라도 이번 범위에서 downstream object pose에는 보정된 중심 위치만 전달한다. 다만 tag-frame offset을 source frame으로 회전시키기 위해 검출 orientation을 내부 계산에 사용한다. tag 원점을 물체 중심으로 간주하지 않으며, `tag_to_object_center_offset_tag`의 frame·부호·단위를 config에 기록한다. P0 ground truth는 인식 결과를 만드는 fallback이 아니다. 고정 bag은 동기화·역투영 개발을 계속하기 위한 입력일 뿐 `perception_mode=P2`로 표기하지 않는다.
 
 ---
 
@@ -1323,13 +1332,14 @@ T1에는 다음 위험이 추가로 남는다.
 `SetEntityPose`는 pose만 설정하며 linear/angular velocity를 초기화하지 않는다. 따라서 반복 평가 reset에 그대로 재사용하지 않는다.
 
 13. 현재 환경에 `simulation_interfaces/srv/SetEntityState` 또는 같은 기능의 interface가 실제 노출되는지 확인
-14. 지원되면 pose와 twist를 함께 0으로 설정하고 결과 검증
+14. 지원되면 pose와 twist를 함께 0으로 설정
 15. 지원되지 않으면 다음 중 하나를 구현·시험
     - object 삭제 후 같은 SDF와 seed로 재생성
     - simulation pause 후 pose 설정과 상태 초기화를 묶는 Gazebo system/plugin
     - 별도 custom reset system
-16. reset 직후 position·shortest-angle orientation 오차와 linear/angular speed가 각 threshold 아래인지 확인
-17. 성공한 경로를 `reset_backend`로 동결
+16. 명령 경로와 별개로 actual pose·twist를 읽는 `get_entity_state`·backend query·custom query 중 하나를 시험해 `reset_state_source`로 동결
+17. reset 직후 이 state source가 읽은 position·shortest-angle orientation 오차와 linear/angular speed가 각 threshold 아래인지 확인. 명령 response나 요청값을 actual measurement로 쓰지 않음
+18. 성공한 명령 경로를 `reset_backend`, 측정 경로를 `reset_state_source`로 각각 동결
 
 #### Week 2 Session 6B로 넘기는 것
 
@@ -1347,7 +1357,7 @@ T1에는 다음 위험이 추가로 남는다.
 - 동시 요청 1개, latest-wins 정책에서 dropped update와 timeout이 기록됨 (B-2)
 - 육안상 심한 점프나 발산이 없음 (B-2)
 - 정지 후 최종 pose가 유지됨 (B-2)
-- position·orientation과 twist를 함께 초기화하고 네 가지 error/speed threshold를 만족하는 `reset_backend`가 3회 연속 성공 (B-3)
+- `reset_backend`로 position·orientation과 twist를 초기화하고, 독립된 `reset_state_source`가 실제 상태를 측정해 네 가지 error/speed threshold를 3회 연속 만족 (B-3)
 
 #### 실패 시
 
@@ -1418,7 +1428,7 @@ position_only_ik_effective
 - `docs/setup/week0_spike.md`
 - RGB-D topic·registration·CameraInfo·optical frame 기록
 - entity pose 호출 방법, in-flight 정책, 지연·dropped update
-- position·orientation+twist reset backend와 네 가지 error/speed threshold를 포함한 3회 시험 로그
+- position·orientation+twist `reset_backend`, actual pose·twist `reset_state_source`, `state_measured`와 네 가지 error/speed threshold를 포함한 3회 시험 로그
 - 두 IK mode 비교, `ik_mode_status`를 포함한 동결값, pose goal 최소 예제와 빌드 명령
 - 세 spike의 성공·실패와 그에 따른 계획 변경 사항
 
@@ -1439,9 +1449,9 @@ position_only_ik_effective
 
 **위험 검증**
 
-- RGB·depth·CameraInfo가 5분 안정 수신되고 registration 계약이 확정되거나, 실패 원인별 P2 입력·frame·평가 계약이 확정됨
+- RGB·depth·CameraInfo가 5분 안정 수신되고 registration 계약이 확정되거나, 실패 원인별 **live P2** 입력·frame·평가 계약이 확정됨. 고정 bag만 가능한 경우 `sensor_path_status=deferred`로 Week 1·2까지 조건부 진행할 수 있으나 Session 9·Week 3 Gate·최종 평가 진입 조건은 충족하지 않음
 - ROS 경로의 A→B→A와 10 Hz × 5초 1-in-flight 추종이 성공하거나, T0 one-shot 왕복 경로와 `L1-fallback`이 확정됨
-- position·orientation과 twist reset backend가 네 가지 error/speed threshold로 3회 연속 성공 (**fallback 없음**)
+- `reset_backend`와 독립 `reset_state_source`가 확정되고 actual position·orientation·twist 측정으로 네 가지 error/speed threshold를 3회 연속 통과 (**측정 없는 fallback 없음**)
 - 코드 실행만으로 최소 안전 위치 1점의 pose/position goal plan·execute와 tool 자세가 검증됨 (**검증 자체에는 fallback 없음**)
 - `planning_frame`, `arm_base_frame`, `eef_frame`과 선택한 sensor source frame 기록
 - `ik_mode`, `ik_mode_status`와 실제 tool tilt/orientation 검증 규칙 동결
@@ -1451,10 +1461,10 @@ position_only_ik_effective
 | 실패 항목 | 판정 | Week 0 Gate |
 |---|---|---|
 | Docker 또는 smoke test | 환경을 먼저 복구 | **실패** |
-| spike A (RGB-D) | 실패 원인별 P2 입력·frame·평가 방법을 문서에 고정 | fallback 계약이 닫히면 통과 가능 |
+| spike A (RGB-D) | live P2 입력·frame·평가 방법을 고정하면 통과. 고정 bag만 있으면 `sensor_path_status=deferred`로 Week 1·2까지만 조건부 진행 | live P1/P2면 통과, deferred면 Week 3 진입 전 재검증 |
 | spike B-1 (one-shot entity pose) | ROS 2 경로의 A→B→A pose 갱신을 복구하거나 transport 설계를 재결정 | **성공 전까지 실패** |
 | spike B-2 (연속 추종) | B-1 one-shot을 T0로 동결하고 `L1-fallback`으로 전환 | T0 경로와 완료 확인이 닫히면 통과 가능 |
-| spike B-3 (reset) | position·orientation+twist reset backend를 구현하고 3회 연속 settle 재시험 | **성공 전까지 실패** |
+| spike B-3 (reset) | 상태 변경용 `reset_backend`와 actual pose·twist 측정용 `reset_state_source`를 구현하고 3회 연속 settle 재시험 | **성공 전까지 실패** |
 | spike C (pose goal/IK mode) | workspace를 안전한 1점까지 줄여 한 mode의 plan·execute·tool 자세를 검증하고 `ik_mode_status=provisional`로 동결. Session 5 재동결 전에는 6A 진입 금지 | 1점도 검증하지 못하면 **실패** |
 
 세 spike 중 둘 이상이 실패하면 Week 1 시작 전에 팀 회의를 한 번 더 한다.
@@ -1554,7 +1564,7 @@ position_only_ik_effective
 8. evaluator에서 `/task/status`를 구독하고 `task_status_timeout_s` watchdog과 `run_trial_cancel_timeout_s` outer 종료 확인 구현
 9. orchestrator에서 active `RunTrial` cancel을 `PickPlace` cancel로 전달하고 `pick_place_cancel_timeout_s` inner 종료 확인 구현
 10. 시작 시 `run_trial_cancel_timeout_s >= pick_place_cancel_timeout_s + cancel_propagation_margin_s` 검증
-11. cancel 처리
+11. cancel 처리. 사용자가 직접 요청한 confirmed cancel은 `TASK_CANCELED`, timeout/watchdog이 유발한 cancel은 initiating error code를 유지
 12. steady-clock action watchdog timeout 처리
 13. `target_mode: fixed | perception` 분기와 `SELECT_TARGET` 허용 전이표 작성
 14. evaluator가 parameter service로 orchestrator의 effective `target_mode`를 읽어 `runner_profile: week2_baseline | perception_evaluation`과의 허용 조합을 검증하고, 잘못된 조합을 `INVALID_TARGET_MODE`로 attempt/reset 전에 거부하는 dummy 시험 작성
@@ -1587,7 +1597,7 @@ manipulation: IDLE → SETUP_SCENE → PLAN_PICK → EXECUTE_PICK → PREPARE_TR
 - evaluator/test client → `RunTrial.goal.task_scope` → `PickPlace.goal.task_scope` 전파와 `pnp_manipulation → PickPlace.result → RunTrial.result`의 `planning_time_ms` 전파가 손실 없이 확인되고, scope별 required/forbidden stage와 허용되지 않은 enum·goal 조합이 motion 전에 거부됨
 - action 실행 중 cancel 가능
 - 코드화된 task 실패는 result가 수신되고 `trial_completed = true`, `pipeline_success = false`로 기록되며 `StageStatus`에서 실패 stage가 복원됨
-- terminal state가 확인된 cancel은 result 수신 + `trial_completed = false`, inner terminal을 확인하지 못한 cancel은 result 미수신 + evaluator의 `run_trial_result_received = false`로 구분되며 후자는 `SAFE_STOP`으로 감
+- terminal state가 확인된 cancel은 result 수신 + `trial_completed = false`로 남고, manual cancel은 `TASK_CANCELED`, timeout-induced cancel은 initiating code를 유지함. inner terminal을 확인하지 못한 cancel은 result 미수신 + evaluator의 `run_trial_result_received = false`로 구분되며 후자는 `SAFE_STOP`으로 감
 - active `PickPlace` 중 `RunTrial` cancel을 보내면 inner cancel이 먼저 전달되고, inner terminal 확인 뒤 outer terminal이 반환됨
 - dummy inner server가 `pick_place_cancel_timeout_s - 0.1초`에 종료하는 경계 시험에서 outer가 잘못 `SAFE_STOP`으로 가지 않음
 - inner terminal을 의도적으로 막으면 outer도 완료로 가장하지 않고 `SAFE_STOP`으로 가며 reset이 호출되지 않음
@@ -1644,7 +1654,7 @@ manipulation: IDLE → SETUP_SCENE → PLAN_PICK → EXECUTE_PICK → PREPARE_TR
 5. controller manager 목록 확인
 6. arm trajectory controller 확인
 7. gripper controller 확인
-8. 공식 Gazebo·MoveIt launch와 프로젝트 노드를 묶고, 기존 official/example world 경로를 전달할 `world` argument를 노출한 상위 launch 작성
+8. 공식 Gazebo·MoveIt launch와 프로젝트 노드를 묶고 `world` argument를 노출한 상위 launch 작성. ROBOTIS Gazebo launch가 내부에서 `.sdf`를 붙이므로 이 argument에는 **확장자를 뺀** official/example world 이름 또는 경로를 전달
 9. `getPlanningFrame()` 결과와 `link1`의 역할 차이를 `docs/frames.md`에 기록
 10. clean terminal에서 재실행
 
@@ -1660,7 +1670,7 @@ manipulation: IDLE → SETUP_SCENE → PLAN_PICK → EXECUTE_PICK → PREPARE_TR
 - planning frame, `link1`, end-effector, camera frame 차이를 설명
 - arm과 gripper controller 구분
 - 한 번의 상위 launch로 공식 simulation과 프로젝트 skeleton 실행
-- 아직 `pnp_simulation`이 없는 상태에서 existing smoke-test world를 사용해 `world` argument 전달과 resolved path 로그를 검증
+- 아직 `pnp_simulation`이 없는 상태에서 existing smoke-test world를 사용해 extensionless `world` argument 전달과 최종 `.sdf` resolved path 로그를 검증
 - 다른 사람이 repository clone 후 실행 가능
 
 ### 실패 시
@@ -1677,7 +1687,7 @@ manipulation: IDLE → SETUP_SCENE → PLAN_PICK → EXECUTE_PICK → PREPARE_TR
 
 ### world argument는 지금, project world는 Session 5
 
-Session 3에서는 아직 존재하지 않는 `pnp_simulation` 파일을 요구하지 않는다. 상위 launch가 `world` argument를 노출하고 **현재 존재하는 official/example world**의 절대 경로를 공식 Gazebo launch에 전달하는 것까지만 검증한다. Session 5에서 `pnp_simulation`을 만든 뒤 project world를 package share에 설치하고 기본값을 그 경로로 바꾼다. 그때 `package.xml`에서 Gazebo resource path도 export한다.
+Session 3에서는 아직 존재하지 않는 `pnp_simulation` 파일을 요구하지 않는다. 상위 launch가 `world` argument를 노출하고 **현재 존재하는 official/example world의 확장자 없는 이름 또는 경로**를 공식 Gazebo launch에 전달하는 것까지만 검증한다. ROBOTIS `open_manipulator_x_gazebo.launch.py`는 이 값 뒤에 `.sdf`를 붙이므로 `.sdf`까지 포함한 경로를 넘겨 `.sdf.sdf`를 만들지 않는다. Session 5에서 `pnp_simulation`을 만든 뒤에는 `project_world_file`을 package share 안의 실제 `.sdf` 절대 경로로 resolve·존재 확인하고, 공식 launch에는 마지막 `.sdf`를 제거한 `world` 값을 넘긴다. 시작 로그에는 둘을 모두 출력한다. 그때 `package.xml`에서 Gazebo resource path도 export한다.
 
 ```xml
 <export>
@@ -1691,7 +1701,7 @@ Session 3에서는 아직 존재하지 않는 `pnp_simulation` 파일을 요구�
 <uri>package://pnp_simulation/models/cube</uri>
 ```
 
-위 XML과 `CMakeLists.txt` 또는 Python package data의 `worlds/`·`models/`·`config/` install은 **Session 5 실습 항목**이다. 상위 launch에는 필요 시 `GZ_SIM_RESOURCE_PATH`에 `pnp_simulation` package share를 추가하고, Session 3부터 어떤 world를 쓰든 최종 resolved path를 시작 로그에 출력한다.
+위 XML과 `CMakeLists.txt` 또는 Python package data의 `worlds/`·`models/`·`config/` install은 **Session 5 실습 항목**이다. 상위 launch에는 필요 시 `GZ_SIM_RESOURCE_PATH`에 `pnp_simulation` package share를 추가하고, Session 3부터 어떤 world를 쓰든 `world` argument와 최종 `.sdf` resolved path를 함께 시작 로그에 출력한다.
 
 ### Week 1 Gate
 
@@ -1879,7 +1889,7 @@ place zone
 - 최종 world 파일 하나가 존재하고, 이후 회차는 이 파일을 수정해서 쓴다
 - 카메라 mount와 sensor가 배치되어 있고 frame 이름이 문서에 기록됨
 - 조명과 배경색이 고정됨 (Week 3 HSV 튜닝의 전제)
-- 상위 launch가 project world의 resolved 절대 경로를 공식 launch의 `world` argument로 전달함
+- 상위 launch가 `project_world_file`의 실제 `.sdf` 절대 경로를 검증하고, 공식 launch에는 마지막 `.sdf`를 제거한 extensionless `world` argument를 전달함
 - `pnp_simulation/package.xml` export와 install 규칙으로 `package://pnp_simulation/...` model을 찾을 수 있음
 
 ---
@@ -1888,7 +1898,7 @@ place zone
 
 **이 절을 읽지 않고 Session 5를 시작하면 IK 실패의 원인을 찾는 데 시간을 크게 쓴다.**
 
-OpenMANIPULATOR-X는 **5개의 관절 구성**을 가지며, 이 중 하나는 그리퍼 구동이다. 즉 팔의 회전 관절은 `joint1`부터 `joint4`까지 넷이고, `joint1`이 Z축 회전, 나머지가 같은 평면의 회전으로 구성된다.
+OpenMANIPULATOR-X의 **팔 planning 자유도는 4**다. 회전 관절은 `joint1`부터 `joint4`까지 넷이고, `joint1`이 Z축 회전, 나머지가 같은 평면의 회전으로 구성된다. 그리퍼는 별도의 1-DoF 구동이며 URDF에서는 좌우 두 prismatic joint 중 한쪽이 다른 쪽을 mimic하는 형태로 표현된다. 이를 팔의 다섯 번째 회전 자유도로 세지 않는다.
 
 자유도가 4인데 일반적인 pose goal은 위치 3 + 방향 3 = 6개를 구속한다. 따라서 full-pose 목표는 특별히 도달 가능한 자세 규칙을 따르지 않으면 일반적으로 해가 없다.
 
@@ -1961,11 +1971,11 @@ base_yaw ≈ atan2(object_y - joint1_origin_y,
 
 ### 5-3. 실습
 
-1. `pnp_simulation` 패키지와 최종 world 골격을 만들고 `worlds/`·`models/`·`config/` install/resource export 및 상위 launch 기본 world 연결 (테이블·큐브·카메라 mount·조명·place zone)
+1. `pnp_simulation` 패키지와 최종 world 골격을 만들고 `worlds/`·`models/`·`config/` install/resource export 및 상위 launch 기본 world 연결. `project_world_file`은 실제 `.sdf` 절대 경로로 검증하고 공식 ROBOTIS launch의 `world`에는 확장자를 제거해 전달 (테이블·큐브·카메라 mount·조명·place zone)
 2. 큐브 model에 Gazebo `PosePublisher`를 붙이고 model pose·update frequency·scoped topic을 고정
 3. `ros_gz_bridge`와 `ground_truth_adapter.py`로 큐브 하나를 선택해 `world_frame`의 `/simulation/object_ground_truth`를 발행
-4. `pnp_interfaces`에 `ResetTrial.srv`를 추가하고 `initial_pose.header.frame_id == world_frame`, finite position, finite unit quaternion만 수락
-5. `reset_trial_node.py`에서 Week 0 `reset_backend`를 감싸 position·orientation·twist reset과 `reset_position_tolerance_mm`·`reset_orientation_tolerance_deg`·속도 threshold 검증을 구현하고 3회 연속 시험
+4. `pnp_interfaces`에 `ResetTrial.srv`를 추가하고 `initial_pose.header.frame_id == world_frame`, `header.stamp == 0`, finite position, finite unit quaternion만 수락하며 response에 `state_measured` 추가
+5. `reset_state_adapter.py`로 Week 0 `reset_state_source`의 backend-private actual pose·twist query를 구현하고, `reset_trial_node.py`가 `reset_backend` 명령 뒤 이 측정값으로 position·orientation·twist threshold를 검증하도록 연결해 3회 연속 시험
 6. `pnp_bringup`의 고정 scene setup에서 정적 테이블을 등록하고, manipulation scene manager는 동적 큐브를 `planning_frame`의 명시적 `object_pose`로 등록·attach·detach·제거하는 idempotent 함수 작성. evaluator나 reset node에는 Planning Scene client를 두지 않음
 7. Gazebo·Planning Scene·reset request의 물체 ID와 frame 통일. Week 2용 `fixed_object_pose`와 EEF `fixed_pick_pose`는 별도 YAML 필드로 동결하고 GT로 만들지 않음
 8. 테이블이 없을 때와 있을 때 계획 비교
@@ -1995,7 +2005,7 @@ position-only에서는 `base_yaw_deg`와 `orientation_error_deg`를 `NA`로 둘 
 
 - `pnp_simulation` 패키지와 최종 world 파일 (카메라 mount·cube PosePublisher 포함)
 - GT bridge 설정과 `ground_truth_adapter.py`; `/simulation/object_ground_truth` 재현 로그
-- `pnp_interfaces/srv/ResetTrial.srv`와 `/simulation/reset_trial`을 제공하는 `reset_trial_node.py`; 3회 settle 로그
+- `pnp_interfaces/srv/ResetTrial.srv`, backend-private `reset_state_adapter.py`, `/simulation/reset_trial`을 제공하는 `reset_trial_node.py`; `state_measured`와 3회 settle 로그
 - `docs/world_layout.md` — 카메라 위치·frame 이름·조명 설정
 - `docs/world_layout.md` 안의 perception/evaluation geometry 절 — cube 높이·table normal·surface/tag-to-center offset·canonical orientation, zone/object 치수, yaw 처리, 세 uncertainty, safety margin, 선언 목표와 Week 2 threshold 계산
 - `pnp_bringup`의 정적 테이블 setup과 manipulation scene manager의 `object_pose` 기반 trial별 동적 object 등록·attach·detach·제거 함수
@@ -2005,9 +2015,9 @@ position-only에서는 `base_yaw_deg`와 `orientation_error_deg`를 `NA`로 둘 
 ### 완료 기준
 
 - **최종 world 골격 확정** (Session 7에서 새로 만들지 않음)
-- package install/resource export와 상위 launch 기본값으로 clean terminal에서 project world가 해석됨
+- package install/resource export와 상위 launch 기본값으로 clean terminal에서 project world가 해석되고, 로그의 `project_world_file`은 `.sdf`, 공식 `world` argument는 extensionless 값으로 일치함
 - PosePublisher → bridge → adapter 경로가 scoped cube 하나만 골라 fresh `world_frame` GT를 5분 이상 발행
-- `/simulation/reset_trial`이 `world_frame` initial pose를 받아 position·orientation·twist threshold를 3회 연속 통과하고, 고정 yaw가 실제 reset 결과와 일치
+- `/simulation/reset_trial`이 zero-stamp `world_frame` initial pose를 받아 `reset_state_source`의 actual 측정으로 `state_measured=true`와 position·orientation·twist threshold를 3회 연속 통과하고, 고정 yaw가 실제 reset 결과와 일치
 - trial별 동적 Planning Scene object는 manipulation만 수정하고, 정적 scene은 bringup이 준비하며 evaluator·reset node에는 Planning Scene/robot command 경로가 없음
 - 명시적 fixed `object_pose`로 동적 object를 등록해 테이블 충돌 회피 확인
 - `surface_to_center_offset_source`·canonical orientation·고정 yaw scenario validation이 config와 `config_hash`에 포함되고, center/surface pose를 혼동하지 않음
@@ -2124,11 +2134,11 @@ lateral_error = ||e_lateral||
 
 1. `lateral_error`가 허용 범위 이내
 2. `abs(axial_error)`가 허용 범위 안
-3. close 동작이 명령대로 수행됨: close action 정상 종료 + 실제 joint position이 commanded close target 허용오차 안. **이는 명령 실행 확인일 뿐 파지의 증거가 아님**
+3. close controller/action이 오류 없이 종료되고, 실제 gripper joint가 close 방향으로 `min_close_travel_m` 이상 이동했으며 최종 aperture가 `gate_max_final_aperture_m` 이하. **이는 구동이 수행됐다는 확인일 뿐 파지의 증거가 아님**
 4. 물체가 Planning Scene에 **world collision object로 등록되어 있고 아직 attach되지 않음**
 5. 접근·실행 단계가 정상 종료
 
-그리퍼의 open aperture는 큐브보다 넓고 close target aperture는 큐브보다 좁게 설정한다. “충분히 닫혔다”는 값은 접촉 센서가 아니므로 물체 존재의 독립 증거로 사용하지 않는다.
+그리퍼의 open aperture는 큐브보다 넓게 설정한다. commanded close target은 큐브보다 좁을 수 있지만, 정상 접촉이 있으면 joint가 그 target에 정확히 도달하지 않는 것이 자연스럽다. 따라서 exact target 오차를 gate 조건으로 사용하지 않고 `min_close_travel_m`과 `gate_max_final_aperture_m`의 안전 envelope만 검증한다. “충분히 닫혔다”는 값 역시 접촉 센서가 아니므로 물체 존재의 독립 증거로 사용하지 않는다.
 
 #### 임계값 정하는 법
 
@@ -2153,7 +2163,7 @@ lateral_error = ||e_lateral||
 4. manipulation의 `SETUP_SCENE`에서 open/home과 `object_pose` 기반 dynamic collision object 등록을 수행한 뒤 pre-grasp → approach → close 단계 함수 연결
 5. `grasp_frame`의 current transform으로 접근축을 planning frame에 회전
 6. `desired_axial_offset`을 포함한 `lateral_error`·`axial_error` 계산 구현
-7. transport의 `ground_truth_max_age_s`, grasp gate, relative translation/rotation, aperture, joint-position 임계값 YAML 작성
+7. transport의 `ground_truth_max_age_s`, grasp gate, relative translation/rotation, open aperture, `min_close_travel_m`, `gate_max_final_aperture_m` 임계값 YAML 작성
 8. manipulation은 `run_id`·`object_id`·`grasp_frame`·`transport_mode`를 넣어 `/transport/prepare`를 호출
 9. transport가 fresh GT와 같은 timestamp의 TF로 gate를 계산하고, 통과 시에만 실제 `T_eef_object`를 내부 저장
 10. `prepared && grasp_evaluated && grasp_eligible` 응답일 때만 Planning Scene attach
@@ -2177,7 +2187,7 @@ lateral_error = ||e_lateral||
 - `RunTrial → PickPlace`로 전파되는 `PICK_LIFT_ONLY` scope, `object_pose` 기반 scene lifecycle과 explicit `CLEANUP`을 가진 pick 단계 action server
 - fresh GT/TF gate와 실제 `T_eef_object` 내부 저장, parameter YAML
 - 접근축 벡터 확정값
-- `grasp_frame`, 접근축 부호, `desired_axial_offset`, gripper aperture 계약
+- `grasp_frame`, 접근축 부호, `desired_axial_offset`, gripper open aperture와 close-travel/final-aperture envelope 계약
 - run별 grasp metric, relative translation/rotation error·verdict, T0 phase/count status 기록
 - full 5회 또는 reduced 3회 시험 결과와 선택 경로
 
@@ -2606,7 +2616,7 @@ p_object_center_source =
 |---|---|
 | depth만 실패 | AprilTag pose에 동결한 `tag_to_object_center_offset_tag`를 회전·적용 |
 | RGB-depth registration 실패 | AprilTag pose에 동결한 `tag_to_object_center_offset_tag`를 회전·적용하거나 depth 좌표계에서 별도 검출 |
-| RGB 전체 실패 | 고정 bag으로 인식 개발을 계속하되 live sensor-to-action Gate는 미통과로 기록. P0는 진단에만 사용 |
+| RGB 전체 실패 | 고정 bag으로 Session 8의 알고리즘 개발만 계속하고 `sensor_path_status=deferred`로 기록. 이는 최종 P2가 아니며 live source 복구 전에는 Session 9·Week 3 Gate·최종 평가를 통과할 수 없음. P0는 진단에만 사용 |
 | CameraInfo 실패 | 해상도와 함께 고정 intrinsics 명시 |
 
 - tag ID로 물체를 식별할 수 있다.
@@ -2710,7 +2720,7 @@ p_object_center_source =
 ### Week 3 Gate
 
 - RGB-D topic과 bag 재생
-- P1 또는 문서화된 P2 fallback
+- P1 또는 **live source로 검증된** P2 fallback (`sensor_path_status=deferred`·고정 bag은 Gate 불가)
 - camera → planning frame TF 변환
 - 인식 기반 전체 픽앤플레이스
 - `runner_profile=perception_evaluation`, `target_mode=perception`에서 Session 6B runner를 재사용한 최소 10회 sensor-to-action trial
@@ -2734,7 +2744,7 @@ p_object_center_source =
 4. action cancel
 5. manipulation `CLEANUP`에서 같은 run transport `STOP`·gripper open·robot home·Planning Scene detach/remove
 6. cleanup succeeded 뒤 manipulation/orchestrator가 terminal result를 반환하고, evaluator가 action result·terminal transport snapshot·reset 전 final GT를 수집
-7. evaluator는 robot/Planning Scene을 조작하지 않고 `/simulation/reset_trial`을 호출하며, `pnp_simulation`이 동결한 reset backend로 Gazebo object position·orientation·twist만 reset한 뒤 evaluator가 새 sensor frame을 확인
+7. evaluator는 robot/Planning Scene을 조작하지 않고 zero-stamp `world_frame` pose로 `/simulation/reset_trial`을 호출한다. `pnp_simulation`은 동결한 `reset_backend`로 Gazebo object position·orientation·twist를 reset하고 `reset_state_source`의 actual 측정으로 `state_measured`·settle 결과를 반환한 뒤 evaluator가 새 sensor frame을 확인
 8. evaluator가 다음 attempt 시작
 9. fault injection 3종
 10. `StageStatus.msg` bit 중복·부분집합 불변식, scope별 required mask, `planning_time_ms` inner→outer 전파, `ErrorCode.msg` 숫자 중복·unknown code 정규화·계층 간 code 전파 시험
@@ -2829,15 +2839,15 @@ runner는 reset 전에 attempt row와 `run_id`를 먼저 만들고 ResetTrial re
 
 1. 이전 `RunTrial`이 active인 경우에만 cancel하고 §4.4 예산에 따라 active `PickPlace`까지 terminal state임을 확인. 이미 terminal이면 중복 cancel하지 않음
 2. 이전 attempt가 manipulation에 도달했다면 result의 `CLEANUP` succeeded와 같은 run의 terminal `TransportStatus`를 확인. 종료·cleanup·terminal snapshot 중 필요한 것이 확인되지 않으면 `SAFE_STOP`으로 이동하고 아래 reset 순서를 실행하지 않음
-3. `/simulation/reset_trial`에 `world_frame`의 stamped initial pose를 보내 Week 0에서 동결한 `reset_backend`로 **Gazebo object pose와 linear/angular velocity만** reset
-4. position·shortest-angle orientation 오차와 linear/angular speed가 동결 threshold 아래인지 확인하며 settle
+3. `/simulation/reset_trial`에 zero-stamp `world_frame` initial pose를 보내 Week 0에서 동결한 `reset_backend`로 **Gazebo object pose와 linear/angular velocity만** reset
+4. `reset_state_source`가 읽은 actual pose·twist로 `state_measured`와 position·shortest-angle orientation 오차, linear/angular speed가 동결 threshold 아래인지 확인하며 settle
 5. pre-reset perception/GT buffer를 비우고 evaluator receive sequence·steady-clock window 열기
 6. 새 GT frame과, `perception_evaluation` profile이면 새 RGB-D frame 확인
 7. `RunTrial` goal 전송과 함께 `trial_started = true` 기록
 
 evaluator에는 transport control, robot/gripper controller, Planning Scene client를 두지 않는다. open/home·transport stop·detach/remove는 이전 action의 manipulation `CLEANUP` 책임이고, 새 dynamic collision object 등록은 다음 `PickPlace.SETUP_SCENE`가 sensor/fixed `object_pose`로 수행한다. evaluator가 scenario의 `initial_pose`로 collision object를 재등록하면 scoring GT가 실행 경로로 새므로 금지한다.
 
-`SetEntityPose` 단독 호출은 3번을 충족하지 않는다. `SetEntityState`가 실제 노출되면 pose+twist를 함께 설정하고, 그렇지 않으면 respawn 또는 custom reset system을 사용한다. 어느 경로든 reset 실패 시 `RunTrial`을 시작하지 않되, 해당 고정 scenario row를 삭제하거나 대체하지 않는다. `trial_started = false`, `run_trial_result_received = false`, `trial_completed = false`, `pipeline_success = false`, `grasp_plausible_success = false`, `place_success = NA`, 최종 `success = false`, `error_code = RESET_FAILED`와 position·orientation·속도 측정값을 기록하며, 도달하지 않은 downstream metric은 `NA`로 두고 평가 분모에 포함한다.
+`SetEntityPose` 단독 호출은 3번을 충족하지 않는다. `SetEntityState`가 실제 노출되면 pose+twist를 함께 설정하고, 그렇지 않으면 respawn 또는 custom reset system을 사용한다. 어느 명령 경로든 성공 boolean을 검증값으로 간주하지 않고 `reset_state_source`로 actual pose·twist를 읽는다. reset 실패 시 `RunTrial`을 시작하지 않되, 해당 고정 scenario row를 삭제하거나 대체하지 않는다. `trial_started = false`, `run_trial_result_received = false`, `trial_completed = false`, `pipeline_success = false`, `grasp_plausible_success = false`, `place_success = NA`, 최종 `success = false`, `error_code = RESET_FAILED`를 기록한다. `state_measured=true`면 position·orientation·속도 측정값을 보존하고, false면 네 값은 `NA`로 두며, 도달하지 않은 downstream metric도 `NA`로 두고 평가 분모에 포함한다.
 
 reset이 성공해 trial을 시작한 뒤에는 `RunTrial` terminal 또는 분류된 watchdog/cancel outcome을 먼저 확정한다. evaluator가 action result·조건부 terminal `TransportStatus`·perception/GT sample을 COLLECT하고 SCORE·RECORD해 active attempt window를 닫은 뒤에만 다음 attempt의 reset으로 간다.
 
@@ -2874,6 +2884,7 @@ place_target_z_m
 place_success_threshold_mm
 
 reset_ok
+reset_state_measured
 reset_position_error_mm
 reset_orientation_error_deg
 reset_linear_speed_mps
@@ -2910,7 +2921,9 @@ transport_timeout_count
 transport_ok                 # 선택한 T1/T0 transport 단계 완료
 place_error_mm
 place_ok                     # inner PLACE가 release까지 완료; lift-only는 NA
-final_gt_age_ms              # terminal→final GT steady receive gap
+final_gt_stamp_ns             # accepted post-terminal GT source stamp
+final_gt_receive_seq          # evaluator-local receive sequence
+final_gt_age_ms              # terminal→final GT steady receive gap; header age가 아님
 cleanup_ok
 
 pipeline_success             # RunTrial outer pipeline이 COMPLETE에 도달
@@ -2970,7 +2983,7 @@ CSV의 `error_code`는 `ErrorCode.msg` 숫자 하나인 primary code이고 `erro
 6. steady-clock action timeout과 run ID 연결
 7. `/task/status` subscriber와 `task_status_timeout_s` watchdog, `run_trial_cancel_timeout_s` outer 종료 확인, `pick_place_cancel_timeout_s`·`cancel_propagation_margin_s` 불변식 재검증
 8. `perception_evaluation`에서 `perception_source_accepted = true`이면 result의 source stamp·frame과 일치하는 저장 pose를 찾고, 그 stamp의 최근접 GT를 `evaluation_gt_sync_slop_s` 안에서 골라 각 pose를 자기 header stamp의 `planning_frame`으로 변환한 뒤 `perception_gt_dt_ms`와 error 계산. `week2_baseline`과 정상 인식 실패에서는 관련 필드를 `NA`로 유지
-9. full-scope action terminal 뒤이고 `evaluation_final_gt_max_age_s` 이내인 final GT를 자기 stamp의 `planning_frame`으로 변환해 scoring-only `place_target_pose`와의 `place_error_mm`를 계산하고 `error <= threshold`만으로 place success 판정. `place_ok`는 별도 stage 지표로 유지
+9. full-scope action terminal+cleanup 시 `terminal_gt_receive_seq`와 최신 GT stamp를 snapshot하고, receive sequence와 header stamp가 모두 그 경계보다 새로우며 `evaluation_final_gt_max_age_s` 이내인 final GT만 자기 stamp의 `planning_frame`으로 변환한다. `final_gt_stamp_ns`·`final_gt_receive_seq`·steady gap을 기록하고 scoring-only `place_target_pose`와의 `place_error_mm`를 계산해 `error <= threshold`만으로 place success 판정. `place_ok`는 별도 stage 지표로 유지
 10. `transport_prepare_attempted = true`인 run만 `TransportStatus`의 grasp·relative-pose·slip·one-shot phase/count·counter terminal snapshot을 action result와 `run_id`로 병합
 11. reset 실패·prepare 이전 실패·분류된 미종료 cancel은 의도된 `NA`/false로 기록하고, stage 도달 flag가 true인데 필수 artifact가 없을 때만 `EVALUATION_DATA_MISSING`으로 batch 중단
 12. `ErrorCode.msg`와 primary-code 우선순위로 `error_source`·numeric code·name을 기록하고 action/transport code 불일치 fault를 `INTERNAL_ERROR`로 중단
@@ -3316,7 +3329,7 @@ CSV의 `error_code`는 `ErrorCode.msg` 숫자 하나인 primary code이고 `erro
 3. transport flag가 true일 때만 같은 `run_id`의 terminal `REJECTED`·`STOPPED`·`ERROR` snapshot을 찾음
 4. `PoseStamped` GT/perception에는 `run_id`가 없으므로 reset 성공 때 buffer를 비웠는지, receive sequence·steady window 밖 sample을 잘못 결합하거나 header stamp를 attempt 소속 판정에 사용하지 않았는지 확인
 5. `perception_gt_dt_ms`가 동결한 `evaluation_gt_sync_slop_s` 안인지 확인
-6. final GT가 action terminal·cleanup 뒤에 새로 수신됐고 다음 reset 전이며 terminal→receive steady gap이 `evaluation_final_gt_max_age_s` 이내인지, scoring-only target·threshold가 실행 때와 같은 `config_hash`인지 확인
+6. final GT의 evaluator receive sequence와 `header.stamp`가 terminal snapshot보다 모두 새롭고 다음 reset 전이며 terminal→receive steady gap이 `evaluation_final_gt_max_age_s` 이내인지 확인. 늦게 도착한 pre-terminal sample이나 sim stamp가 멈춘 sample을 재사용하지 않았는지, scoring-only target·threshold가 실행 때와 같은 `config_hash`인지 확인
 7. 실제 필수 artifact 누락이면 batch를 중단하고 원인 수정 후 고정 seed 전체를 다시 시작. reset 실패 row를 지우거나 성공 seed로 대체하지 않음
 
 ## 12.10 평가 row가 `INTERNAL_ERROR`로 중단됨
@@ -3377,7 +3390,7 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 - [ ] 메인 PC 재현, 다른 PC 또는 clean container 재현 권장
 - [ ] **Week 0 spike 3종 결과 기록** (RGB-D registration · 추종/reset · IK mode)
 - [ ] 최종 world 파일 하나로 유지됨
-- [ ] project world argument와 Gazebo resource export 확인
+- [ ] `project_world_file` 실제 `.sdf` 경로, 공식 launch의 extensionless `world` argument와 Gazebo resource export 확인
 
 ## ROS 시스템
 
@@ -3393,7 +3406,7 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 - [ ] steady-clock planning-call 합계 `planning_time_ms`는 manipulation→outer result, `total_time_ms`는 evaluator attempt timer라는 생산자 계약
 - [ ] `perception_source_accepted`·source stamp/frame·`transport_prepare_attempted`와 조건부 평가 artifact 존재성 계약
 - [ ] `PrepareTransport.srv`와 run-aware `ControlTransport.srv`의 START/UPDATE/CHECK/STOP 계약
-- [ ] action cancel
+- [ ] action cancel: manual confirmed cancel은 `TASK_CANCELED`, timeout-induced cancel은 initiating code 유지
 - [ ] `run_trial_cancel_timeout_s >= pick_place_cancel_timeout_s + cancel_propagation_margin_s`와 경계·실패 fault injection
 - [ ] timeout
 - [ ] `/task/status`: orchestrator publisher · evaluator steady-clock watchdog · fault injection
@@ -3435,7 +3448,7 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 
 - [ ] grasp offset
 - [ ] `grasp_frame`·접근축 부호·desired axial offset
-- [ ] **grasp gate·aperture·joint target 임계값 YAML**
+- [ ] **grasp gate·open aperture·`min_close_travel_m`·`gate_max_final_aperture_m` YAML**
 - [ ] grasp gate 미달 시 T1/T0 transport 미실행 확인
 - [ ] transport가 fresh GT/TF로 실제 `T_eef_object`를 내부 계산하며 manipulation에 GT/offset을 노출하지 않음
 - [ ] PosePublisher → bridge → ground_truth_adapter
@@ -3452,14 +3465,14 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 
 ## 평가
 
-- [ ] Session 5부터 동작하는 `/simulation/reset_trial`, stamped `world_frame` initial pose, finite unit quaternion, position·orientation·twist settle threshold와 CSV 전파; backend·네 threshold·quaternion tolerance는 `config_hash`에 포함
+- [ ] Session 5부터 동작하는 `/simulation/reset_trial`, zero-stamp `world_frame` initial pose, finite unit quaternion, 상태 변경용 `reset_backend`와 actual pose·twist 측정용 `reset_state_source`, `state_measured`, position·orientation·twist settle threshold와 CSV 전파; 두 경로·네 threshold·quaternion tolerance는 `config_hash`에 포함
 - [ ] Session 6B `week2_baseline + fixed` runner로 Week 2 무개입 10회와 Session 11 이후 회귀 재실행
 - [ ] 고정 seed
 - [ ] L2 최소 20회 또는 L1-fallback 최소 10회, 권장 30회
 - [ ] `git_commit`, `config_hash`와 일곱 최종 실행 구성 필드: `completion_level`, `perception_mode`, `transport_mode`, `ik_mode`, `ik_mode_status=final`, `runner_profile=perception_evaluation`, `target_mode=perception`
 - [ ] raw CSV
 - [ ] sensor/fixed `object_pose`, EEF 명령 `place_pose`, scoring-only object `place_target_pose`와 §2.4 threshold가 분리되고 zone/object 치수·yaw 처리·최악 회전 반경·safety margin·품질 한계·`evaluation_final_gt_max_age_s`와 함께 `config_hash`에 포함
-- [ ] `RunTrial` result와 조건부 terminal `TransportStatus`는 `run_id`로, GT/perception `PoseStamped`는 active attempt time window·timestamp로 연결
+- [ ] `RunTrial` result와 조건부 terminal `TransportStatus`는 `run_id`로, GT/perception `PoseStamped`는 active attempt time window·timestamp로 연결. final GT는 terminal snapshot보다 receive sequence와 header stamp가 모두 새로워야 함
 - [ ] reset 실패·stage 미도달의 의도된 `NA`와, true인 stage flag의 실제 artifact 누락(`EVALUATION_DATA_MISSING`) 구분
 - [ ] 완주 batch는 고정 scenario 수와 raw CSV attempt 수 일치, reset 실패도 분모에 포함하며 채점 완료 전 다음 reset 금지. `EVALUATION_DATA_MISSING`·`INTERNAL_ERROR`·`SAFE_STOP` 중단 batch는 partial CSV를 별도 보존하고 최종 분모에서 제외
 - [ ] **성공률 3종 분리 계산** (pipeline / grasp_plausible / place); 앞의 두 비율과 최종 success는 전체 할당 row, place 비율은 non-NA 분모와 coverage를 함께 보고
@@ -3550,6 +3563,16 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 ---
 
 # 18. 개정 이력
+
+## v3.5.2 — 2026-07-27
+
+- reset 명령 경로 `reset_backend`와 actual pose·twist 측정 경로 `reset_state_source`를 분리하고 `ResetTrial.state_measured`·NaN/CSV NA 계약을 추가
+- gripper close exact-target 조건을 제거하고 close travel·final aperture의 구동 envelope로 교정해 정상 접촉 파지를 거부할 수 있는 모순을 해소
+- ROBOTIS Gazebo launch가 `.sdf`를 붙이는 실제 동작에 맞춰 `project_world_file`과 extensionless `world` argument를 분리
+- final GT가 terminal 뒤 늦게 도착한 과거 sample을 재사용하지 않도록 receive sequence와 source stamp의 이중 신선도 경계를 추가
+- 고정 bag을 개발 전용 deferred 경로로 명시하고 최종 P2·Week 3 Gate와 분리
+- manual confirmed cancel의 canonical `TASK_CANCELED` 코드와 reset·final-GT audit CSV 필드를 추가
+- README·progress·docs 경로표까지 v3.5.2 기록 계약으로 동기화
 
 ## v3.5.1 — 2026-07-27
 

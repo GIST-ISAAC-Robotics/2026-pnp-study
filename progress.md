@@ -12,7 +12,7 @@
 
 | 단계 | 상태 | 현재 결과 / 진입 조건 |
 |---|---|---|
-| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.1 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리; 구현은 아직 시작 전 |
+| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.2 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리; 구현은 아직 시작 전 |
 | Week 0 — 환경·위험 제거 | 대기 | Docker, 공식 smoke test, RGB-D·pose follower·reset·IK spike |
 | Week 1 — ROS 2 시스템 뼈대 | 대기 | Week 0 Gate 통과 후 시작 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
@@ -27,12 +27,22 @@
 - [ ] Session 0-1: ROBOTIS Docker 환경 구축
 - [ ] Session 0-2: 공식 Gazebo·MoveIt smoke test
 - [ ] Session 0-3: RGB-D, pose 추종/reset, pose goal·IK mode spike
-- [ ] `docs/setup/docker.md`에 S0-1 환경과 smoke test 기록
+- [ ] `docs/setup/docker.md`에 S0-1 환경 기록; S0-2 종료 시 공식 smoke test 결과 추가
 - [ ] `docs/setup/week0_spike.md`에 동결값과 Gate 판정 기록
 
 세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 0](./curriculum.md#6-week-0--환경-구축과-위험-제거)을 따른다.
 
 ## 회차 로그
+
+### 2026-07-27 — 커리큘럼 v3.5.2 전수 계약·저장소 회귀 검토
+
+- **상태:** 완료
+- **수행:** `curriculum.md` 처음부터 끝까지 producer/consumer, 상태기계, interface, reset·transport·평가 CSV와 README·`docs/README.md`·`progress.md` 기록 체계를 재검토
+- **결과:** reset 명령과 actual state 측정 경로를 분리하고 `state_measured`를 추가했다. gripper exact-close 모순, official world argument의 `.sdf` 중복 위험, terminal 뒤 지연 GT 재사용, fixed-bag의 최종 P2 오인, manual cancel code 누락을 교정했다. HTML/Pages 파일은 검토·수정 범위에서 제외했다.
+- **문제:** ROS 구현 전이므로 compile·Gazebo runtime 동작은 아직 검증하지 못함
+- **결정:** 실행 명세 v3.5.2를 Week 0 기준으로 사용. runtime에서 동결할 값은 `progress.md`와 지정 전문 문서에 증빙 링크와 함께 기록
+- **다음:** Session 0-1에서 Docker 환경 구축 시작
+- **증빙:** [curriculum.md](./curriculum.md), [README](./README.md), [문서 산출물 경로](./docs/README.md)
 
 ### 2026-07-27 — 커리큘럼 v3.5.1 교차 계약 재검토
 
