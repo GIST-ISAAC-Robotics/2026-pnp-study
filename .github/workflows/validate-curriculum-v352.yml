@@ -57,7 +57,7 @@ jobs:
               'state_measured': 10,
               'TASK_CANCELED': 5,
               'final_gt_stamp_ns': 2,
-              'final_gt_receive_seq': 3,
+              'final_gt_receive_seq': 2,
               'project_world_file': 5,
               'min_close_travel_m': 4,
               'gate_max_final_aperture_m': 4,
