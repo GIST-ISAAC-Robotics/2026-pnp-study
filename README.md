@@ -2,9 +2,9 @@
 
 ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤플레이스 시스템을 처음부터 반복 평가까지 완주하는 2인 스터디입니다.
 
-> **현재 상태 — 2026-07-27**
+> **현재 상태 — 2026-07-28**
 >
-> 실행 커리큘럼 `v3.5.2` 확정 · 저장소/Pages 정리 완료 · **Week 0 시작 전**
+> 실행 커리큘럼 `v3.5.3` 확정 · 저장소/Pages 정리 완료 · **Week 0 시작 전**
 
 ## 바로가기
 
@@ -61,7 +61,7 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 │   ├── setup/
 │   │   ├── docker.md                 # S0-1에서 최초 작성
 │   │   └── week0_spike.md            # S0-2~S0-3에서 최초 작성
-│   ├── session01_ros_graph.md        # S1에서 최초 작성
+│   ├── system_architecture.md        # S1 최초 작성 · S2~S3 갱신
 │   ├── frames.md                     # S3에서 최초 작성
 │   ├── world_layout.md               # S5에서 최초 작성
 │   └── rgbd_topics.md                # S7에서 최초 작성

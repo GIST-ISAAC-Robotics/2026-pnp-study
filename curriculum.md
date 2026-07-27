@@ -1,9 +1,9 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v3.5.2 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
+## 최종 실행 커리큘럼 v3.5.3 — ROS 2 · Gazebo · MoveIt · RGB-D 통합
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
-> **개정일:** 2026-07-27
+> **개정일:** 2026-07-28
 >
 > **운영 권장:** 주 3회, 회차당 2.5~3.5시간 (Week 2만 4회차) + 회차 사이 개인 작업 1인당 주 2시간 상한  
 > **환경:** Windows + WSL2 + ROBOTIS 공식 Docker 환경  
@@ -206,7 +206,7 @@ Session 6 분할로 본과정은 **13회**다. Week 2만 주 4회로 운영하�
 - Gazebo world와 물체 모델
 - MoveGroupInterface 기반 manipulation action server
 - orchestrator, reset 경로, 평가 runner
-- 고정 seed 반복 평가 CSV와 오류 코드별 개수
+- 고정 seed 반복 평가 raw CSV·batch summary와 오류 코드별 개수
 - 오류 코드 표, 시스템 구조도, TF tree, 상태 전이도
 - 최종 시연 영상
 - 최소 1개의 단위 테스트와 1개의 reset 후 재실행 통합 테스트
@@ -326,11 +326,30 @@ zone·object 치수, yaw 처리 방식, 세 uncertainty 측정값, safety margin
 | sensor-to-action | 필수 | 필수 |
 | 최종 표기 | `completion_level: L2` | `completion_level: L1-fallback` |
 
+runner는 batch를 시작할 때마다 `output_root` 아래에 새 출력 디렉터리를 만든다. 권장 이름은 `evaluation_results/<YYYYMMDDTHHMMSSZ>_<runner_profile>_<config12>/`이며 `config12`는 full `config_hash`의 앞 12자다. 기존 디렉터리를 재사용하거나 그 안의 CSV에 append하지 않는다. 각 디렉터리에는 최소한 `raw.csv`와 `batch_summary.yaml`을 함께 둔다.
+
+```yaml
+batch_status: completed | aborted
+runner_profile: week2_baseline | perception_evaluation
+target_mode: fixed | perception
+git_commit: "<full commit SHA>"
+config_hash: "<full config hash>"
+expected_row_count: 20
+recorded_row_count: 20
+abort_reason: "<canonical error/state or null>"
+last_run_id: "<last allocated run_id or null>"
+raw_csv: raw.csv
+started_at_utc: "YYYY-MM-DDTHH:MM:SSZ"
+ended_at_utc: "YYYY-MM-DDTHH:MM:SSZ"
+```
+
+완주한 batch는 `batch_status=completed`, 두 row 수의 일치, `abort_reason=null`을 기록한다. 중단 batch는 `batch_status=aborted`, 실제 기록 수와 중단 원인을 남긴다. 이 둘은 평가 **실행 데이터 산출물**이므로 전문 문서만 관리하는 `docs/README.md` 경로표의 대상이 아니다.
+
 평가 중 기능 또는 코드를 바꾸면 남은 trial만 이어 붙이지 않는다. 새 `git_commit`과 `config_hash`로 **전체 평가를 처음부터 다시 시작**한다.
 
-평가 전에 고정한 scenario/seed 한 행은 **한 attempt이자 분모 한 칸**이다. reset·detection·planning 등 어느 단계에서 실패해도 그 행을 성공할 때까지 대체 실행하지 않고 실패 row를 남긴다. metric 결합 자체가 깨진 `EVALUATION_DATA_MISSING`과 mask·code·scope 불변식이 깨진 `INTERNAL_ERROR`는 유효한 평가가 아니므로 batch를 중단하고 같은 고정 seed 전체를 새 commit/config로 재시작한다. outer terminal을 확인하지 못한 `SAFE_STOP`은 실제 liveness 실패 row로 남기되 무개입 batch를 그 자리에서 종료하며, 수동 복구 뒤 남은 seed에 이어 쓰지 않고 고정 seed 전체를 다시 시작한다.
+평가 전에 고정한 scenario/seed 한 행은 **한 attempt이자 분모 한 칸**이다. reset·detection·planning 등 어느 단계에서 실패해도 그 행을 성공할 때까지 대체 실행하지 않고 실패 row를 남긴다. metric 결합 자체가 깨진 `EVALUATION_DATA_MISSING`과 mask·code·scope 불변식이 깨진 `INTERNAL_ERROR`는 유효한 평가가 아니므로 batch를 중단하고 원인을 고친 새 commit/config로 같은 고정 seed 전체를 재시작한다. outer terminal을 확인하지 못한 `SAFE_STOP`은 실제 liveness 실패 row로, 평가 중 운영자가 요청해 정상 확인된 `TASK_CANCELED`는 취소 실패 row로 남기되 둘 다 무개입 batch를 그 자리에서 종료한다. 수동 복구 뒤 남은 seed에 이어 쓰지 않고 새 출력 디렉터리에서 고정 seed 전체를 다시 시작하며, 코드나 config가 바뀌었다면 새 `git_commit`과 `config_hash`를 사용한다.
 
-고정 scenario 수와 raw CSV row 수가 같아야 한다는 조건은 **끝까지 완주한 batch에만** 적용한다. `EVALUATION_DATA_MISSING`·`INTERNAL_ERROR` 또는 `SAFE_STOP`으로 중단되면 그 시점까지 실제 할당한 attempt row와 진단 정보를 즉시 flush하고, batch summary에 `batch_status=aborted`, 기대·기록 row 수, `abort_reason`, `last_run_id`를 남긴다. 이 partial CSV는 최종 성공률 분모로 사용하지 않는다. 수동 복구 뒤에는 같은 CSV나 `batch_id`에 이어 쓰지 않고 새 batch로 고정 seed 전체를 다시 시작한다.
+고정 scenario 수와 raw CSV row 수가 같아야 한다는 조건은 **끝까지 완주한 batch에만** 적용한다. `EVALUATION_DATA_MISSING`·`INTERNAL_ERROR`·`SAFE_STOP` 또는 평가 중 `TASK_CANCELED`로 중단되면 그 시점까지 실제 할당한 attempt row와 진단 정보를 `raw.csv`에 즉시 flush하고, 같은 디렉터리의 `batch_summary.yaml`에 `batch_status=aborted`, `expected_row_count`, `recorded_row_count`, `abort_reason`, `last_run_id`를 남긴다. 이 partial CSV는 최종 성공률 분모로 사용하지 않는다.
 
 ---
 
@@ -585,7 +604,7 @@ Gazebo PosePublisher
 | `task_scope` | evaluator 또는 6A test client | `RunTrial.goal → PickPlace.goal` | manipulation stage requirement, evaluator CSV |
 | `object_pose` | orchestrator가 fixed config 또는 accepted perception 중심 위치 + 동결한 canonical orientation으로 생성 | orchestrator → `PickPlace.goal` | manipulation의 동적 Planning Scene 등록 |
 | `planning_time_ms` | manipulation steady clock | `PickPlace.result → RunTrial.result` | evaluator CSV |
-| `StageStatus` | manipulation inner bit, orchestrator outer bit | orchestrator가 mask 병합 | evaluator의 `true | false | NA` 변환 |
+| `StageStatus` | manipulation inner bit, orchestrator outer bit | orchestrator가 mask 병합 | evaluator의 `true`/`false`/`NA` 변환 |
 | `relative_pose_ok` | transport의 fresh GT/TF 계산 | `ControlTransport` response | manipulation `VERIFY_PICK` |
 | terminal `TransportStatus` | transport | `/transport/state` | evaluator 진단·CSV |
 | final GT | simulation adapter | `/simulation/object_ground_truth` | evaluator place scoring 전용 |
@@ -1533,7 +1552,7 @@ position_only_ik_effective
 
 ### 회차 사이 작업
 
-- `docs/session01_ros_graph.md`
+- 장기 보존용 전문 문서 `docs/system_architecture.md`에 현재 node/topic graph를 최초 작성하고, action/service·cancel/timeout·`/task/status` 내용은 Session 2~3에서 갱신
 - 각자 새 terminal에서 workspace source와 실행 재현
 - ROS graph를 말로 설명하는 3분 녹화
 
@@ -2416,14 +2435,14 @@ T0 경로는 1~4의 persistent follower·rate sweep·quaternion 연속성 작업
 
 6A의 pick-and-lift 5회와 6B의 단계 시험 5회는 서로 다른 검증이므로, 단순 합계만으로 **10회 연속 전체 시험**이 되지는 않는다. Week 2 Gate의 반복 의무는 Session 6B의 최소 `scenario_runner.py`가 `runner_profile=week2_baseline`, `target_mode=fixed`에서 `/simulation/reset_trial`과 `RunTrial`을 호출해, 동결한 설정·reset·scenario에서 사람의 개입 없이 수행하는 고정 좌표 full pick-and-place 10회 한 세트다.
 
-6B의 전체 trial이 위 조건을 만족하며 연속 실행됐다면 그 횟수부터 포함한다. 6A의 lift-only trial은 포함하지 않는다. 남은 횟수만 §5.5 상한 안에서 회차 사이 또는 Week 3 첫 30분에 수행한다. 이 Gate의 10회는 성공률 100% 요구가 아니라 **10개 attempt 모두 reset 성공, code화된 `RunTrial` terminal·cleanup·기록 완료, 사람 개입 없음**을 뜻한다. 개별 `pipeline_success=false`는 실패 row로 남길 수 있지만 reset 실패, `EVALUATION_DATA_MISSING`, `INTERNAL_ERROR`, `SAFE_STOP` 중 하나라도 있으면 Gate 세트를 처음부터 다시 실행한다.
+6B의 전체 trial이 위 조건을 만족하며 연속 실행됐다면 그 횟수부터 포함한다. 6A의 lift-only trial은 포함하지 않는다. 남은 횟수만 §5.5 상한 안에서 회차 사이 또는 Week 3 첫 30분에 수행한다. 이 Gate의 10회는 성공률 100% 요구가 아니라 **10개 attempt 모두 reset 성공, code화된 `RunTrial` terminal·cleanup·기록 완료, 사람 개입 없음**을 뜻한다. 개별 `pipeline_success=false`는 실패 row로 남길 수 있지만 reset 실패, `EVALUATION_DATA_MISSING`, `INTERNAL_ERROR`, `SAFE_STOP`, `TASK_CANCELED` 중 하나라도 있으면 Gate 세트를 새 출력 디렉터리에서 처음부터 다시 실행한다.
 
 기록 항목:
 
 ```text
 attempt_index, scenario_id, run_id, seed, config_hash,
 place_target_x_m, place_target_y_m, place_target_z_m, place_success_threshold_mm,
-reset_ok, reset_position_error_mm, reset_orientation_error_deg,
+reset_ok, reset_state_measured, reset_position_error_mm, reset_orientation_error_deg,
 reset_linear_speed_mps, reset_angular_speed_rad_s,
 trial_started, run_trial_result_received, trial_completed,
 runner_profile, target_mode, ik_mode, ik_mode_status, transport_mode,
@@ -2431,7 +2450,8 @@ perception_source_accepted, transport_prepare_attempted, grasp_evaluated, grasp_
 grasp_lateral_error_mm, grasp_axial_error_mm,
 transport_relative_pose_ok, transport_relative_translation_error_mm,
 transport_relative_rotation_error_deg, transport_one_shot_update_count,
-transport_max_slip_mm, place_error_mm, cleanup_ok,
+transport_max_slip_mm, place_error_mm,
+final_gt_stamp_ns, final_gt_receive_seq, final_gt_age_ms, cleanup_ok,
 pipeline_success, grasp_plausible_success, place_success, success, error_code
 ```
 
@@ -2985,10 +3005,10 @@ CSV의 `error_code`는 `ErrorCode.msg` 숫자 하나인 primary code이고 `erro
 8. `perception_evaluation`에서 `perception_source_accepted = true`이면 result의 source stamp·frame과 일치하는 저장 pose를 찾고, 그 stamp의 최근접 GT를 `evaluation_gt_sync_slop_s` 안에서 골라 각 pose를 자기 header stamp의 `planning_frame`으로 변환한 뒤 `perception_gt_dt_ms`와 error 계산. `week2_baseline`과 정상 인식 실패에서는 관련 필드를 `NA`로 유지
 9. full-scope action terminal+cleanup 시 `terminal_gt_receive_seq`와 최신 GT stamp를 snapshot하고, receive sequence와 header stamp가 모두 그 경계보다 새로우며 `evaluation_final_gt_max_age_s` 이내인 final GT만 자기 stamp의 `planning_frame`으로 변환한다. `final_gt_stamp_ns`·`final_gt_receive_seq`·steady gap을 기록하고 scoring-only `place_target_pose`와의 `place_error_mm`를 계산해 `error <= threshold`만으로 place success 판정. `place_ok`는 별도 stage 지표로 유지
 10. `transport_prepare_attempted = true`인 run만 `TransportStatus`의 grasp·relative-pose·slip·one-shot phase/count·counter terminal snapshot을 action result와 `run_id`로 병합
-11. reset 실패·prepare 이전 실패·분류된 미종료 cancel은 의도된 `NA`/false로 기록하고, stage 도달 flag가 true인데 필수 artifact가 없을 때만 `EVALUATION_DATA_MISSING`으로 batch 중단
+11. reset 실패·prepare 이전 실패·분류된 미종료 cancel은 의도된 `NA`/false로 기록하고, stage 도달 flag가 true인데 필수 artifact가 없을 때만 `EVALUATION_DATA_MISSING`으로 batch 중단. 평가 중 정상 확인된 manual `TASK_CANCELED`는 실패 row를 기록한 뒤 batch 중단
 12. `ErrorCode.msg`와 primary-code 우선순위로 `error_source`·numeric code·name을 기록하고 action/transport code 불일치 fault를 `INTERNAL_ERROR`로 중단
 13. reset 실패도 대체 실행하지 않고 `trial_started = false`, `run_trial_result_received = false`인 유효한 실패 row로 CSV에 저장
-14. 완주한 batch의 CSV row 수·고정 scenario 수·평가 분모 일치를 검증하고, 중단 batch는 실제 할당 row를 flush한 partial CSV와 `batch_status=aborted`, `abort_reason`, `last_run_id` summary를 별도 보존
+14. batch마다 새 출력 디렉터리에 `raw.csv`와 §2.5 형식의 `batch_summary.yaml`을 함께 생성. 완주 시 `completed`와 row 수 일치를, 중단 시 실제 할당 row를 flush한 partial CSV와 `aborted`·`abort_reason`·`last_run_id`를 보존
 15. 성공 bag 1개 저장
 16. 실패 유형별 bag 저장
 17. 결과 요약 표 생성
@@ -2999,7 +3019,7 @@ CSV의 `error_code`는 `ErrorCode.msg` 숫자 하나인 primary code이고 `erro
 - Session 5에서 구현한 `ResetTrial.srv`·`reset_trial_node.py`의 runner 통합·fault 검증본
 - Session 6B 최소판에서 확장하되 `week2_baseline` 회귀 profile을 보존한 `pnp_evaluation/scenario_runner.py`, `evaluator.py`, 동결한 scenario YAML/CSV
 - `RunTrial` result와 조건부 `TransportStatus`의 run ID 결합, `PoseStamped` GT/perception의 attempt-window·timestamp 연결 시험
-- `error_source`·고정 numeric/name code를 포함한 raw 평가 CSV, 결과 요약 표, 대표 성공·실패 bag
+- `error_source`·고정 numeric/name code를 포함한 `raw.csv`, 같은 batch 출력 디렉터리의 `batch_summary.yaml`, 결과 요약 표, 대표 성공·실패 bag
 
 ### 완료 기준
 
@@ -3014,11 +3034,11 @@ CSV의 `error_code`는 `ErrorCode.msg` 숫자 하나인 primary code이고 `erro
 - T1/T0 모두 relative-pose verdict가 control response→action result 판단과 terminal status에서 같은 의미를 가지며, T0의 lift/place phase count가 2이고 중복 request가 추가 update로 세지지 않음
 - 단계별 실패율 계산
 - 평가 중 parameter 변경 없음
-- **완주한 batch에서** 고정 scenario 행 수와 raw CSV attempt 수가 같고 reset 실패도 분모에서 빠지지 않음. 중단 batch의 partial CSV는 `aborted`로 보존하되 최종 평가 분모에 합치지 않음
+- **완주한 batch에서** 고정 scenario 행 수와 raw CSV attempt 수가 같고 reset 실패도 분모에서 빠지지 않음. 모든 batch의 `batch_summary.yaml`이 §2.5 schema와 일치하며, 중단 batch의 partial CSV는 `aborted`로 보존하되 최종 평가 분모에 합치지 않음
 - steady-clock planning-call 합계 `planning_time_ms`가 manipulation result에서 outer result와 CSV까지 전파되고, `total_time_ms`는 evaluator의 attempt 시작 steady clock에서 생산됨
 - `place_success_threshold_mm`가 §2.4의 품질 한계·yaw 미채점 최악 회전 clearance로 계산되어 zone/object 치수·yaw 처리·safety margin과 함께 평가 전에 동결됨
 - grasp gate 임계값이 평가 전에 동결됨
-- `/simulation/reset_trial` 응답의 `reset_ok`, position·orientation error, linear/angular speed가 실제 settle 판정과 일치하고, reset마다 position·orientation·twist threshold 통과
+- `/simulation/reset_trial`의 `reset_ok=true` 응답은 `state_measured=true`와 position·orientation·twist threshold 통과를 모두 만족함. `reset_ok=false`는 `state_measured`에 따라 실제 측정값 보존 또는 네 값 `NA` 계약을 지키며 유효한 실패 row로 남음
 - active trial에서 `/task/status` 수신 간격이 threshold를 넘으면 `TASK_HEARTBEAT_TIMEOUT`으로 분류
 - nested cancel 경계·실패 fault injection에서 inner→outer 종료 순서와 `SAFE_STOP` 시 reset 금지가 유지됨
 - evaluator가 source-frame perception pose를 직접 구독하고 attempt time window·timestamp slop으로 GT를 독립 연결·변환하며, final GT age도 동결 threshold 이내로 검증하고 perception 노드는 GT를 구독하지 않음
@@ -3044,7 +3064,7 @@ CSV의 `error_code`는 `ErrorCode.msg` 숫자 하나인 primary code이고 `erro
 1. 평가를 즉시 중단한다.
 2. 원인을 고치고 새 오류 코드 또는 복구 경로를 추가한다.
 3. 새 commit과 `config_hash`를 만든다.
-4. 기존 CSV에 이어 쓰지 않고 **동일 seed 전체 평가를 처음부터 다시 시작**한다.
+4. 기존 출력 디렉터리나 CSV에 이어 쓰지 않고 새 출력 디렉터리에서 **동일 seed 전체 평가를 처음부터 다시 시작**한다.
 
 ### 시간이 부족할 때
 
@@ -3086,7 +3106,7 @@ CSV의 `error_code`는 `ErrorCode.msg` 숫자 하나인 primary code이고 `erro
 
 - 설치·빌드·실행·종료·재평가 명령을 clean container에서 검증한 README
 - 시스템 구조도·TF tree·상태 전이도·오류 코드 표 최종본
-- Session 11의 raw CSV와 일치하는 최종 평가 요약·오류 코드별 개수
+- Session 11의 completed `batch_summary.yaml`·raw CSV와 일치하는 최종 평가 요약·오류 코드별 개수
 - 최종 시연 영상과 대표 성공·실패 영상
 - Known issues, 일곱 최종 실행 구성 필드, 축소한 기능과 이유를 포함한 최종 문서
 
@@ -3330,7 +3350,7 @@ CSV의 `error_code`는 `ErrorCode.msg` 숫자 하나인 primary code이고 `erro
 4. `PoseStamped` GT/perception에는 `run_id`가 없으므로 reset 성공 때 buffer를 비웠는지, receive sequence·steady window 밖 sample을 잘못 결합하거나 header stamp를 attempt 소속 판정에 사용하지 않았는지 확인
 5. `perception_gt_dt_ms`가 동결한 `evaluation_gt_sync_slop_s` 안인지 확인
 6. final GT의 evaluator receive sequence와 `header.stamp`가 terminal snapshot보다 모두 새롭고 다음 reset 전이며 terminal→receive steady gap이 `evaluation_final_gt_max_age_s` 이내인지 확인. 늦게 도착한 pre-terminal sample이나 sim stamp가 멈춘 sample을 재사용하지 않았는지, scoring-only target·threshold가 실행 때와 같은 `config_hash`인지 확인
-7. 실제 필수 artifact 누락이면 batch를 중단하고 원인 수정 후 고정 seed 전체를 다시 시작. reset 실패 row를 지우거나 성공 seed로 대체하지 않음
+7. 실제 필수 artifact 누락이면 partial `raw.csv`와 `batch_summary.yaml`을 `aborted`로 flush하고, 원인 수정 후 새 출력 디렉터리에서 고정 seed 전체를 다시 시작. reset 실패 row를 지우거나 성공 seed로 대체하지 않음
 
 ## 12.10 평가 row가 `INTERNAL_ERROR`로 중단됨
 
@@ -3470,11 +3490,11 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 - [ ] 고정 seed
 - [ ] L2 최소 20회 또는 L1-fallback 최소 10회, 권장 30회
 - [ ] `git_commit`, `config_hash`와 일곱 최종 실행 구성 필드: `completion_level`, `perception_mode`, `transport_mode`, `ik_mode`, `ik_mode_status=final`, `runner_profile=perception_evaluation`, `target_mode=perception`
-- [ ] raw CSV
+- [ ] batch별 새 출력 디렉터리의 `raw.csv`와 §2.5 schema를 따르는 `batch_summary.yaml`
 - [ ] sensor/fixed `object_pose`, EEF 명령 `place_pose`, scoring-only object `place_target_pose`와 §2.4 threshold가 분리되고 zone/object 치수·yaw 처리·최악 회전 반경·safety margin·품질 한계·`evaluation_final_gt_max_age_s`와 함께 `config_hash`에 포함
 - [ ] `RunTrial` result와 조건부 terminal `TransportStatus`는 `run_id`로, GT/perception `PoseStamped`는 active attempt time window·timestamp로 연결. final GT는 terminal snapshot보다 receive sequence와 header stamp가 모두 새로워야 함
 - [ ] reset 실패·stage 미도달의 의도된 `NA`와, true인 stage flag의 실제 artifact 누락(`EVALUATION_DATA_MISSING`) 구분
-- [ ] 완주 batch는 고정 scenario 수와 raw CSV attempt 수 일치, reset 실패도 분모에 포함하며 채점 완료 전 다음 reset 금지. `EVALUATION_DATA_MISSING`·`INTERNAL_ERROR`·`SAFE_STOP` 중단 batch는 partial CSV를 별도 보존하고 최종 분모에서 제외
+- [ ] 완주 batch는 고정 scenario 수와 raw CSV attempt 수 일치, reset 실패도 분모에 포함하며 채점 완료 전 다음 reset 금지. `EVALUATION_DATA_MISSING`·`INTERNAL_ERROR`·`SAFE_STOP`·평가 중 `TASK_CANCELED` 중단 batch는 partial CSV와 `batch_summary.yaml(status=aborted)`을 보존하고 최종 분모에서 제외
 - [ ] **성공률 3종 분리 계산** (pipeline / grasp_plausible / place); 앞의 두 비율과 최종 success는 전체 할당 row, place 비율은 non-NA 분모와 coverage를 함께 보고
 - [ ] `place_ok`는 release 완료, `place_success = place_error_mm <= threshold`는 physical final GT 지표로 분리되고 initial-target 중첩 scenario는 사전 거부
 - [ ] evaluator가 robot·gripper·Planning Scene·transport control을 직접 호출하지 않음
@@ -3563,6 +3583,14 @@ Week 2는 Session 4 · 5 · 6A · 6B의 네 회차로 구성된다.
 ---
 
 # 18. 개정 이력
+
+## v3.5.3 — 2026-07-28
+
+- S1 ROS graph 문서를 회차 일지로 오인하지 않도록 장기 보존 전문 문서 `docs/system_architecture.md`로 바꾸고 S1 최초 작성·S2~S3 갱신 책임을 명시
+- 정의 없이 한 번 쓰인 batch 식별자 표현을 제거하고 batch별 새 출력 디렉터리, `raw.csv`, `batch_summary.yaml`의 경로·schema·완주/중단 규칙을 추가
+- Session 11 산출물·완료 기준·Session 12 요약·최종 체크리스트에 batch summary를 연결하고 평가 중 `TASK_CANCELED`도 중단 batch 계약에 포함
+- reset 실패도 유효한 평가 row라는 계약과 Session 11 완료 기준을 일치시키고, Week 2 최소 CSV에 `reset_state_measured`와 final-GT audit 필드를 복구
+- `StageStatus` 생산자 표의 code-span 내부 pipe가 열 구분자로 해석되던 Markdown 표 렌더링 오류를 교정
 
 ## v3.5.2 — 2026-07-27
 

@@ -8,7 +8,7 @@ docs/
 ├── setup/
 │   ├── docker.md
 │   └── week0_spike.md
-├── session01_ros_graph.md
+├── system_architecture.md
 ├── frames.md
 ├── world_layout.md
 └── rgbd_topics.md
@@ -20,7 +20,7 @@ docs/
 |---|---|---|
 | `docs/setup/docker.md` | S0-1 최초 작성 · S0-2 갱신 | Docker image tag 또는 digest, ROBOTIS package commit, WSL/GPU/GUI 조건, 설치·실행·종료 명령; S0-2에서 공식 Gazebo·MoveIt smoke test 결과 추가 |
 | `docs/setup/week0_spike.md` | S0-2~S0-3 | `ik_mode`와 status, `planning_frame`, 상태 변경용 `reset_backend`, actual pose·twist 측정용 `reset_state_source`, `state_measured`, RGB-depth registration/frame과 `sensor_path_status`, T1/T0 spike 결과, 관련 config hash와 측정 로그 링크 |
-| `docs/session01_ros_graph.md` | S1 | node/topic/service/action 목록, QoS, action cancel/timeout, `/task/status` heartbeat, ROS graph 캡처 또는 명령 결과 |
+| `docs/system_architecture.md` | S1 최초 작성 · S2~S3 갱신 | node/topic/service/action 목록, QoS, action cancel/timeout, `/task/status` heartbeat, ROS graph 캡처 또는 명령 결과 |
 | `docs/frames.md` | S3 | `planning_frame`, `link1`, `eef_frame`, `grasp_frame`, camera optical frame, world frame, TF tree, 접근축과 부호 규약 |
 | `docs/world_layout.md` | S5 | table/cube/camera 위치와 치수, model/object ID, frame 이름, 조명, `project_world_file`과 extensionless official `world` argument, reset initial pose·`reset_state_source`·position/orientation/속도 threshold, PosePublisher와 GT bridge 설정, `surface_to_center_offset_source`와 P2 `tag_to_object_center_offset_tag`, 고정 yaw·canonical object orientation, gripper close-travel/final-aperture envelope, place threshold 계산 입력 |
 | `docs/rgbd_topics.md` | S7 | RGB/depth/CameraInfo topic, 해상도, QoS, registration 방식, optical frame, timestamp 동기화 설정 |
