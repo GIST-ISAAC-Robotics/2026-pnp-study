@@ -25,7 +25,12 @@ jobs:
             echo 'Patch already applied.'
             exit 0
           fi
-          python - <<'PY'
+          if test -f .github/curriculum-v352-patch-error.log; then
+            echo 'Previous patch error is preserved in the branch.'
+            exit 0
+          fi
+          set +e
+          python - <<'PY' > /tmp/curriculum-v352-patch.log 2>&1
           from pathlib import Path
           import textwrap
 
@@ -35,6 +40,18 @@ jobs:
           body = workflow.split(marker_start, 1)[1].split(marker_end, 1)[0]
           exec(compile(textwrap.dedent(body), 'embedded_curriculum_patch.py', 'exec'))
           PY
+          status=$?
+          set -e
+          if test "$status" -ne 0; then
+            cp /tmp/curriculum-v352-patch.log .github/curriculum-v352-patch-error.log
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/curriculum-v352-patch-error.log
+            git commit -m "chore: record curriculum audit patch failure"
+            git push origin HEAD:${{ github.head_ref }}
+            cat /tmp/curriculum-v352-patch.log
+            exit "$status"
+          fi
 
       - name: Commit changes when present
         shell: bash
