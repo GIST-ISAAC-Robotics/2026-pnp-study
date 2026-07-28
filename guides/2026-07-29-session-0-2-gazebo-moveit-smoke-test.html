@@ -66,9 +66,15 @@
       gap: 18px;
     }
     .brand {
+      color: inherit;
       font-weight: 800;
       letter-spacing: -.4px;
+      text-decoration: none;
       white-space: nowrap;
+    }
+    .brand:focus-visible {
+      outline: 2px solid var(--red);
+      outline-offset: 4px;
     }
     .brand i {
       color: var(--red);
@@ -425,7 +431,7 @@
 <body>
   <header class="shell">
     <div class="shell-inner">
-      <span class="brand">2026 PNP STUDY<i>.</i></span>
+      <a class="brand" href="../" aria-label="2026 PNP Study 메인 페이지">2026 PNP STUDY<i>.</i></a>
       <nav>
         <a href="#overview">개요</a>
         <a href="#step0">0 · 재진입</a>
