@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "updated": "2026-07-30",
+  "updated": "2026-07-29",
   "guides": [
     {
-      "date": "2026-07-30",
+      "date": "2026-07-29",
       "session": "Session 0-2",
       "title": "공식 Gazebo·MoveIt smoke test",
       "description": "공식 OpenMANIPULATOR-X 시뮬레이션에서 arm·gripper 동작, ROS 시간 정합성, joint state 일치와 2회 전체 재현을 검증합니다.",
-      "path": "./2026-07-30-session-0-2-gazebo-moveit-smoke-test.html",
+      "path": "./2026-07-29-session-0-2-gazebo-moveit-smoke-test.html",
       "tags": [
         "Week 0",
         "Gazebo",
@@ -16,11 +16,11 @@
       ]
     },
     {
-      "date": "2026-07-29",
+      "date": "2026-07-28",
       "session": "Session 0-1",
       "title": "ROBOTIS Docker 환경 구축",
       "description": "아무것도 설치되지 않은 Windows PC에서 WSL2, Docker Engine, ROBOTIS 공식 컨테이너, GUI와 영속 볼륨을 순서대로 검증합니다.",
-      "path": "./2026-07-29-session-0-1-docker-setup.html",
+      "path": "./2026-07-28-session-0-1-docker-setup.html",
       "tags": [
         "Week 0",
         "WSL2",

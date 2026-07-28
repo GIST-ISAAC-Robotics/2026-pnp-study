@@ -44,7 +44,7 @@
 - **문제:** Zenoh router를 시작하지 않았을 때 D-2에서 `Unable to connect to a Zenoh router` 경고가 발생했다. router를 켠 뒤에도 D-3의 `container.sh stop → start`가 router process를 종료했으나 터미널 창은 남아 있어 실행 중으로 오인했고, D-5 RViz에서 같은 경고가 재발했다.
 - **결정:** `rmw_zenoh_cpp` 사용 시 별도 container shell을 router 전용으로 유지하고, 모든 container 시작·재시작 뒤 `ros2 run rmw_zenoh_cpp rmw_zenohd`를 다시 실행한다. `pgrep`와 경고 없는 `ros2 node list`로 생존을 확인하도록 일일 가이드를 보정했다.
 - **다음:** Session 0-2에서 공식 Gazebo·MoveIt launch, arm planning/execution, gripper open/close, `/clock`과 2회 재실행을 검증
-- **증빙:** [Docker 개발 환경 기록](./docs/setup/docker.md), [Session 0-1 실행 가이드](./guides/2026-07-29-session-0-1-docker-setup.html)
+- **증빙:** [Docker 개발 환경 기록](./docs/setup/docker.md), [Session 0-1 실행 가이드](./guides/2026-07-28-session-0-1-docker-setup.html)
 
 ### 2026-07-28 — 커리큘럼 v3.5.5 참조·구조 일관성 검토
 
