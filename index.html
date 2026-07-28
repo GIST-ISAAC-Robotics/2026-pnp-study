@@ -1299,8 +1299,8 @@
       </a>
       <nav class="topnav" id="topnav" aria-label="주요 메뉴">
         <a href="#overview">개요</a>
-        <a href="#progress">진행 상황</a>
         <a href="#guides">일일 가이드</a>
+        <a href="#progress">진행 상황</a>
         <a href="#curriculum">커리큘럼</a>
         <a href="#archive">의사결정 기록</a>
         <a class="topnav-accent" href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study">GitHub ↗</a>
@@ -1321,8 +1321,8 @@
         </p>
         <div class="hero-actions">
           <a class="button button-light" href="#curriculum">커리큘럼 읽기</a>
-          <a class="button button-ghost-light" href="#progress">현재 진행 보기</a>
           <a class="button button-ghost-light" href="./guides/">일일 가이드</a>
+          <a class="button button-ghost-light" href="#progress">현재 진행 보기</a>
         </div>
       </div>
       <aside class="hero-panel" aria-label="현재 스터디 상태">
@@ -1390,32 +1390,9 @@
       </div>
     </section>
 
-    <section class="progress-section" id="progress" aria-labelledby="progress-title">
-      <div class="section">
-        <header class="section-header">
-          <p class="eyebrow">02 · Live progress</p>
-          <h2 id="progress-title">현재 위치와 다음 행동.</h2>
-          <p><code>progress.md</code>의 내용을 그대로 불러옵니다. 회차 로그 한 곳만 갱신하면 이 화면도 함께 바뀝니다.</p>
-        </header>
-
-        <div class="progress-meta">
-          <div class="progress-tile"><small>Current stage</small><b id="progress-stage">불러오는 중</b></div>
-          <div class="progress-tile"><small>Next gate</small><b id="progress-gate">불러오는 중</b></div>
-          <div class="progress-tile"><small>Last updated</small><b id="progress-updated">불러오는 중</b></div>
-        </div>
-
-        <article class="progress-card markdown-body" id="progress-content" aria-live="polite">
-          <div class="loading" role="status" aria-label="진행 상황 불러오는 중">
-            <span class="loading-line"></span><span class="loading-line"></span><span class="loading-line"></span>
-            <span class="loading-line"></span><span class="loading-line"></span>
-          </div>
-        </article>
-      </div>
-    </section>
-
     <section class="section" id="guides" aria-labelledby="guides-title">
       <header class="section-header">
-        <p class="eyebrow">03 · Daily guides</p>
+        <p class="eyebrow">02 · Daily guides</p>
         <h2 id="guides-title">오늘 할 일을, 오늘 바로 엽니다.</h2>
         <p>각 회차의 준비물, 실행 명령, 검증 기준과 기록 양식을 한 화면에 정리합니다. 아래 최신 가이드를 바로 열거나 전체 보관함에서 지난 회차를 찾을 수 있습니다.</p>
       </header>
@@ -1437,6 +1414,29 @@
           <p>앞으로 추가되는 가이드는 날짜와 회차 순서로 한곳에 쌓입니다. 제목·태그 검색도 지원합니다.</p>
           <a class="button button-secondary" href="./guides/">전체 목록 보기</a>
         </aside>
+      </div>
+    </section>
+
+    <section class="progress-section" id="progress" aria-labelledby="progress-title">
+      <div class="section">
+        <header class="section-header">
+          <p class="eyebrow">03 · Live progress</p>
+          <h2 id="progress-title">현재 위치와 다음 행동.</h2>
+          <p><code>progress.md</code>의 내용을 그대로 불러옵니다. 회차 로그 한 곳만 갱신하면 이 화면도 함께 바뀝니다.</p>
+        </header>
+
+        <div class="progress-meta">
+          <div class="progress-tile"><small>Current stage</small><b id="progress-stage">불러오는 중</b></div>
+          <div class="progress-tile"><small>Next gate</small><b id="progress-gate">불러오는 중</b></div>
+          <div class="progress-tile"><small>Last updated</small><b id="progress-updated">불러오는 중</b></div>
+        </div>
+
+        <article class="progress-card markdown-body" id="progress-content" aria-live="polite">
+          <div class="loading" role="status" aria-label="진행 상황 불러오는 중">
+            <span class="loading-line"></span><span class="loading-line"></span><span class="loading-line"></span>
+            <span class="loading-line"></span><span class="loading-line"></span>
+          </div>
+        </article>
       </div>
     </section>
 
