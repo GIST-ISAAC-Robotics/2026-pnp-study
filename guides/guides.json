@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "updated": "2026-07-29",
+  "guides": [
+    {
+      "date": "2026-07-29",
+      "session": "Session 0-1",
+      "title": "ROBOTIS Docker 환경 구축",
+      "description": "아무것도 설치되지 않은 Windows PC에서 WSL2, Docker Engine, ROBOTIS 공식 컨테이너, GUI와 영속 볼륨을 순서대로 검증합니다.",
+      "path": "./2026-07-29-session-0-1-docker-setup.html",
+      "tags": [
+        "Week 0",
+        "WSL2",
+        "Docker",
+        "ROBOTIS"
+      ]
+    }
+  ]
+}

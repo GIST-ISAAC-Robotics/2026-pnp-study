@@ -1,0 +1,1285 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Session 0-1 · ROBOTIS Docker 환경 구축 · 일일 실행 가이드</title>
+  <style>
+    :root {
+      --ink: #191716;
+      --body: #514b48;
+      --muted: #817a76;
+      --paper: #ffffff;
+      --canvas: #f6f4f2;
+      --line: #e2ddda;
+      --red: #a9231f;
+      --red-dark: #711411;
+      --red-soft: #f8ecea;
+      --green: #176b45;
+      --green-soft: #eaf5ef;
+      --amber: #8a5700;
+      --amber-soft: #fff6df;
+      --blue: #205a87;
+      --blue-soft: #eaf3fa;
+      --code: #171514;
+      --code-ink: #f5f1ed;
+      --shadow: 0 8px 28px rgba(45, 34, 29, .08);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+    body {
+      margin: 0;
+      font-family: Pretendard, "Noto Sans KR", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--canvas);
+      line-height: 1.68;
+      word-break: keep-all;
+    }
+    a { color: var(--red); text-underline-offset: 3px; }
+    code {
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: .91em;
+      background: #eeeae7;
+      padding: .12em .38em;
+      border-radius: 5px;
+      word-break: break-word;
+    }
+    strong { color: var(--ink); }
+    .shell {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .shell-inner {
+      max-width: 1160px;
+      height: 62px;
+      margin: 0 auto;
+      padding: 0 26px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: -.4px;
+      white-space: nowrap;
+    }
+    .brand i {
+      color: var(--red);
+      font-style: normal;
+    }
+    nav {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+    }
+    nav a {
+      color: var(--body);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 650;
+      padding: 7px 10px;
+      border-radius: 999px;
+    }
+    nav a:hover { background: var(--red-soft); color: var(--red); }
+    .progress { height: 3px; background: var(--line); }
+    .progress span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--red-dark), var(--red));
+    }
+    .hero {
+      color: white;
+      background:
+        radial-gradient(circle at 86% 18%, rgba(248, 175, 107, .35), transparent 27%),
+        radial-gradient(circle at 18% 8%, rgba(226, 95, 87, .28), transparent 30%),
+        linear-gradient(135deg, #3d0c0a, #761714 52%, #a9231f);
+      overflow: hidden;
+    }
+    .hero-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 74px 28px 60px;
+    }
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .hero .kicker { color: #ffd3cf; }
+    .kicker::before {
+      content: "";
+      width: 26px;
+      height: 2px;
+      background: currentColor;
+    }
+    h1 {
+      max-width: 900px;
+      margin: 18px 0 12px;
+      font-size: clamp(38px, 6vw, 66px);
+      line-height: 1.08;
+      letter-spacing: -.055em;
+    }
+    .hero-lead {
+      max-width: 850px;
+      margin: 0;
+      color: rgba(255,255,255,.84);
+      font-size: clamp(18px, 2.4vw, 23px);
+      line-height: 1.55;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 30px;
+    }
+    .pill {
+      padding: 8px 14px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 999px;
+      background: rgba(255,255,255,.1);
+      font-size: 13px;
+    }
+    .pill b { color: white; }
+    main {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 24px 28px 70px;
+    }
+    section {
+      padding: 54px 0 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    section:last-child { border-bottom: 0; }
+    h2 {
+      margin: 12px 0 12px;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.18;
+      letter-spacing: -.045em;
+    }
+    h3 {
+      margin: 38px 0 12px;
+      font-size: 25px;
+      letter-spacing: -.025em;
+    }
+    h4 {
+      margin: 30px 0 10px;
+      font-size: 19px;
+    }
+    p { color: var(--body); }
+    .subtitle {
+      max-width: 880px;
+      margin: 0;
+      color: var(--body);
+      font-size: 18px;
+    }
+    .verdict {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 20px;
+      margin-top: 26px;
+    }
+    .card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .card h3, .card h4 { margin-top: 0; }
+    .card p:last-child { margin-bottom: 0; }
+    .status {
+      display: inline-block;
+      margin-bottom: 8px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .status.ok { color: var(--green); background: var(--green-soft); }
+    .status.fix { color: var(--amber); background: var(--amber-soft); }
+    .callout {
+      margin: 22px 0;
+      padding: 17px 20px;
+      border: 1px solid;
+      border-left-width: 5px;
+      border-radius: 10px;
+    }
+    .callout p { margin: 4px 0; color: inherit; }
+    .callout strong { color: inherit; }
+    .callout.warn {
+      color: #684500;
+      background: var(--amber-soft);
+      border-color: #e5c986;
+    }
+    .callout.info {
+      color: #19496d;
+      background: var(--blue-soft);
+      border-color: #aed0e6;
+    }
+    .callout.ok {
+      color: #115436;
+      background: var(--green-soft);
+      border-color: #a9d6be;
+    }
+    .callout.danger {
+      color: #761713;
+      background: var(--red-soft);
+      border-color: #e1b3ae;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 22px;
+    }
+    .grid.two { grid-template-columns: repeat(2, 1fr); }
+    .step-badge {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin-right: 7px;
+      color: white;
+      background: var(--red);
+      border-radius: 50%;
+      font-size: 16px;
+      vertical-align: 6px;
+    }
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 18px 0;
+    }
+    .checklist li {
+      display: grid;
+      grid-template-columns: 20px 1fr auto;
+      gap: 12px;
+      align-items: start;
+      margin: 8px 0;
+      padding: 13px 15px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--paper);
+    }
+    .checklist input {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      accent-color: var(--red);
+    }
+    .checklist .tag {
+      color: var(--red);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      white-space: nowrap;
+    }
+    .checklist input:checked + label {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+    .code-block {
+      margin: 15px 0 22px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: var(--code);
+      box-shadow: var(--shadow);
+    }
+    .code-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 8px 13px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .code-head b {
+      color: #ffb5af;
+      font-size: 11px;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .where {
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+    }
+    .copy {
+      margin-left: auto;
+      padding: 5px 11px;
+      color: white;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      background: transparent;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+    }
+    .copy:hover { background: var(--red); border-color: var(--red); }
+    pre {
+      margin: 0;
+      padding: 17px;
+      overflow-x: auto;
+      color: var(--code-ink);
+      font: 13px/1.65 "Cascadia Code", "Consolas", monospace;
+      white-space: pre;
+    }
+    pre .comment { color: #9d9690; }
+    table {
+      width: 100%;
+      margin: 18px 0;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper);
+    }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+    th {
+      color: var(--body);
+      background: #efebe8;
+      font-size: 12px;
+      letter-spacing: .04em;
+    }
+    tr:last-child td { border-bottom: 0; }
+    td { color: var(--body); font-size: 14px; }
+    .cmd { font-family: "Cascadia Code", "Consolas", monospace; color: var(--ink); }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin: 22px 0;
+    }
+    .flow div {
+      position: relative;
+      padding: 15px 10px;
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--paper);
+      font-weight: 750;
+      font-size: 13px;
+    }
+    .flow div:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      z-index: 2;
+      color: var(--red);
+      transform: translateY(-50%);
+    }
+    .sources li { margin: 8px 0; color: var(--body); }
+    footer {
+      padding: 26px 28px 45px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+    }
+    @media (max-width: 880px) {
+      nav { display: none; }
+      .verdict, .grid, .grid.two { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .flow div:not(:last-child)::after {
+        content: "↓";
+        top: auto;
+        right: 50%;
+        bottom: -18px;
+        transform: translateX(50%);
+      }
+      table { display: block; overflow-x: auto; }
+      .checklist li { grid-template-columns: 20px 1fr; }
+      .checklist .tag { grid-column: 2; }
+    }
+    @media print {
+      .shell, .copy { display: none; }
+      .hero { color: var(--ink); background: white; }
+      .hero .kicker, .hero-lead, .pill, .pill b { color: var(--ink); }
+      .pill { border-color: var(--line); }
+      main { max-width: none; }
+      section { break-inside: avoid; }
+      .card, .code-block { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell">
+    <div class="shell-inner">
+      <div class="brand">2026 PNP STUDY<i>.</i></div>
+      <nav aria-label="문서 목차">
+        <a href="#overview">개요</a>
+        <a href="#preflight">0 · 사전 점검</a>
+        <a href="#wsl">A · WSL2</a>
+        <a href="#docker">B · Docker</a>
+        <a href="#container">C · Container</a>
+        <a href="#verify">D · 검증</a>
+        <a href="#artifacts">E · 산출물</a>
+        <a href="#completion">완료 기준</a>
+      </nav>
+    </div>
+    <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="kicker">Week 0 · Session 0-1 · 일일 실행 가이드</div>
+      <h1>ROBOTIS Docker 환경 구축</h1>
+      <p class="hero-lead">
+        아무것도 설치되지 않은 Windows PC에서 시작해 WSL2, Docker Engine,
+        ROBOTIS 공식 컨테이너, GUI와 영속 볼륨을 검증하고 재현 가능한 기록까지 남깁니다.
+      </p>
+      <div class="meta">
+        <div class="pill"><b>기준일</b> · 2026-07-29</div>
+        <div class="pill"><b>커리큘럼</b> · v3.5.5</div>
+        <div class="pill"><b>표준 경로</b> · WSL 내부 Docker Engine</div>
+        <div class="pill"><b>권장 시간</b> · 2~2.5시간 + 최초 다운로드 변동</div>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <section id="overview">
+      <div class="kicker">Overview</div>
+      <h2>오늘의 범위와 판정 기준</h2>
+      <p class="subtitle">
+        오늘의 목표는 Gazebo에서 로봇을 움직이는 것이 아닙니다. 공식 환경에 진입하고,
+        같은 상태를 다시 만들 수 있다는 증빙을 남기는 데까지입니다. Gazebo·MoveIt 실제
+        smoke test는 Session 0-2에서 진행합니다.
+      </p>
+
+      <div class="verdict">
+        <div class="card">
+          <span class="status ok">오늘 한다</span>
+          <h3>환경 진입과 재현</h3>
+          <p>
+            Windows/WSL 전제 확인, Docker Engine 설치, 공식 <code>jazzy</code> 저장소와
+            컨테이너 진입, <code>/workspace</code> 보존, 실제 RMW와 GUI 검증,
+            <code>docs/setup/docker.md</code> 및 <code>progress.md</code> 기록까지 수행합니다.
+          </p>
+        </div>
+        <div class="card">
+          <span class="status fix">오늘 하지 않는다</span>
+          <h3>Gazebo·MoveIt 동작 시험</h3>
+          <p>
+            공식 world 실행, arm planning/execution, gripper open/close는 Session 0-2의
+            완료 기준입니다. 오늘 억지로 섞으면 설치와 기능 오류가 한 솥에서 끓습니다.
+          </p>
+        </div>
+      </div>
+
+      <div class="flow" aria-label="오늘의 진행 순서">
+        <div>0 · 사전 점검</div>
+        <div>A · WSL2/WSLg</div>
+        <div>B · Docker</div>
+        <div>C · 공식 Container</div>
+        <div>D/E · 검증과 기록</div>
+      </div>
+
+      <div class="callout warn">
+        <p><strong>시간 규칙:</strong> Docker 명령 자체를 90분 넘게 복구하지 못하면 한 PC만
+          메인 통합 환경으로 정합니다. GUI만 2시간 넘게 막히면 원인과 software rendering
+          결과를 기록하고 E1 host 설치는 별도 복구 일정으로 분리합니다. Week 0 전체 하드 캡은
+          7.5시간입니다.</p>
+      </div>
+    </section>
+
+    <section id="preflight">
+      <div class="kicker">Step 0</div>
+      <h2><span class="step-badge">0</span>빈 Windows 사전 점검</h2>
+      <p class="subtitle">
+        아래 전제가 충족되지 않으면 명령을 따라가도 설치가 끝나지 않습니다. 특히 WSLg GUI
+        기준은 단순 WSL 설치 기준보다 조금 더 높습니다.
+      </p>
+
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="p1">
+          <label for="p1">Windows 11 또는 Windows 10 21H2, 빌드 19044 이상인 것을 확인했다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="p2">
+          <label for="p2">작업 관리자 → 성능 → CPU에서 가상화가 사용으로 표시된다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="p3">
+          <label for="p3">관리자 권한과 Windows 재부팅 권한이 있다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="p4">
+          <label for="p4">Intel/AMD/NVIDIA Windows GPU 드라이버가 최신 상태다.</label>
+          <span class="tag">GUI</span>
+        </li>
+        <li>
+          <input type="checkbox" id="p5">
+          <label for="p5">안정적인 인터넷과 WSL 배포판·Docker image를 받을 충분한 디스크 여유가 있다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="p6">
+          <label for="p6">Docker Desktop과 WSL 내부 Docker Engine을 동시에 설치하지 않기로 했다.</label>
+          <span class="tag">충돌 방지</span>
+        </li>
+      </ul>
+
+      <h3>Windows와 WSL 상태 확인</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>PowerShell · 관리자</b><span class="where">Windows</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>winver
+wsl --version
+wsl --list --online</pre>
+      </div>
+      <p>
+        <code>Ubuntu-24.04</code>가 목록에 없거나 설치가 0%에서 멈추면 Microsoft의 공식
+        fallback인 <code>wsl --install --web-download -d Ubuntu-24.04</code>를 사용합니다.
+      </p>
+
+      <div class="callout info">
+        <p><strong>저장 위치 원칙:</strong> ROBOTIS 저장소는 반드시 WSL Linux 파일시스템의
+          <code>~/open_manipulator</code>에 둡니다. 스터디 저장소는 이후
+          <code>~/open_manipulator/docker/workspace/2026-pnp-study</code>에 clone하여
+          컨테이너에서 <code>/workspace/2026-pnp-study</code>로 보이게 합니다.</p>
+      </div>
+    </section>
+
+    <section id="wsl">
+      <div class="kicker">Step A</div>
+      <h2><span class="step-badge">A</span>WSL2와 Ubuntu 24.04</h2>
+      <p class="subtitle">
+        먼저 Linux 기반과 WSLg GUI를 검증합니다. Docker까지 설치한 뒤 GUI 문제를 발견하면
+        원인 분리가 매우 불친절해집니다.
+      </p>
+
+      <h3>A-1 · 설치</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>PowerShell · 관리자</b><span class="where">Windows</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>wsl --update
+wsl --install -d Ubuntu-24.04</pre>
+      </div>
+      <p>
+        재부팅 요청이 나오면 재부팅합니다. 첫 Ubuntu 실행에서 Linux 사용자 이름과 암호를
+        생성합니다. 암호 입력 중 화면에 문자가 보이지 않는 것은 정상입니다.
+      </p>
+
+      <h3>A-2 · WSL2 확인</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>PowerShell</b><span class="where">Windows</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>wsl -l -v</pre>
+      </div>
+      <p><code>Ubuntu-24.04</code>의 <code>VERSION</code>이 2여야 합니다. 1일 때만 아래를 실행합니다.</p>
+      <div class="code-block">
+        <div class="code-head">
+          <b>PowerShell · 필요할 때만</b><span class="where">Windows</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>wsl --set-version Ubuntu-24.04 2</pre>
+      </div>
+
+      <h3>A-3 · 기본 도구와 WSLg GUI</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>sudo apt update
+sudo apt install -y git gh x11-apps x11-xserver-utils
+
+git --version
+gh --version
+echo "DISPLAY=$DISPLAY"
+xeyes</pre>
+      </div>
+      <p>
+        <code>DISPLAY</code>는 정확히 특정 문자열일 필요는 없지만 비어 있으면 안 됩니다.
+        <code>xeyes</code> 창이 Windows 바탕화면에 뜨면 성공이며 <code>Ctrl+C</code>로 종료합니다.
+        <code>x11-xserver-utils</code>는 ROBOTIS 스크립트가 호출하는 <code>xhost</code>를 제공합니다.
+      </p>
+
+      <h3>A-4 · systemd 확인 후 필요할 때만 활성화</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>ps -p 1 -o comm=
+systemctl is-system-running</pre>
+      </div>
+      <p>
+        PID 1이 <code>systemd</code>이고 결과가 <code>running</code> 또는
+        <code>degraded</code>이면 아래 설정은 건너뜁니다. systemd가 아닐 때만 실행합니다.
+      </p>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash · 필요할 때만</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>sudo tee /etc/wsl.conf &gt; /dev/null &lt;&lt;'EOF'
+[boot]
+systemd=true
+EOF</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head">
+          <b>PowerShell · 설정 적용</b><span class="where">Windows</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>wsl --shutdown</pre>
+      </div>
+
+      <div class="callout warn">
+        <p><strong>GUI 실패 순서:</strong> <code>wsl --update</code> → <code>wsl --shutdown</code>
+          → Windows GPU 드라이버 확인 → <code>ls /mnt/wslg</code> 순서로 봅니다. WSLg 자체가
+          실패한 상태에서 Docker 설정부터 만지지 않습니다.</p>
+      </div>
+    </section>
+
+    <section id="docker">
+      <div class="kicker">Step B</div>
+      <h2><span class="step-badge">B</span>Docker Engine 설치</h2>
+      <p class="subtitle">
+        이 수정본은 <strong>Ubuntu WSL 내부 Docker Engine</strong>만 표준 경로로 사용합니다.
+        Docker Desktop은 대안이지만, 이미 선택했다면 아래 Engine 절차와 섞지 마십시오.
+      </p>
+
+      <div class="callout danger">
+        <p><strong>보안:</strong> 사용자를 <code>docker</code> 그룹에 추가하면 사실상 root급
+          권한을 부여합니다. 개인 개발용 WSL에서는 편리하지만, 공유 계정이나 신뢰할 수 없는
+          스크립트를 실행하는 환경에서는 이 의미를 알고 사용해야 합니다.</p>
+      </div>
+
+      <h3>B-1 · 충돌 패키지 정리와 공식 apt 저장소</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre><span class="comment"># 빈 PC에서는 제거 대상이 없어도 정상입니다.</span>
+for pkg in docker.io docker-doc docker-compose docker-compose-v2 \
+  docker-buildx podman-docker containerd runc; do
+  sudo apt-get remove -y "$pkg" 2&gt;/dev/null || true
+done
+
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+sudo tee /etc/apt/sources.list.d/docker.sources &gt; /dev/null &lt;&lt;EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release &amp;&amp; echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt-get update</pre>
+      </div>
+
+      <h3>B-2 · 설치와 권한 반영</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>sudo apt-get install -y docker-ce docker-ce-cli containerd.io \
+  docker-buildx-plugin docker-compose-plugin
+
+sudo systemctl enable --now docker
+sudo systemctl status docker --no-pager
+
+sudo usermod -aG docker "$USER"</pre>
+      </div>
+      <p>그룹 권한을 확실히 반영하려면 WSL을 완전히 종료한 후 다시 엽니다.</p>
+      <div class="code-block">
+        <div class="code-head">
+          <b>PowerShell</b><span class="where">Windows</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>wsl --shutdown</pre>
+      </div>
+
+      <h3>B-3 · 검증</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>docker version
+docker compose version
+docker run --rm hello-world</pre>
+      </div>
+      <p>
+        client와 server 정보, Compose v2, <code>Hello from Docker!</code>가 모두 확인되어야
+        Step C로 넘어갑니다. 권한 오류가 나면 <code>groups</code>에 <code>docker</code>가
+        포함됐는지 먼저 확인합니다.
+      </p>
+    </section>
+
+    <section id="container">
+      <div class="kicker">Step C</div>
+      <h2><span class="step-badge">C</span>공식 저장소와 컨테이너</h2>
+      <p class="subtitle">
+        ROBOTIS 공식 <code>jazzy</code> branch를 WSL home에 clone하고, 스터디 저장소는
+        공식 volume 아래에 둡니다. 두 저장소는 역할이 다르므로 서로 대체하지 않습니다.
+      </p>
+
+      <h3>C-1 · GitHub 인증과 작성자 정보</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash · 1회 설정</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>git config --global user.name "YOUR NAME"
+git config --global user.email "YOUR_GITHUB_EMAIL"
+
+gh auth login --hostname github.com --git-protocol https --web
+gh auth status</pre>
+      </div>
+      <p>
+        브라우저 인증을 완료하고 <code>gh auth status</code>가 성공해야 마지막
+        <code>git push</code>까지 진행할 수 있습니다. 토큰이나 인증 코드는 문서·스크린샷·commit에
+        남기지 않습니다.
+      </p>
+
+      <h3>C-2 · ROBOTIS 저장소 clone과 commit 기록</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host) · home</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>cd ~
+git clone -b jazzy https://github.com/ROBOTIS-GIT/open_manipulator.git
+cd ~/open_manipulator
+
+git rev-parse --abbrev-ref HEAD
+git log -1 --format="%H  %ad  %s" --date=short</pre>
+      </div>
+
+      <h3>C-3 · 스터디 저장소를 영속 volume에 clone</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>mkdir -p ~/open_manipulator/docker/workspace
+cd ~/open_manipulator/docker/workspace
+git clone https://github.com/GIST-ISAAC-Robotics/2026-pnp-study.git
+
+cd ~/open_manipulator/docker/workspace/2026-pnp-study
+git branch --show-current
+git remote -v</pre>
+      </div>
+      <p>
+        branch는 <code>main</code>, remote는
+        <code>GIST-ISAAC-Robotics/2026-pnp-study</code>여야 합니다.
+      </p>
+
+      <h3>C-4 · 컨테이너 시작과 진입</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host) · ~/open_manipulator</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>cd ~/open_manipulator
+./docker/container.sh start
+./docker/container.sh enter</pre>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <span class="status ok">정상 전제</span>
+          <h4>image와 Compose</h4>
+          <p>
+            공식 Compose는 <code>robotis/open-manipulator:5.0.0</code>을 사용하며 최초에는
+            큰 image를 받으므로 네트워크에 따라 시간이 달라집니다.
+          </p>
+        </div>
+        <div class="card">
+          <span class="status fix">경고 가능</span>
+          <h4>udev</h4>
+          <p>
+            스크립트는 U2D2 규칙을 쓰고 <code>udevadm</code>을 호출합니다. WSL에서 실제 로봇을
+            쓰지 않는 오늘 범위라면 관련 경고를 기록하고 계속 진행할 수 있습니다.
+          </p>
+        </div>
+        <div class="card">
+          <span class="status ok">공식 기본값</span>
+          <h4>RMW와 Domain</h4>
+          <p>
+            공식 Dockerfile은 <code>rmw_zenoh_cpp</code>와
+            <code>ROS_DOMAIN_ID=30</code>을 <code>~/.bashrc</code>에 설정합니다.
+          </p>
+        </div>
+      </div>
+
+      <h3>C-5 · host와 container 경로 대응</h3>
+      <table>
+        <thead>
+          <tr><th>WSL host</th><th>Container</th><th>용도</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="cmd">~/open_manipulator/docker/workspace</td>
+            <td class="cmd">/workspace</td>
+            <td>영속 프로젝트 공간. 컨테이너를 제거해도 host 파일은 유지됩니다.</td>
+          </tr>
+          <tr>
+            <td class="cmd">.../workspace/2026-pnp-study</td>
+            <td class="cmd">/workspace/2026-pnp-study</td>
+            <td>스터디 코드와 문서 저장소입니다.</td>
+          </tr>
+          <tr>
+            <td class="cmd">~/open_manipulator</td>
+            <td class="cmd">/root/ros2_ws/src/open_manipulator/</td>
+            <td>ROBOTIS 공식 패키지 소스입니다.</td>
+          </tr>
+          <tr>
+            <td class="cmd">/tmp/.X11-unix</td>
+            <td class="cmd">/tmp/.X11-unix</td>
+            <td>WSLg/X11 GUI 전달용입니다.</td>
+          </tr>
+          <tr>
+            <td class="cmd">/dev, /dev/shm</td>
+            <td class="cmd">/dev, /dev/shm</td>
+            <td>장치와 공유 메모리입니다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="verify">
+      <div class="kicker">Step D</div>
+      <h2><span class="step-badge">D</span>환경·영속성·GUI 검증</h2>
+      <p class="subtitle">
+        각 명령의 실행 위치를 섞지 마십시오. Docker daemon을 다루는 명령은 WSL host,
+        ROS 패키지와 GUI를 확인하는 명령은 container 내부입니다.
+      </p>
+
+      <h3>D-1 · host에서 컨테이너 상태 확인</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>docker ps --filter name=open_manipulator</pre>
+      </div>
+      <p><code>open_manipulator</code>가 <code>Up</code> 상태여야 합니다.</p>
+
+      <h3>D-2 · container 내부 실제 환경 확인</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Container 내부</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>echo "ROS_DISTRO         = $ROS_DISTRO"
+echo "RMW_IMPLEMENTATION = $RMW_IMPLEMENTATION"
+echo "ROS_DOMAIN_ID      = $ROS_DOMAIN_ID"
+
+ros2 --help &gt; /dev/null &amp;&amp; echo "ros2 CLI OK"
+command -v colcon
+python3 -c "import importlib.metadata as m; print('colcon-core', m.version('colcon-core'))"
+gz sim --version || echo "gz sim NOT FOUND"
+ros2 pkg list | grep -i moveit | head
+ros2 pkg list | grep -ci moveit
+ros2 doctor --report</pre>
+      </div>
+      <div class="callout info">
+        <p>
+          <strong><code>ros2</code>에는 최상위 버전 출력 옵션이 없습니다.</strong> Jazzy의
+          CLI는 <code>--help</code>로 동작 여부를 확인합니다. <code>ROS_DISTRO</code>,
+          CLI 실행 여부, 설치 package, <code>ros2 doctor --report</code>의 RMW 보고를 함께
+          기록해야 환경 변수와 실제 middleware를 모두 증명할 수 있습니다.
+        </p>
+      </div>
+
+      <h3>D-3 · volume 보존 시험</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash · 먼저 실행</b><span class="where">Container 내부</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>echo "session 0-1 volume test $(date -Iseconds)" &gt; /workspace/keep_me.txt
+cat /workspace/keep_me.txt</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash · container에서 exit 후 실행</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>cat ~/open_manipulator/docker/workspace/keep_me.txt
+
+cd ~/open_manipulator
+./docker/container.sh stop
+<span class="comment"># 확인 질문에 y 입력</span>
+./docker/container.sh start
+./docker/container.sh enter</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash · 재진입 후</b><span class="where">Container 내부</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>cat /workspace/keep_me.txt
+ls -la /workspace/2026-pnp-study</pre>
+      </div>
+      <p>같은 내용과 스터디 저장소가 다시 보이면 컨테이너 제거 전후 보존에 성공한 것입니다.</p>
+
+      <h3>D-4 · 두 번째 shell</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash · 새 Ubuntu 터미널</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>cd ~/open_manipulator
+./docker/container.sh enter
+ls -la /workspace</pre>
+      </div>
+      <p>첫 번째 container shell과 동일한 파일이 보이면 같은 컨테이너에 진입한 것입니다.</p>
+
+      <h3>D-5 · RViz GUI</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Container 내부</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>echo "DISPLAY=$DISPLAY"
+rviz2</pre>
+      </div>
+      <table>
+        <thead>
+          <tr><th>증상</th><th>분리 시험</th><th>실행 위치</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>DISPLAY</code>가 비어 있음</td>
+            <td>host의 <code>echo "$DISPLAY"</code>부터 확인하고 Step A의 WSLg를 복구합니다.</td>
+            <td>WSL host</td>
+          </tr>
+          <tr>
+            <td><code>cannot connect to X server</code></td>
+            <td><code>xhost +local:docker</code> 후 container에 다시 진입합니다.</td>
+            <td>WSL host</td>
+          </tr>
+          <tr>
+            <td>창이 깨지거나 검은 화면</td>
+            <td><code>LIBGL_ALWAYS_SOFTWARE=1 rviz2</code>로 software rendering을 분리 시험합니다.</td>
+            <td>Container</td>
+          </tr>
+          <tr>
+            <td>software rendering만 성공</td>
+            <td>GPU/WSLg 경로 문제로 기록하고 Session 0-2 전에 Windows GPU 드라이버를 재확인합니다.</td>
+            <td>기록</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="artifacts">
+      <div class="kicker">Step E</div>
+      <h2><span class="step-badge">E</span>산출물과 Git 기록</h2>
+      <p class="subtitle">
+        명령을 실행한 사실이 아니라, branch·commit·버전·실패 조건을 다른 사람이 확인할 수
+        있어야 회차가 끝납니다.
+      </p>
+
+      <h3>E-1 · 작업 위치와 디렉터리</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>cd ~/open_manipulator/docker/workspace/2026-pnp-study
+mkdir -p docs/setup
+git status --short --branch</pre>
+      </div>
+
+      <h3>E-2 · <code>docs/setup/docker.md</code> 템플릿</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Markdown</b><span class="where">docs/setup/docker.md</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre># Docker 개발 환경 (Session 0-1)
+
+- 수행일: 2026-07-29
+- 담당: [이름]
+- 결과: [완료 / 보류 / 차단]
+
+## 1. Windows / WSL host
+
+| 항목 | 실제 값 |
+|---|---|
+| Windows | [버전과 빌드] |
+| WSL | `[wsl --version 출력]` |
+| 배포판 | WSL2 · Ubuntu 24.04 |
+| systemd | [running / degraded / 미사용] |
+| GPU | [모델명과 Windows driver 버전] |
+| WSLg | `xeyes` [성공 / 실패] |
+
+## 2. Docker
+
+| 항목 | 실제 값 |
+|---|---|
+| 방식 | Docker Engine in WSL |
+| Engine | `[docker version의 Server Version]` |
+| Compose | `[docker compose version]` |
+| hello-world | [성공 / 실패] |
+
+`docker` 그룹이 root급 권한을 부여한다는 점을 확인하고 개인 개발용 WSL에서 사용했다.
+
+## 3. ROBOTIS 공식 환경
+
+| 항목 | 실제 값 |
+|---|---|
+| 저장소 | https://github.com/ROBOTIS-GIT/open_manipulator |
+| branch | jazzy |
+| commit | `[40자리 commit hash]` |
+| commit 날짜 | [YYYY-MM-DD] |
+| image | robotis/open-manipulator:5.0.0 |
+
+## 4. 시작과 진입
+
+```bash
+cd ~/open_manipulator
+./docker/container.sh start
+./docker/container.sh enter
+```
+
+사용 가능한 명령: `help` / `start` / `enter` / `stop`
+`stop`은 container를 중지하고 제거한다.
+
+## 5. Host ↔ Container 경로
+
+| WSL host | Container | 용도 |
+|---|---|---|
+| `~/open_manipulator/docker/workspace` | `/workspace` | 영속 프로젝트 공간 |
+| `.../workspace/2026-pnp-study` | `/workspace/2026-pnp-study` | 스터디 저장소 |
+| `~/open_manipulator` | `/root/ros2_ws/src/open_manipulator/` | 공식 소스 |
+| `/tmp/.X11-unix` | `/tmp/.X11-unix` | X11/WSLg |
+| `/dev`, `/dev/shm` | `/dev`, `/dev/shm` | 장치·공유 메모리 |
+
+## 6. Container 확인 결과
+
+| 항목 | 명령 | 실제 출력 |
+|---|---|---|
+| ROS distro | `echo $ROS_DISTRO` | [값] |
+| ros2 CLI | `ros2 --help` | [성공 / 실패] |
+| colcon | `command -v colcon` | [경로] |
+| Gazebo | `gz sim --version` | [버전 / NOT FOUND] |
+| MoveIt | `ros2 pkg list \| grep -ci moveit` | [개수] |
+| RMW 환경 변수 | `echo $RMW_IMPLEMENTATION` | [값] |
+| 실제 RMW | `ros2 doctor --report` | [RMW 보고값] |
+| ROS domain | `echo $ROS_DOMAIN_ID` | [값] |
+
+## 7. Volume 보존
+
+- 절차: `/workspace/keep_me.txt` 생성 → `stop` → `start` → `enter` → `cat`
+- 결과: [보존됨 / 보존되지 않음]
+- 증빙: [터미널 로그 또는 스크린샷 경로]
+
+## 8. GUI
+
+- host `xeyes`: [성공 / 실패]
+- container `rviz2`: [성공 / 실패]
+- DISPLAY: [실제 값]
+- software rendering 필요 여부: [예 / 아니오]
+
+## 9. 알려진 문제와 다음 행동
+
+- [없으면 "없음"]
+- 인증 코드·토큰·개인 비밀값은 기록하지 않았다.</pre>
+      </div>
+
+      <h3>E-3 · <code>progress.md</code> 최신 회차 로그</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Markdown</b><span class="where">progress.md · 회차 로그 최상단</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>### 2026-07-29 — Session 0-1 · ROBOTIS Docker 환경 구축
+
+- **상태:** [완료 / 진행 중 / 보류 / 차단]
+- **목표:** 공식 jazzy Docker 환경 진입, `/workspace` 보존과 GUI 실행 확인
+- **수행:** WSL2 Ubuntu 24.04, Docker Engine, 공식 저장소와 container,
+  실제 RMW, volume 보존, 두 번째 shell, RViz GUI 검증
+- **결과:** ROBOTIS commit `[7자리]`, RMW `[값]`, ROS_DOMAIN_ID `[값]`,
+  Gazebo `[버전/NOT FOUND]`, MoveIt `[개수]개`,
+  `/workspace` 보존 `[O/X]`, GUI `[O/X]`
+- **문제:** [원인과 재현 조건 / 없음]
+- **결정:** [해결값, fallback, 다음 회차 이관 사항]
+- **다음:** Session 0-2 공식 Gazebo·MoveIt smoke test
+- **증빙:** [docs/setup/docker.md](./docs/setup/docker.md), [commit 링크]</pre>
+      </div>
+
+      <h3>E-4 · 검토 후 commit과 push</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash</b><span class="where">Ubuntu (WSL host) · 2026-pnp-study</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>git status --short
+git add docs/setup/docker.md progress.md
+git diff --cached --check
+git diff --cached
+
+git commit -m "docs: Session 0-1 Docker 환경 구축 기록"
+git push origin main
+
+git status --short
+git log -1 --oneline</pre>
+      </div>
+      <p>
+        <code>git diff --cached</code>에서 인증 정보·토큰·불필요한 시스템 경로가 없는지 직접
+        확인한 뒤 commit합니다. 마지막 <code>git status --short</code>가 비어 있으면 작업 트리가
+        깨끗한 것입니다.
+      </p>
+    </section>
+
+    <section id="completion">
+      <div class="kicker">Completion</div>
+      <h2>Session 0-1 완료 기준</h2>
+      <p class="subtitle">아래 필수 항목을 모두 충족해야 Session 0-2로 넘어갑니다.</p>
+
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="c1">
+          <label for="c1">메인 PC에서 WSL2·WSLg, Docker Engine과 Compose v2가 검증됐다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="c2">
+          <label for="c2">ROBOTIS <code>jazzy</code> branch와 40자리 commit을 기록했다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="c3">
+          <label for="c3">container에 진입하고 두 번째 shell에서도 같은 container를 확인했다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="c4">
+          <label for="c4"><code>/workspace</code> 파일이 container 제거 전후 보존됐다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="c5">
+          <label for="c5">ROS distro, ros2 CLI, colcon, Gazebo, MoveIt package를 확인했다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="c6">
+          <label for="c6">환경 변수와 <code>ros2 doctor --report</code>로 실제 RMW를 기록했다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="c7">
+          <label for="c7">container 안의 <code>rviz2</code>가 Windows 화면에 표시됐다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="c8">
+          <label for="c8"><code>docs/setup/docker.md</code>와 <code>progress.md</code>를 실제 값으로 채웠다.</label>
+          <span class="tag">산출물</span>
+        </li>
+        <li>
+          <input type="checkbox" id="c9">
+          <label for="c9">diff에서 비밀값을 확인하고 commit·push와 원격 commit 링크를 검증했다.</label>
+          <span class="tag">산출물</span>
+        </li>
+      </ul>
+
+      <div class="callout ok">
+        <p><strong>다음 회차:</strong> Session 0-2 · 공식 Gazebo·MoveIt smoke test.
+          오늘 기록한 branch, commit, RMW, GUI 조건을 그대로 기준점으로 사용합니다.</p>
+      </div>
+
+      <h3>공식 근거</h3>
+      <ul class="sources">
+        <li><a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/commit/abc3c4562cdff8e45fe00137a200dbce025ca461">스터디 커리큘럼 v3.5.5 확정 commit</a></li>
+        <li><a href="https://learn.microsoft.com/en-us/windows/wsl/install">Microsoft · WSL 설치</a></li>
+        <li><a href="https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps">Microsoft · WSLg GUI 앱 요구사항</a></li>
+        <li><a href="https://learn.microsoft.com/en-us/windows/wsl/systemd">Microsoft · WSL systemd</a></li>
+        <li><a href="https://docs.docker.com/engine/install/ubuntu/">Docker · Ubuntu Engine 설치</a></li>
+        <li><a href="https://docs.docker.com/engine/install/linux-postinstall/">Docker · 비-root 후속 설정과 권한 경고</a></li>
+        <li><a href="https://github.com/ROBOTIS-GIT/open_manipulator/blob/jazzy/docker/container.sh">ROBOTIS · container.sh</a></li>
+        <li><a href="https://github.com/ROBOTIS-GIT/open_manipulator/blob/jazzy/docker/docker-compose.yml">ROBOTIS · docker-compose.yml</a></li>
+        <li><a href="https://github.com/ROBOTIS-GIT/open_manipulator/blob/jazzy/docker/Dockerfile">ROBOTIS · Dockerfile</a></li>
+        <li><a href="https://docs.ros.org/en/jazzy/Concepts/Basic/About-Command-Line-Tools.html">ROS 2 Jazzy · CLI 사용법</a></li>
+        <li><a href="https://cli.github.com/manual/gh_auth_login">GitHub CLI · gh auth login</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    2026 PNP STUDY · Session 0-1 daily guide · UTF-8 · 2026-07-29
+  </footer>
+
+  <script>
+    const progressBar = document.getElementById("progress-bar");
+    const updateProgress = () => {
+      const root = document.documentElement;
+      const max = root.scrollHeight - root.clientHeight;
+      progressBar.style.width = `${max > 0 ? (root.scrollTop / max) * 100 : 0}%`;
+    };
+    addEventListener("scroll", updateProgress, { passive: true });
+    addEventListener("resize", updateProgress);
+    updateProgress();
+
+    document.querySelectorAll(".copy").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const text = button.closest(".code-block").querySelector("pre").innerText;
+        const original = button.textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+          button.textContent = "복사됨";
+        } catch {
+          button.textContent = "복사 실패";
+        }
+        setTimeout(() => { button.textContent = original; }, 1300);
+      });
+    });
+
+    document.querySelectorAll('.checklist input[type="checkbox"]').forEach((box) => {
+      const key = `pnp-session-0-1:${box.id}`;
+      try { box.checked = localStorage.getItem(key) === "1"; } catch {}
+      box.addEventListener("change", () => {
+        try { localStorage.setItem(key, box.checked ? "1" : "0"); } catch {}
+      });
+    });
+  </script>
+</body>
+</html>

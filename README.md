@@ -11,6 +11,7 @@ ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤
 | 문서 | 용도 |
 |---|---|
 | [커리큘럼 웹 뷰](https://gist-isaac-robotics.github.io/2026-pnp-study/) | 검색·자동 목차·장별 접기를 지원하는 기본 열람 페이지 |
+| [일일 실행 가이드](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/) | 날짜별 준비물, 명령, 검증 기준을 모은 따라 하기용 가이드 보관함 |
 | [실행 커리큘럼](./curriculum.md) | 구현 계약과 회차별 실습을 담은 원본 Markdown |
 | [진행 상황과 로그](./progress.md) | 현재 단계, 다음 작업, 회차별 결과와 증빙 기록 |
 | [문서 산출물 경로](./docs/README.md) | `docs/` 전문 문서의 정확한 경로와 작성·갱신 회차 |
@@ -39,6 +40,16 @@ ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤
 
 GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTML 수정 없이 최신 기록을 표시합니다. README의 위 상태 요약은 큰 단계가 바뀔 때만 함께 갱신합니다.
 
+## 일일 실행 가이드
+
+매일 실제로 따라 할 준비물, 명령, 검증 기준과 기록 방법은 [일일 실행 가이드 보관함](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/)에 모읍니다. 새 가이드는 [`guides/`](./guides/)에 HTML 파일을 추가하고 [`guides.json`](./guides/guides.json)에 항목 하나를 등록하면 보관함에 최신순으로 나타납니다.
+
+| 날짜 | 회차 | 가이드 |
+|---|---|---|
+| 2026-07-29 | Session 0-1 | [ROBOTIS Docker 환경 구축](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-29-session-0-1-docker-setup.html) |
+
+파일명과 목록 갱신 규칙은 [`guides/README.md`](./guides/README.md)에 정리되어 있습니다.
+
 ## 의사결정 아카이브
 
 아래 두 문서는 현재 실행 기준이 아니라, 커리큘럼 방향을 결정하는 과정에서 만든 비교·의사결정 자료입니다. 다음 스터디를 설계할 때 재사용할 수 있도록 보존합니다.
@@ -56,6 +67,11 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 ├── .gitignore                        # ROS·빌드·로컬 산출물 제외 규칙
 ├── curriculum.md                     # 실행 커리큘럼 원본
 ├── progress.md                       # 진행 상황·회차 로그 원본
+├── guides/                           # 날짜별 따라 하기용 실행 가이드
+│   ├── README.md                     # 새 가이드 추가·관리 규칙
+│   ├── index.html                    # GitHub Pages 가이드 보관함
+│   ├── guides.json                   # 가이드 목록의 단일 원본
+│   └── 2026-07-29-session-0-1-docker-setup.html
 ├── docs/
 │   ├── README.md                     # 전문 산출물 경로표
 │   ├── setup/
