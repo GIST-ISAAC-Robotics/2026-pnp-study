@@ -1,10 +1,10 @@
 # 진행 상황과 실행 로그
 
-> **현재 단계:** 준비 — Week 0 시작 전
+> **현재 단계:** Week 0 진행 중 — Session 0-1 완료
 >
-> **다음 Gate:** Week 0 Gate
+> **다음 Gate:** Week 0 Gate — Session 0-2·0-3 미완료
 >
-> **마지막 업데이트:** 2026-07-28
+> **마지막 업데이트:** 2026-07-29
 
 이 문서는 스터디 진행 상황의 단일 기록 원본이다. 회차 종료 시 최신 항목을 위에 추가하고, 성공뿐 아니라 실패·축소·보류 판정도 증빙과 함께 남긴다.
 
@@ -12,8 +12,8 @@
 
 | 단계 | 상태 | 현재 결과 / 진입 조건 |
 |---|---|---|
-| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.5 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리; 구현은 아직 시작 전 |
-| Week 0 — 환경·위험 제거 | 대기 | Docker, 공식 smoke test, RGB-D·pose follower·reset·IK spike |
+| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.5 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리 |
+| Week 0 — 환경·위험 제거 | **진행 중** | S0-1 Docker·volume·Zenoh·RViz 검증 완료; S0-2 공식 smoke test부터 계속 |
 | Week 1 — ROS 2 시스템 뼈대 | 대기 | Week 0 Gate 통과 후 시작 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
 | Week 3 — RGB-D 인식 통합 | 대기 | Week 2 Gate 통과 후 시작 |
@@ -24,15 +24,27 @@
 
 ## 다음 작업
 
-- [ ] Session 0-1: ROBOTIS Docker 환경 구축
+- [x] Session 0-1: ROBOTIS Docker 환경 구축
 - [ ] Session 0-2: 공식 Gazebo·MoveIt smoke test
 - [ ] Session 0-3: RGB-D, pose 추종/reset, pose goal·IK mode spike
-- [ ] `docs/setup/docker.md`에 S0-1 환경 기록; S0-2 종료 시 공식 smoke test 결과 추가
+- [x] `docs/setup/docker.md`에 S0-1 환경 기록
+- [ ] S0-2 종료 시 `docs/setup/docker.md`에 공식 smoke test 결과 추가
 - [ ] `docs/setup/week0_spike.md`에 동결값과 Gate 판정 기록
 
 세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 0](./curriculum.md#6-week-0--환경-구축과-위험-제거)을 따른다.
 
 ## 회차 로그
+
+### 2026-07-29 — Session 0-1 · ROBOTIS Docker 환경 구축
+
+- **상태:** 완료
+- **목표:** ROBOTIS 공식 `jazzy` Docker 환경에 진입하고 `/workspace` 보존, 실제 middleware와 RViz GUI를 검증
+- **수행:** Windows 11 + WSL2 Ubuntu 24.04.4에 Docker Engine/Compose를 구성하고 ROBOTIS `jazzy` 저장소와 `robotis/open-manipulator:5.0.0` container를 실행했다. 두 번째 shell, container 제거 전후 volume, ROS 2/colcon/Gazebo/MoveIt, Zenoh router와 RViz를 순서대로 확인
+- **결과:** ROBOTIS commit `32975f8`, Docker `29.6.2`, Compose `v5.3.1`, ROS 2 Jazzy, Gazebo Sim `8.11.0`, MoveIt package `24`개, `RMW_IMPLEMENTATION=rmw_zenoh_cpp`, 실제 RMW `rmw_zenoh_cpp`, `ROS_DOMAIN_ID=30`을 확인했다. `/workspace/keep_me.txt`와 스터디 저장소가 container 제거 후에도 보존됐고 RViz는 OpenGL `4.5`로 표시됐다.
+- **문제:** Zenoh router를 시작하지 않았을 때 D-2에서 `Unable to connect to a Zenoh router` 경고가 발생했다. router를 켠 뒤에도 D-3의 `container.sh stop → start`가 router process를 종료했으나 터미널 창은 남아 있어 실행 중으로 오인했고, D-5 RViz에서 같은 경고가 재발했다.
+- **결정:** `rmw_zenoh_cpp` 사용 시 별도 container shell을 router 전용으로 유지하고, 모든 container 시작·재시작 뒤 `ros2 run rmw_zenoh_cpp rmw_zenohd`를 다시 실행한다. `pgrep`와 경고 없는 `ros2 node list`로 생존을 확인하도록 일일 가이드를 보정했다.
+- **다음:** Session 0-2에서 공식 Gazebo·MoveIt launch, arm planning/execution, gripper open/close, `/clock`과 2회 재실행을 검증
+- **증빙:** [Docker 개발 환경 기록](./docs/setup/docker.md), [Session 0-1 실행 가이드](./guides/2026-07-29-session-0-1-docker-setup.html)
 
 ### 2026-07-28 — 커리큘럼 v3.5.5 참조·구조 일관성 검토
 

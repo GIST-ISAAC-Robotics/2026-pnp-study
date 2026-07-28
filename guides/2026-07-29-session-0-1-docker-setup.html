@@ -846,7 +846,39 @@ git remote -v</pre>
         </div>
       </div>
 
-      <h3>C-5 · host와 container 경로 대응</h3>
+      <h3>C-5 · Zenoh router 전용 shell</h3>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash · 새 Ubuntu 터미널</b><span class="where">Ubuntu (WSL host)</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>cd ~/open_manipulator
+./docker/container.sh enter
+ros2 run rmw_zenoh_cpp rmw_zenohd</pre>
+      </div>
+      <p>
+        <code>rmw_zenoh_cpp</code>의 기본 discovery에는 Zenoh router가 필요합니다.
+        마지막 명령이 실행 중인 동안에는 프롬프트가 돌아오지 않는 것이 정상이며, 이 shell을
+        router 전용으로 유지합니다. 작업할 명령은 원래 container shell에서 계속 실행합니다.
+      </p>
+      <div class="code-block">
+        <div class="code-head">
+          <b>Bash · 생존 확인</b><span class="where">원래 Container shell</span>
+          <button class="copy" type="button">복사</button>
+        </div>
+        <pre>pgrep -af '[r]mw_zenohd'
+ros2 node list</pre>
+      </div>
+      <div class="callout warn">
+        <p>
+          <strong>container를 다시 시작할 때마다 router도 다시 시작해야 합니다.</strong>
+          <code>container.sh stop</code>은 container를 제거하므로 router process도 종료합니다.
+          터미널 창만 남아 있어도 router가 살아 있다는 뜻이 아닙니다. 모든
+          <code>stop → start</code> 뒤 이 절차를 반복하고 <code>pgrep</code>로 확인하십시오.
+        </p>
+      </div>
+
+      <h3>C-6 · host와 container 경로 대응</h3>
       <table>
         <thead>
           <tr><th>WSL host</th><th>Container</th><th>용도</th></tr>
@@ -925,6 +957,13 @@ ros2 doctor --report</pre>
           기록해야 환경 변수와 실제 middleware를 모두 증명할 수 있습니다.
         </p>
       </div>
+      <div class="callout warn">
+        <p>
+          <strong><code>Unable to connect to a Zenoh router</code>가 나오면 설치 실패가 아니라
+          router 미실행 상태입니다.</strong> C-5의 router 전용 shell을 실행하고
+          <code>ros2 node list</code>에서 같은 경고가 사라지는지 확인한 뒤 계속합니다.
+        </p>
+      </div>
 
       <h3>D-3 · volume 보존 시험</h3>
       <div class="code-block">
@@ -957,11 +996,18 @@ cd ~/open_manipulator
 ls -la /workspace/2026-pnp-study</pre>
       </div>
       <p>같은 내용과 스터디 저장소가 다시 보이면 컨테이너 제거 전후 보존에 성공한 것입니다.</p>
+      <div class="callout warn">
+        <p>
+          <strong>재시작 직후 C-5를 다시 실행하십시오.</strong> 이 시험의
+          <code>stop → start</code>는 기존 Zenoh router도 종료합니다. 새 router를 시작하지 않고
+          D-4·D-5로 넘어가면 ROS CLI와 RViz에서 router 연결 경고가 다시 발생합니다.
+        </p>
+      </div>
 
       <h3>D-4 · 두 번째 shell</h3>
       <div class="code-block">
         <div class="code-head">
-          <b>Bash · 새 Ubuntu 터미널</b><span class="where">Ubuntu (WSL host)</span>
+          <b>Bash · router 전용 shell과 별도</b><span class="where">새 Ubuntu 터미널</span>
           <button class="copy" type="button">복사</button>
         </div>
         <pre>cd ~/open_manipulator
@@ -1003,6 +1049,11 @@ rviz2</pre>
             <td>software rendering만 성공</td>
             <td>GPU/WSLg 경로 문제로 기록하고 Session 0-2 전에 Windows GPU 드라이버를 재확인합니다.</td>
             <td>기록</td>
+          </tr>
+          <tr>
+            <td><code>Unable to connect to a Zenoh router</code></td>
+            <td>C-5를 다시 실행합니다. 직전에 D-3의 <code>stop → start</code>를 했다면 기존 router는 종료된 상태입니다.</td>
+            <td>별도 Container shell</td>
           </tr>
         </tbody>
       </table>
@@ -1104,6 +1155,7 @@ cd ~/open_manipulator
 | RMW 환경 변수 | `echo $RMW_IMPLEMENTATION` | [값] |
 | 실제 RMW | `ros2 doctor --report` | [RMW 보고값] |
 | ROS domain | `echo $ROS_DOMAIN_ID` | [값] |
+| Zenoh router | `pgrep -af '[r]mw_zenohd'` | [process / 미실행] |
 
 ## 7. Volume 보존
 
@@ -1120,7 +1172,9 @@ cd ~/open_manipulator
 
 ## 9. 알려진 문제와 다음 행동
 
-- [없으면 "없음"]
+- Zenoh 연결 경고가 나오면 별도 container shell에서
+  `ros2 run rmw_zenoh_cpp rmw_zenohd`를 실행한다.
+- `container.sh stop → start` 뒤에는 기존 router가 종료되므로 반드시 다시 실행한다.
 - 인증 코드·토큰·개인 비밀값은 기록하지 않았다.</pre>
       </div>
 
@@ -1177,7 +1231,7 @@ git log -1 --oneline</pre>
       <ul class="checklist">
         <li>
           <input type="checkbox" id="c1">
-          <label for="c1">메인 PC에서 WSL2·WSLg, Docker Engine과 Compose v2가 검증됐다.</label>
+          <label for="c1">메인 PC에서 WSL2·WSLg, Docker Engine과 <code>docker compose</code> plugin이 검증됐다.</label>
           <span class="tag">필수</span>
         </li>
         <li>
@@ -1203,6 +1257,11 @@ git log -1 --oneline</pre>
         <li>
           <input type="checkbox" id="c6">
           <label for="c6">환경 변수와 <code>ros2 doctor --report</code>로 실제 RMW를 기록했다.</label>
+          <span class="tag">필수</span>
+        </li>
+        <li>
+          <input type="checkbox" id="c10">
+          <label for="c10">Zenoh router를 별도 shell에서 유지하고 재시작 뒤 생존 여부를 확인했다.</label>
           <span class="tag">필수</span>
         </li>
         <li>
@@ -1238,6 +1297,8 @@ git log -1 --oneline</pre>
         <li><a href="https://github.com/ROBOTIS-GIT/open_manipulator/blob/jazzy/docker/container.sh">ROBOTIS · container.sh</a></li>
         <li><a href="https://github.com/ROBOTIS-GIT/open_manipulator/blob/jazzy/docker/docker-compose.yml">ROBOTIS · docker-compose.yml</a></li>
         <li><a href="https://github.com/ROBOTIS-GIT/open_manipulator/blob/jazzy/docker/Dockerfile">ROBOTIS · Dockerfile</a></li>
+        <li><a href="https://docs.robotis.com/docs/systems/omx/specifications/zenoh_communication/">ROBOTIS · Zenoh Communication</a></li>
+        <li><a href="https://github.com/ros2/rmw_zenoh#start-the-zenoh-router">ROS 2 · rmw_zenoh router 시작</a></li>
         <li><a href="https://docs.ros.org/en/jazzy/Concepts/Basic/About-Command-Line-Tools.html">ROS 2 Jazzy · CLI 사용법</a></li>
         <li><a href="https://cli.github.com/manual/gh_auth_login">GitHub CLI · gh auth login</a></li>
       </ul>
