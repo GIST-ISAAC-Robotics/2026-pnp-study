@@ -6,6 +6,7 @@
 
 | 날짜 | 회차 | 가이드 |
 |---|---|---|
+| 2026-07-30 | Session 0-2 | [공식 Gazebo·MoveIt smoke test](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-30-session-0-2-gazebo-moveit-smoke-test.html) |
 | 2026-07-29 | Session 0-1 | [ROBOTIS Docker 환경 구축](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-29-session-0-1-docker-setup.html) |
 
 ## 새 가이드 추가 방법

@@ -1,7 +1,20 @@
 {
   "schema_version": 1,
-  "updated": "2026-07-29",
+  "updated": "2026-07-30",
   "guides": [
+    {
+      "date": "2026-07-30",
+      "session": "Session 0-2",
+      "title": "공식 Gazebo·MoveIt smoke test",
+      "description": "공식 OpenMANIPULATOR-X 시뮬레이션에서 arm·gripper 동작, ROS 시간 정합성, joint state 일치와 2회 전체 재현을 검증합니다.",
+      "path": "./2026-07-30-session-0-2-gazebo-moveit-smoke-test.html",
+      "tags": [
+        "Week 0",
+        "Gazebo",
+        "MoveIt",
+        "smoke test"
+      ]
+    },
     {
       "date": "2026-07-29",
       "session": "Session 0-1",
