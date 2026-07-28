@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="2026 여름 픽앤플레이스 스터디의 날짜별 실행 가이드 보관함">
+  <title>일일 실행 가이드 · 2026 PnP Study</title>
+  <style>
+    :root {
+      --ink: #171615;
+      --body: #53504d;
+      --canvas: #f5f3ef;
+      --paper: #fff;
+      --line: #dedad3;
+      --crimson: #bf2b25;
+      --crimson-deep: #941f1b;
+      --accent-soft: #fff0ed;
+      --shadow: 0 18px 50px #2a201a12;
+      --content: 1120px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: Pretendard, "Noto Sans KR", "Segoe UI", sans-serif;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+    a { color: inherit; }
+    .topbar {
+      position: sticky;
+      z-index: 20;
+      top: 0;
+      border-bottom: 1px solid #ffffff16;
+      color: white;
+      background: #171615f2;
+      backdrop-filter: blur(16px);
+    }
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: min(calc(100% - 40px), var(--content));
+      min-height: 66px;
+      margin: 0 auto;
+    }
+    .wordmark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .2px;
+      text-decoration: none;
+    }
+    .wordmark::before {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--crimson);
+      box-shadow: 0 0 0 5px #bf2b252c;
+      content: "";
+    }
+    .toplinks { display: flex; gap: 8px; }
+    .toplinks a {
+      padding: 8px 11px;
+      color: #ffffffb5;
+      border-radius: 999px;
+      font-size: 12px;
+      text-decoration: none;
+    }
+    .toplinks a:hover,
+    .toplinks a:focus-visible { color: white; background: #ffffff10; }
+    .hero {
+      color: white;
+      background:
+        radial-gradient(circle at 77% 18%, #bf2b2538, transparent 30%),
+        linear-gradient(135deg, #161514, #282320 72%, #391c1a);
+    }
+    .hero-inner {
+      width: min(calc(100% - 40px), var(--content));
+      margin: 0 auto;
+      padding: clamp(70px, 10vw, 128px) 0 72px;
+    }
+    .eyebrow {
+      margin: 0 0 18px;
+      color: #ef746e;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 780px;
+      margin: 0;
+      font-size: clamp(43px, 7vw, 78px);
+      line-height: 1.02;
+      letter-spacing: -3.8px;
+    }
+    .hero p:last-child {
+      max-width: 680px;
+      margin: 24px 0 0;
+      color: #ffffffa6;
+      font-size: 17px;
+    }
+    main {
+      width: min(calc(100% - 40px), var(--content));
+      min-height: 55vh;
+      margin: 0 auto;
+      padding: 70px 0 100px;
+    }
+    .toolbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 22px;
+      margin-bottom: 26px;
+    }
+    .toolbar h2 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.15;
+      letter-spacing: -1.7px;
+    }
+    .updated {
+      margin: 8px 0 0;
+      color: var(--body);
+      font-size: 13px;
+    }
+    .search {
+      width: min(100%, 330px);
+      padding: 12px 14px;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      outline: none;
+      background: white;
+      border-radius: 12px;
+      font: inherit;
+      font-size: 14px;
+    }
+    .search:focus {
+      border-color: #bf2b257d;
+      box-shadow: 0 0 0 4px #bf2b2514;
+    }
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .guide-card {
+      display: flex;
+      min-height: 310px;
+      padding: 30px;
+      flex-direction: column;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+    .guide-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--body);
+      font-size: 12px;
+    }
+    .session {
+      padding: 5px 9px;
+      color: var(--crimson-deep);
+      border: 1px solid #efc8c4;
+      background: var(--accent-soft);
+      border-radius: 999px;
+      font-weight: 700;
+    }
+    .guide-card h3 {
+      margin: 25px 0 10px;
+      font-size: 27px;
+      line-height: 1.25;
+      letter-spacing: -.8px;
+    }
+    .guide-card p {
+      margin: 0 0 22px;
+      color: var(--body);
+      font-size: 14px;
+    }
+    .tags {
+      display: flex;
+      margin-top: auto;
+      margin-bottom: 22px;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      padding: 4px 8px;
+      color: #6e6863;
+      background: #f5f2ed;
+      border-radius: 7px;
+      font-size: 11px;
+    }
+    .open-guide {
+      display: inline-flex;
+      width: fit-content;
+      padding: 11px 15px;
+      color: white;
+      background: var(--crimson);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .open-guide:hover,
+    .open-guide:focus-visible { background: var(--crimson-deep); }
+    .state {
+      padding: 38px;
+      color: var(--body);
+      border: 1px dashed #c9c3bb;
+      background: #ffffffa1;
+      border-radius: 18px;
+      text-align: center;
+    }
+    footer {
+      padding: 36px 20px;
+      color: #ffffff78;
+      background: var(--ink);
+      font-size: 12px;
+      text-align: center;
+    }
+    footer a { color: white; text-underline-offset: 3px; }
+    @media (max-width: 720px) {
+      .toplinks a:first-child { display: none; }
+      .hero-inner, main { width: min(calc(100% - 28px), var(--content)); }
+      h1 { letter-spacing: -2.5px; }
+      .toolbar { align-items: stretch; flex-direction: column; }
+      .search { width: 100%; }
+      .guide-grid { grid-template-columns: 1fr; }
+      .guide-card { min-height: 285px; padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="wordmark" href="../">ISAAC Robotics · PnP Study</a>
+      <nav class="toplinks" aria-label="관련 링크">
+        <a href="../">스터디 홈</a>
+        <a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/tree/main/guides">GitHub ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Daily field guides</p>
+      <h1>오늘 할 일을<br>바로 실행합니다.</h1>
+      <p>날짜별 준비물, 명령, 검증 기준과 기록 방법을 한 화면에 모았습니다. 최신 가이드부터 골라 순서대로 따라가면 됩니다.</p>
+    </div>
+  </section>
+
+  <main>
+    <div class="toolbar">
+      <div>
+        <p class="eyebrow">Guide archive</p>
+        <h2>일일 실행 가이드</h2>
+        <p class="updated" id="updated">목록을 불러오는 중입니다.</p>
+      </div>
+      <label>
+        <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">가이드 검색</span>
+        <input class="search" id="search" type="search" placeholder="회차·제목·태그 검색" autocomplete="off">
+      </label>
+    </div>
+
+    <div class="guide-grid" id="guide-grid" aria-live="polite">
+      <div class="state">가이드 목록을 불러오는 중입니다.</div>
+    </div>
+
+    <noscript>
+      <p class="state">JavaScript를 사용할 수 없다면 <a href="./2026-07-29-session-0-1-docker-setup.html">Session 0-1 가이드</a>를 직접 여십시오.</p>
+    </noscript>
+  </main>
+
+  <footer>
+    2026 PNP STUDY · 목록은 <a href="./guides.json">guides.json</a>에서 관리합니다.
+  </footer>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const grid = document.getElementById("guide-grid");
+      const search = document.getElementById("search");
+      const updated = document.getElementById("updated");
+      let guides = [];
+
+      const escapeHTML = (value) => String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+      const render = (items) => {
+        if (!items.length) {
+          grid.innerHTML = '<p class="state">검색 조건에 맞는 가이드가 없습니다.</p>';
+          return;
+        }
+
+        grid.innerHTML = items.map((guide) => {
+          const tags = guide.tags.map((tag) => `<span class="tag">${escapeHTML(tag)}</span>`).join("");
+          return `
+            <article class="guide-card">
+              <div class="guide-meta">
+                <span class="session">${escapeHTML(guide.session)}</span>
+                <time datetime="${escapeHTML(guide.date)}">${escapeHTML(guide.date)}</time>
+              </div>
+              <h3>${escapeHTML(guide.title)}</h3>
+              <p>${escapeHTML(guide.description)}</p>
+              <div class="tags">${tags}</div>
+              <a class="open-guide" href="${escapeHTML(guide.path)}">가이드 열기 →</a>
+            </article>
+          `;
+        }).join("");
+      };
+
+      const loadGuides = async () => {
+        try {
+          const response = await fetch("./guides.json", { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          guides = data.guides.sort((a, b) => b.date.localeCompare(a.date));
+          updated.textContent = `총 ${guides.length}개 · 목록 갱신 ${data.updated}`;
+          render(guides);
+        } catch (error) {
+          updated.textContent = "목록을 불러오지 못했습니다.";
+          grid.innerHTML = `
+            <p class="state">
+              가이드 목록 로딩에 실패했습니다.
+              <a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/tree/main/guides">GitHub에서 확인</a>
+            </p>
+          `;
+          console.error(error);
+        }
+      };
+
+      search.addEventListener("input", () => {
+        const query = search.value.trim().toLocaleLowerCase("ko");
+        const filtered = guides.filter((guide) =>
+          [guide.date, guide.session, guide.title, guide.description, ...guide.tags]
+            .join(" ")
+            .toLocaleLowerCase("ko")
+            .includes(query)
+        );
+        render(filtered);
+      });
+
+      loadGuides();
+    })();
+  </script>
+</body>
+</html>

@@ -971,6 +971,86 @@
     }
     .archive-card a { position: relative; z-index: 1; }
 
+    .guide-feature {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(260px, .75fr);
+      gap: 18px;
+    }
+    .guide-current,
+    .guide-library {
+      padding: 32px;
+      border: 1px solid var(--hairline);
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-1);
+    }
+    .guide-current {
+      position: relative;
+      overflow: hidden;
+      color: white;
+      border-color: transparent;
+      background:
+        radial-gradient(circle at 88% 18%, #d7463e4a, transparent 29%),
+        linear-gradient(140deg, #1b1918, #302622 78%, #4a211e);
+    }
+    .guide-current::after {
+      position: absolute;
+      right: -25px;
+      bottom: -58px;
+      color: #ffffff0a;
+      content: "0-1";
+      font-size: 152px;
+      font-weight: 750;
+      line-height: 1;
+      letter-spacing: -10px;
+      pointer-events: none;
+    }
+    .guide-meta {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+    .guide-chip {
+      padding: 5px 9px;
+      color: #ffffffc4;
+      border: 1px solid #ffffff1f;
+      background: #ffffff0c;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: .35px;
+    }
+    .guide-current h3,
+    .guide-library h3 {
+      position: relative;
+      z-index: 1;
+      margin: 25px 0 12px;
+      font-size: 28px;
+      line-height: 1.25;
+      letter-spacing: -.9px;
+    }
+    .guide-current p,
+    .guide-library p {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 26px;
+      font-size: 14px;
+    }
+    .guide-current p { max-width: 630px; color: #ffffffa6; }
+    .guide-current .button,
+    .guide-library .button { position: relative; z-index: 1; }
+    .guide-library {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .guide-library h3 { margin-top: 0; }
+    .guide-library p { color: var(--body); }
+    .guide-library .button { margin-top: auto; }
+
     footer {
       color: white;
       background: var(--ink);
@@ -1122,6 +1202,7 @@
       .reader-rail.open .rail-tools { display: grid; }
       .reader-rail.open .toc { display: grid; }
       .curriculum-shell { padding: 28px; border-radius: var(--radius-md); }
+      .guide-feature { grid-template-columns: 1fr; }
       .archive-grid { grid-template-columns: 1fr; }
     }
 
@@ -1155,6 +1236,8 @@
       .markdown-body h2 { margin-top: 42px; font-size: 23px; }
       .markdown-body h3 { font-size: 18px; }
       .markdown-body blockquote { padding: 14px 16px; }
+      .guide-current,
+      .guide-library { padding: 24px; }
       .archive-card { min-height: 250px; padding: 24px; }
       .footer-inner { align-items: flex-start; flex-direction: column; }
       .footer-links { justify-content: flex-start; }
@@ -1217,6 +1300,7 @@
       <nav class="topnav" id="topnav" aria-label="주요 메뉴">
         <a href="#overview">개요</a>
         <a href="#progress">진행 상황</a>
+        <a href="#guides">일일 가이드</a>
         <a href="#curriculum">커리큘럼</a>
         <a href="#archive">의사결정 기록</a>
         <a class="topnav-accent" href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study">GitHub ↗</a>
@@ -1238,6 +1322,7 @@
         <div class="hero-actions">
           <a class="button button-light" href="#curriculum">커리큘럼 읽기</a>
           <a class="button button-ghost-light" href="#progress">현재 진행 보기</a>
+          <a class="button button-ghost-light" href="./guides/">일일 가이드</a>
         </div>
       </div>
       <aside class="hero-panel" aria-label="현재 스터디 상태">
@@ -1328,9 +1413,36 @@
       </div>
     </section>
 
+    <section class="section" id="guides" aria-labelledby="guides-title">
+      <header class="section-header">
+        <p class="eyebrow">03 · Daily guides</p>
+        <h2 id="guides-title">오늘 할 일을, 오늘 바로 엽니다.</h2>
+        <p>각 회차의 준비물, 실행 명령, 검증 기준과 기록 양식을 한 화면에 정리합니다. 아래 최신 가이드를 바로 열거나 전체 보관함에서 지난 회차를 찾을 수 있습니다.</p>
+      </header>
+
+      <div class="guide-feature">
+        <article class="guide-current">
+          <div class="guide-meta">
+            <span class="guide-chip">2026-07-29</span>
+            <span class="guide-chip">Session 0-1</span>
+            <span class="guide-chip">Week 0</span>
+          </div>
+          <h3>ROBOTIS Docker 환경 구축</h3>
+          <p>아무것도 설치되지 않은 Windows PC에서 WSL2, Docker Engine, ROBOTIS 공식 컨테이너, GUI와 영속 볼륨을 순서대로 확인합니다.</p>
+          <a class="button button-light" href="./guides/2026-07-29-session-0-1-docker-setup.html">오늘 가이드 열기</a>
+        </article>
+
+        <aside class="guide-library">
+          <h3>일일 가이드 보관함</h3>
+          <p>앞으로 추가되는 가이드는 날짜와 회차 순서로 한곳에 쌓입니다. 제목·태그 검색도 지원합니다.</p>
+          <a class="button button-secondary" href="./guides/">전체 목록 보기</a>
+        </aside>
+      </div>
+    </section>
+
     <section class="reader-section" id="curriculum" aria-labelledby="curriculum-title">
       <div class="reader-heading">
-        <p class="eyebrow">03 · Curriculum reader</p>
+        <p class="eyebrow">04 · Curriculum reader</p>
         <div class="reader-heading-row">
           <header class="section-header reader-section-header">
             <h2 id="curriculum-title">실행 커리큘럼 전체.</h2>
@@ -1375,7 +1487,7 @@
 
     <section class="section" id="archive" aria-labelledby="archive-title">
       <header class="section-header">
-        <p class="eyebrow">04 · Decision archive</p>
+        <p class="eyebrow">05 · Decision archive</p>
         <h2 id="archive-title">결론보다 과정이 필요할 때.</h2>
         <p>아래 문서는 현재 실행 지침이 아니라, 왜 이 커리큘럼을 택했는지 보여 주는 의사결정 기록입니다. 다음 스터디의 선택지를 설계할 때 재사용합니다.</p>
       </header>
@@ -1407,6 +1519,7 @@
         <p>GIST 로봇 동아리 ISAAC · 2026 여름 픽앤플레이스 스터디</p>
       </div>
       <nav class="footer-links" aria-label="하단 링크">
+        <a href="./guides/">Daily Guides</a>
         <a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study#readme">README</a>
         <a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/blob/main/curriculum.md">Curriculum MD</a>
         <a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/blob/main/progress.md">Progress MD</a>
