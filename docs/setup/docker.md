@@ -125,7 +125,7 @@ ros2 node list
 - 재발 원인: D-3의 `container.sh stop → start`가 실행 중이던 router를 container와 함께 종료했으나, router용 터미널 창은 남아 있어 실행 중으로 오인
 - 해결: container 시작·재시작 뒤 별도 container shell에서 `ros2 run rmw_zenoh_cpp rmw_zenohd` 재실행
 - 검증: `rmw_zenohd` process 확인, 별도 shell의 `ros2 node list` 종료 코드 `0`, RViz OpenGL 초기화 성공
-- 가이드 반영: [Session 0-1 일일 실행 가이드](../../guides/2026-07-29-session-0-1-docker-setup.html)에 router 전용 shell과 재시작 규칙 추가
+- 가이드 반영: [Session 0-1 일일 실행 가이드](../../guides/2026-07-28-session-0-1-docker-setup.html)에 router 전용 shell과 재시작 규칙 추가
 
 ## 10. 재현 명령 요약
 

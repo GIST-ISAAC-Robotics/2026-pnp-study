@@ -42,11 +42,12 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 
 ## 일일 실행 가이드
 
-매일 실제로 따라 할 준비물, 명령, 검증 기준과 기록 방법은 [일일 실행 가이드 보관함](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/)에 모읍니다. 새 가이드는 [`guides/`](./guides/)에 HTML 파일을 추가하고 [`guides.json`](./guides/guides.json)에 항목 하나를 등록하면 보관함에 최신순으로 나타납니다.
+매일 실제로 따라 할 준비물, 명령, 검증 기준과 기록 방법은 [일일 실행 가이드 보관함](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/)에 모읍니다. 가이드의 날짜는 **제작일 기준**입니다. 새 가이드는 [`guides/`](./guides/)에 HTML 파일을 추가하고 [`guides.json`](./guides/guides.json)에 항목 하나를 등록하면 보관함에 최신순으로 나타납니다.
 
-| 날짜 | 회차 | 가이드 |
+| 제작일 | 회차 | 가이드 |
 |---|---|---|
-| 2026-07-29 | Session 0-1 | [ROBOTIS Docker 환경 구축](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-29-session-0-1-docker-setup.html) |
+| 2026-07-29 | Session 0-2 | [공식 Gazebo·MoveIt smoke test](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-29-session-0-2-gazebo-moveit-smoke-test.html) |
+| 2026-07-28 | Session 0-1 | [ROBOTIS Docker 환경 구축](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-28-session-0-1-docker-setup.html) |
 
 파일명과 목록 갱신 규칙은 [`guides/README.md`](./guides/README.md)에 정리되어 있습니다.
 
@@ -71,7 +72,8 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 │   ├── README.md                     # 새 가이드 추가·관리 규칙
 │   ├── index.html                    # GitHub Pages 가이드 보관함
 │   ├── guides.json                   # 가이드 목록의 단일 원본
-│   └── 2026-07-29-session-0-1-docker-setup.html
+│   ├── 2026-07-28-session-0-1-docker-setup.html
+│   └── 2026-07-29-session-0-2-gazebo-moveit-smoke-test.html
 ├── docs/
 │   ├── README.md                     # 전문 산출물 경로표
 │   ├── setup/
