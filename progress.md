@@ -35,6 +35,16 @@
 
 ## 회차 로그
 
+### 2026-07-31 — Session 0-2 가이드 `init` 자세 정정과 README 가이드 목록 동기화
+
+- **상태:** 완료
+- **수행:** Session 0-2 가이드 C-1의 named state 설명을 `open_manipulator_x_arm.urdf.xacro`와 다시 대조하고, 루트 `README.md`의 일일 가이드 표와 저장소 구조 트리를 `guides.json` 기준으로 점검
+- **결과:** `init`을 「곧게 선 자세」로 적은 설명이 실제 형상과 달랐다. URDF의 joint origin은 모두 `rpy="0 0 0"`이라 관절 영점에 회전 offset이 없지만, `joint2 → joint3` offset `0.024 0 0.128`과 `joint3 → joint4` offset `0.124 0 0` 때문에 네 관절이 `0`일 때 위팔은 위로, 아래팔부터는 앞으로 뻗는 ㄱ자가 된다. 표 설명을 정정하고 근거와 위팔의 `atan(0.024 / 0.128) ≈ 10.62°` offset을 callout으로 덧붙였다. README에는 빠져 있던 Session 0-3 가이드 행과 `guides/assets/`, 0-3 HTML을 구조 트리에 추가했다.
+- **문제:** 없음
+- **결정:** named state 설명은 이름과 관절 값만이 아니라 URDF 형상까지 확인한 뒤 적는다. 관절 값이 `0`인 것과 링크가 일직선인 것은 구분해 기술한다.
+- **다음:** Session 0-3에서 핵심 위험 3종 spike 진행
+- **증빙:** [Session 0-2 실행 가이드](./guides/2026-07-29-session-0-2-gazebo-moveit-smoke-test.html), [README](./README.md)
+
 ### 2026-07-31 — 문서 표기·서술 시점 일관성 정리
 
 - **상태:** 완료
