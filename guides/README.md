@@ -6,6 +6,7 @@
 
 | 제작일 | 회차 | 가이드 |
 |---|---|---|
+| 2026-07-31 | Session 0-3 | [핵심 위험 3종 spike](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-31-session-0-3-week0-spikes.html) |
 | 2026-07-29 | Session 0-2 | [공식 Gazebo·MoveIt smoke test](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-29-session-0-2-gazebo-moveit-smoke-test.html) |
 | 2026-07-28 | Session 0-1 | [ROBOTIS Docker 환경 구축](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-28-session-0-1-docker-setup.html) |
 

@@ -1,0 +1,2131 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Session 0-3 · 핵심 위험 3종 spike · 일일 실행 가이드</title>
+  <style>
+    :root {
+      --ink: #191716;
+      --body: #514b48;
+      --muted: #817a76;
+      --paper: #ffffff;
+      --canvas: #f6f4f2;
+      --line: #e2ddda;
+      --red: #a9231f;
+      --red-dark: #711411;
+      --red-soft: #f8ecea;
+      --green: #176b45;
+      --green-soft: #eaf5ef;
+      --amber: #8a5700;
+      --amber-soft: #fff6df;
+      --blue: #205a87;
+      --blue-soft: #eaf3fa;
+      --code: #171514;
+      --code-ink: #f5f1ed;
+      --shadow: 0 8px 28px rgba(45, 34, 29, .08);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+    body {
+      margin: 0;
+      font-family: Pretendard, "Noto Sans KR", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--canvas);
+      line-height: 1.68;
+      word-break: keep-all;
+    }
+    a { color: var(--red); text-underline-offset: 3px; }
+    code {
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: .91em;
+      background: #eeeae7;
+      padding: .12em .38em;
+      border-radius: 5px;
+      word-break: break-word;
+    }
+    strong { color: var(--ink); }
+    .shell {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .shell-inner {
+      max-width: 1160px;
+      height: 62px;
+      margin: 0 auto;
+      padding: 0 26px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .brand {
+      color: inherit;
+      font-weight: 800;
+      letter-spacing: -.4px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .brand:focus-visible {
+      outline: 2px solid var(--red);
+      outline-offset: 4px;
+    }
+    .brand i {
+      color: var(--red);
+      font-style: normal;
+    }
+    nav {
+      margin-left: auto;
+      display: flex;
+      gap: 4px;
+    }
+    nav a {
+      color: var(--body);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 650;
+      padding: 7px 10px;
+      border-radius: 999px;
+    }
+    nav a:hover { background: var(--red-soft); color: var(--red); }
+    .progress { height: 3px; background: var(--line); }
+    .progress span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--red-dark), var(--red));
+    }
+    .hero {
+      color: white;
+      background:
+        radial-gradient(circle at 86% 18%, rgba(248, 175, 107, .35), transparent 27%),
+        radial-gradient(circle at 18% 8%, rgba(226, 95, 87, .28), transparent 30%),
+        linear-gradient(135deg, #3d0c0a, #761714 52%, #a9231f);
+      overflow: hidden;
+    }
+    .hero-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 74px 28px 60px;
+    }
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .hero .kicker { color: #ffd3cf; }
+    .kicker::before {
+      content: "";
+      width: 26px;
+      height: 2px;
+      background: currentColor;
+    }
+    h1 {
+      max-width: 900px;
+      margin: 18px 0 12px;
+      font-size: clamp(38px, 6vw, 66px);
+      line-height: 1.08;
+      letter-spacing: -.055em;
+    }
+    .hero-lead {
+      max-width: 850px;
+      margin: 0;
+      color: rgba(255,255,255,.84);
+      font-size: clamp(18px, 2.4vw, 23px);
+      line-height: 1.55;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 30px;
+    }
+    .pill {
+      padding: 8px 14px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 999px;
+      background: rgba(255,255,255,.1);
+      font-size: 13px;
+    }
+    .pill b { color: white; }
+    main {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 24px 28px 70px;
+    }
+    section {
+      padding: 54px 0 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    section:last-child { border-bottom: 0; }
+    h2 {
+      margin: 12px 0 12px;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.18;
+      letter-spacing: -.045em;
+    }
+    h3 {
+      margin: 38px 0 12px;
+      font-size: 25px;
+      letter-spacing: -.025em;
+    }
+    h4 {
+      margin: 30px 0 10px;
+      font-size: 19px;
+    }
+    p { color: var(--body); }
+    .subtitle {
+      max-width: 880px;
+      margin: 0;
+      color: var(--body);
+      font-size: 18px;
+    }
+    .verdict {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 20px;
+      margin-top: 26px;
+    }
+    .card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .card h3, .card h4 { margin-top: 0; }
+    .card p:last-child { margin-bottom: 0; }
+    .status {
+      display: inline-block;
+      margin-bottom: 8px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .status.ok { color: var(--green); background: var(--green-soft); }
+    .status.fix { color: var(--amber); background: var(--amber-soft); }
+    .callout {
+      margin: 22px 0;
+      padding: 17px 20px;
+      border: 1px solid;
+      border-left-width: 5px;
+      border-radius: 10px;
+    }
+    .callout p { margin: 4px 0; color: inherit; }
+    .callout strong { color: inherit; }
+    .callout.warn {
+      color: #684500;
+      background: var(--amber-soft);
+      border-color: #e5c986;
+    }
+    .callout.info {
+      color: #19496d;
+      background: var(--blue-soft);
+      border-color: #aed0e6;
+    }
+    .callout.ok {
+      color: #115436;
+      background: var(--green-soft);
+      border-color: #a9d6be;
+    }
+    .callout.danger {
+      color: #761713;
+      background: var(--red-soft);
+      border-color: #e1b3ae;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 22px;
+    }
+    .grid.two { grid-template-columns: repeat(2, 1fr); }
+    .step-badge {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin-right: 7px;
+      color: white;
+      background: var(--red);
+      border-radius: 50%;
+      font-size: 16px;
+      vertical-align: 6px;
+    }
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 18px 0;
+    }
+    .checklist li {
+      display: grid;
+      grid-template-columns: 20px 1fr auto;
+      gap: 12px;
+      align-items: start;
+      margin: 8px 0;
+      padding: 13px 15px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--paper);
+    }
+    .checklist input {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      accent-color: var(--red);
+    }
+    .checklist .tag {
+      color: var(--red);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      white-space: nowrap;
+    }
+    .checklist input:checked + label {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+    .code-block {
+      margin: 15px 0 22px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: var(--code);
+      box-shadow: var(--shadow);
+    }
+    .code-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 8px 13px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .code-head b {
+      color: #ffb5af;
+      font-size: 11px;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .where {
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+    }
+    .copy {
+      margin-left: auto;
+      padding: 5px 11px;
+      color: white;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      background: transparent;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+    }
+    .copy:hover { background: var(--red); border-color: var(--red); }
+    pre {
+      margin: 0;
+      padding: 17px;
+      overflow-x: auto;
+      color: var(--code-ink);
+      font: 13px/1.65 "Cascadia Code", "Consolas", monospace;
+      white-space: pre;
+    }
+    pre .comment { color: #9d9690; }
+    table {
+      width: 100%;
+      margin: 18px 0;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper);
+    }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+    th {
+      color: var(--body);
+      background: #efebe8;
+      font-size: 12px;
+      letter-spacing: .04em;
+    }
+    tr:last-child td { border-bottom: 0; }
+    td { color: var(--body); font-size: 14px; }
+    .cmd { font-family: "Cascadia Code", "Consolas", monospace; color: var(--ink); }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin: 22px 0;
+    }
+    .flow div {
+      position: relative;
+      padding: 15px 10px;
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--paper);
+      font-weight: 750;
+      font-size: 13px;
+    }
+    .flow div:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      z-index: 2;
+      color: var(--red);
+      transform: translateY(-50%);
+    }
+    .sources li { margin: 8px 0; color: var(--body); }
+    footer {
+      padding: 26px 28px 45px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+    }
+    @media (max-width: 880px) {
+      nav { display: none; }
+      .verdict, .grid, .grid.two { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .flow div:not(:last-child)::after {
+        content: "↓";
+        top: auto;
+        right: 50%;
+        bottom: -18px;
+        transform: translateX(50%);
+      }
+      table { display: block; overflow-x: auto; }
+      .checklist li { grid-template-columns: 20px 1fr; }
+      .checklist .tag { grid-column: 2; }
+    }
+    @media print {
+      .shell, .copy { display: none; }
+      .hero { color: var(--ink); background: white; }
+      .hero .kicker, .hero-lead, .pill, .pill b { color: var(--ink); }
+      .pill { border-color: var(--line); }
+      main { max-width: none; }
+      section { break-inside: avoid; }
+      .card, .code-block { box-shadow: none; }
+    }
+  </style>
+  <style>
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .checklist h4 { margin-top: 0; }
+  </style>
+</head>
+<body>
+  <header class="shell">
+    <div class="shell-inner">
+      <a class="brand" href="../" aria-label="2026 PNP Study 메인 페이지">2026 PNP STUDY<i>.</i></a>
+      <nav>
+        <a href="#overview">개요</a>
+        <a href="#step0">0 · 준비</a>
+        <a href="#spikeA">A · RGB-D</a>
+        <a href="#spikeB">B · pose·reset</a>
+        <a href="#spikeC">C · IK</a>
+        <a href="#stepE">E · 산출물</a>
+        <a href="#gate">Week 0 Gate</a>
+      </nav>
+    </div>
+    <div class="progress"><span id="progress-bar"></span></div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="kicker">Week 0 · Session 0-3 · 일일 실행 가이드</div>
+      <h1>핵심 위험 3종 spike</h1>
+      <p class="hero-lead">
+        본과정에서 가장 늦게 발견되면 치명적인 세 가지를 지금 확인합니다.
+        RGB-D 입력 경로, Gazebo 물체 pose 추종과 reset backend, 그리고 코드 기반 goal과 IK mode.
+        이 회차 끝에 <b>Week 0 Gate 판정</b>이 붙습니다.
+      </p>
+      <div class="meta">
+        <span class="pill"><b>기준일</b> · 2026-07-31</span>
+        <span class="pill"><b>커리큘럼</b> · v3.5.5 · Session 0-3</span>
+        <span class="pill"><b>전제</b> · Session 0-1·0-2 완료</span>
+        <span class="pill"><b>권장 시간</b> · 2.5~3시간 (timebox)</span>
+      </div>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- ================= OVERVIEW ================= -->
+    <section id="overview">
+      <div class="kicker">Overview</div>
+      <h2>오늘의 범위와 판정 기준</h2>
+      <p class="subtitle">
+        Session 0-2까지는 “공식 환경이 정상인가”를 물었습니다. 오늘은 <b>우리 설계가 이 환경 위에서
+        성립하는가</b>를 묻습니다. 실패해도 되지만, <b>실패했다는 사실을 모르는 것</b>은 안 됩니다.
+      </p>
+
+      <div class="verdict">
+        <div class="card">
+          <span class="status ok">오늘 한다</span>
+          <h3>세 전제의 성립 여부 확인</h3>
+          <p>
+            spike A는 RGB-D topic과 registration 계약, spike B는 ROS 경로의 entity pose 갱신과
+            reset backend, spike C는 코드 pose goal과 IK mode를 확인합니다. 각각 성공·실패와
+            <b>동결값</b>을 <code>docs/setup/week0_spike.md</code>에 남기고 Week 0 Gate를 판정합니다.
+          </p>
+        </div>
+        <div class="card">
+          <span class="status fix">오늘 하지 않는다</span>
+          <h3>성능·정량 최적화</h3>
+          <p>
+            인식 알고리즘(Session 8), 주기 sweep과 정량 오차(Session 6B), workspace 전체 IK 재동결
+            (Session 5)은 모두 나중입니다. 오늘은 <b>“되는가”와 “안 되면 무엇으로 가는가”</b>만 봅니다.
+          </p>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div>0 · 준비</div>
+        <div>A · RGB-D</div>
+        <div>B · pose·reset</div>
+        <div>C · IK</div>
+        <div>Gate 판정</div>
+      </div>
+
+      <h3>시간 배분 — 커리큘럼 원문</h3>
+      <table>
+        <thead><tr><th style="width:120px">구간</th><th>작업</th><th style="width:180px">이 구간의 성격</th></tr></thead>
+        <tbody>
+          <tr><td><b>0~40분</b></td><td>spike A · RGB-D bridge와 registration</td><td>실패해도 fallback이 있음</td></tr>
+          <tr><td><b>40~100분</b></td><td>spike B · entity pose 변경, 짧은 추종, reset backend 판정</td><td><b>가장 김. B-1·B-3는 hard blocker</b></td></tr>
+          <tr><td><b>100~140분</b></td><td>spike C · 코드 pose goal과 IK mode 비교</td><td>최소 1점 검증에는 fallback 없음</td></tr>
+          <tr><td><b>140~160분</b></td><td>결과 기록과 위험 판정</td><td>여기를 빼면 회차가 끝나지 않음</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn">
+        <p>
+          <strong>timebox로 운영합니다.</strong> 특히 spike B의 설계 판정은 world와 bridge가
+          정상 기동된 시점부터 60분입니다. 환경 복구 시간과 spike 판정 시간을 섞어 성공처럼
+          처리하지 않습니다. 60분 안에 계약을 닫지 못하면 <b>미해결 또는 실패로 기록</b>하고
+          blocker 복구를 별도 일정으로 분리합니다. “거의 될 것 같은데”가 가장 비싼 문장입니다.
+        </p>
+      </div>
+
+      <div class="callout danger">
+        <p>
+          <strong>사전 검증에서 닫아 둔 함정 네 가지.</strong> 아래 값은 2026-07-31 현재
+          Session 0-1에서 동결한 container에서 직접 확인했습니다. 그래도 회차 당일에는
+          0단계의 읽기 전용 명령으로 한 번 더 확인합니다.
+        </p>
+        <p>
+          ① <code>ros_gz_sim_demos</code> ROS package는 없지만 Gazebo 8.11.0의 공식
+          <code>sensors_demo.sdf</code>는 설치돼 있습니다. spike A는 자작 sensor schema 대신
+          이 검증된 world를 사용합니다.
+        </p>
+        <p>
+          ② 설치된 <code>ros_gz_bridge 1.0.22</code>는 <code>SetEntityPose</code> 서비스를
+          한 줄 명령으로 bridge합니다. <code>Entity.MODEL</code>의 실제 값은 <b><code>2</code></b>이며,
+          초안의 추정치 <code>6</code>은 SENSOR입니다.
+        </p>
+        <p>
+          ③ <code>simulation_interfaces</code> 정의는 설치돼 있지만 <code>/gzserver/*</code> provider는
+          실제 기동되지 않았습니다. B-3는 <code>ControlWorld reset.model_only</code>로 twist를
+          초기화하고 <code>SetEntityPose(A)</code>로 pose를 복귀시킨 뒤
+          <code>OdometryPublisher</code>로 측정하는 경로를 사용합니다.
+        </p>
+        <p>
+          ④ OpenMANIPULATOR-X의 접근축은 URDF상 <b><code>+X_tool</code></b>입니다.
+          <code>end_effector_joint</code>가 <code>link5</code>에서 +X 방향으로 0.126 m 뻗고,
+          finger는 ±Y로 움직입니다. z축을 접근축으로 잡으면 tilt 계산 전체가 틀립니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= STEP 0 ================= -->
+    <section id="step0">
+      <div class="kicker">Step 0</div>
+      <h2><span class="step-badge">0</span>환경 재진입과 오늘 쓸 도구 확인</h2>
+      <p class="subtitle">
+        Session 0-2의 터미널 규약을 그대로 씁니다. 다만 오늘은 창이 더 필요하고,
+        <b>없는 패키지를 먼저 알아내는 것</b>이 시간을 가장 많이 아낍니다.
+      </p>
+
+      <h3>0-1 · container와 Zenoh router</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash</b><span class="where">Ubuntu (WSL host)</span><button class="copy">복사</button></div>
+<pre>cd ~/open_manipulator
+if ! docker ps --format '{{.Names}}' | grep -qx 'open_manipulator'; then
+  ./docker/container.sh start
+fi
+docker ps --filter name=open_manipulator</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · router 중복 확인 후 기동</b><span class="where">Container</span><button class="copy">복사</button></div>
+<pre>pgrep -af '[r]mw_zenohd' || true
+<span class="comment"># 출력이 없을 때만 router 전용 창에서 아래를 실행</span>
+ros2 run rmw_zenoh_cpp rmw_zenohd</pre>
+      </div>
+      <p>
+        Session 0-2와 같은 규칙입니다. 이미 <code>rmw_zenohd</code>가 보이면 두 번째를 띄우지 않고,
+        <code>ros2 node list --no-daemon</code>이 경고 없이 끝나는지로 판정합니다.
+      </p>
+
+      <h3>0-2 · 오늘의 터미널</h3>
+      <table>
+        <thead><tr><th style="width:64px">창</th><th style="width:180px">역할</th><th>용도</th></tr></thead>
+        <tbody>
+          <tr><td><b>T0</b></td><td>Zenoh router 전용</td><td>회차 끝까지 유지</td></tr>
+          <tr><td><b>T1</b></td><td>Gazebo / world</td><td>A·B·C 전환 때마다 이전 world를 정상 종료하고 새 world를 띄웁니다</td></tr>
+          <tr><td><b>T2</b></td><td>bridge 전용</td><td>A와 B에서 해당 bridge를 상주시킵니다</td></tr>
+          <tr><td><b>T3</b></td><td>검사·스크립트</td><td><code>ros2 topic</code>, service call, spike 코드 실행</td></tr>
+          <tr><td><b>T4</b></td><td>MoveIt (C에서만)</td><td>position-only/full-pose마다 MoveIt을 한 번씩 다시 띄웁니다</td></tr>
+        </tbody>
+      </table>
+
+      <h3>0-3 · 오늘 필요한 패키지가 있는지 먼저 확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 읽기 전용 확인</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>dpkg-query -W \
+  ros-jazzy-ros-gz-bridge \
+  ros-jazzy-ros-gz-interfaces \
+  ros-jazzy-gz-sim-vendor
+
+<span class="comment"># ROS demo package는 없어도 됩니다. 아래 Gazebo world 파일이 핵심입니다.</span>
+ros2 pkg prefix ros_gz_sim_demos 2&gt;&amp;1 || true
+GZ_WORLD_DIR=/opt/ros/jazzy/opt/gz_sim_vendor/share/gz/gz-sim8/worlds
+test -f "$GZ_WORLD_DIR/sensors_demo.sdf" &amp;&amp; echo "sensors_demo.sdf OK"
+
+ros2 interface show ros_gz_interfaces/srv/SetEntityPose
+ros2 interface show ros_gz_interfaces/msg/Entity
+ros2 interface show ros_gz_interfaces/srv/ControlWorld
+ros2 interface list | grep -x 'simulation_interfaces/srv/SetEntityState'
+ros2 pkg prefix moveit_ros_planning_interface
+gz sim --versions</pre>
+      </div>
+      <div class="callout info">
+        <p>
+          <strong><code>ros_gz_sim_demos</code>의 “Package not found”는 예상 결과입니다.</strong>
+          <code>sensors_demo.sdf OK</code>, <code>SetEntityPose</code>·<code>ControlWorld</code>
+          interface, MoveGroupInterface prefix가 확인되면 진행합니다. 없는 package를 즉석에서
+          <code>apt install</code>하지 않습니다. 공식 image를 회차 도중 슬쩍 바꾸면 재현성도
+          같이 슬쩍 사라집니다.
+        </p>
+      </div>
+
+      <h3>0-4 · ROBOTIS branch와 commit 재확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 읽기 전용 확인</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>git -C /root/ros2_ws/src/open_manipulator \
+  rev-parse --abbrev-ref HEAD
+git -C /root/ros2_ws/src/open_manipulator rev-parse HEAD</pre>
+      </div>
+      <div class="callout warn">
+        <p>
+          <strong>PR #13에서 복구한 실제 Session 0-2 누락 사항.</strong> 위 두 명령이
+          <code>fatal: detected dubious ownership</code>로 거부되면 container의 Git 사용자와
+          저장소 소유자가 다르다는 뜻입니다. ROS나 Gazebo 오류가 아닙니다. 아래처럼
+          <b>정확한 저장소 경로 하나만</b> 신뢰 대상으로 등록하고 두 명령을 다시 실행합니다.
+        </p>
+        <div class="code-block">
+          <div class="code-head"><b>Bash · 오류가 발생했을 때만</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>git config --global --add safe.directory /root/ros2_ws/src/open_manipulator
+git -C /root/ros2_ws/src/open_manipulator rev-parse --abbrev-ref HEAD
+git -C /root/ros2_ws/src/open_manipulator rev-parse HEAD</pre>
+        </div>
+        <p>
+          정상 기준은 branch <code>jazzy</code>, commit
+          <code>32975f87efdb089e82c9ad103f068ef532aabfd2</code>입니다.
+          <code>safe.directory '*'</code>처럼 모든 저장소를 허용하지 않습니다. 재실행 결과가
+          다르거나 오류가 계속되면 실제 출력을 기록하고 spike를 시작하지 않습니다.
+        </p>
+      </div>
+
+      <h3>0-5 · 오늘 작업할 영속 workspace</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>mkdir -p /workspace/week0_spike/{worlds,scripts,logs}
+mkdir -p /workspace/week0_spike/ws/src
+ls -la /workspace/week0_spike</pre>
+      </div>
+      <p>
+        <code>/workspace</code>는 container를 제거해도 남는 공간입니다(Session 0-1에서 검증).
+        오늘 만드는 world SDF, 스크립트, 로그는 전부 여기에 둡니다. 정리된 결과만 나중에
+        스터디 저장소로 옮깁니다.
+      </p>
+    </section>
+
+    <!-- ================= SPIKE A ================= -->
+    <section id="spikeA">
+      <div class="kicker">Spike A · 0~40분</div>
+      <h2><span class="step-badge">A</span>RGB-D bridge 확인</h2>
+      <p class="subtitle">
+        Gazebo 카메라 영상이 ROS 2 topic으로 넘어오는 <b>경로 자체</b>가 성립하는지만 봅니다.
+        인식 알고리즘은 다루지 않습니다.
+      </p>
+
+      <h3>A-1 · 설치된 공식 RGB-D world 확인</h3>
+      <p>
+        ROBOTIS world에는 시뮬레이션 카메라가 없지만, Gazebo Sim 8.11.0 vendor package에는
+        공식 <code>sensors_demo.sdf</code>가 포함돼 있습니다. ROS demo package 설치 여부와
+        Gazebo world 파일 존재 여부는 서로 다른 이야기입니다. 오늘은 센서 SDF를 새로 발명하지
+        않고 이 파일을 사용합니다.
+      </p>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 파일과 핵심 sensor block 확인</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>GZ_WORLD_DIR=/opt/ros/jazzy/opt/gz_sim_vendor/share/gz/gz-sim8/worlds
+test -f "$GZ_WORLD_DIR/sensors_demo.sdf"
+grep -n -A20 'sensor name="rgbd_camera"' \
+  "$GZ_WORLD_DIR/sensors_demo.sdf"</pre>
+      </div>
+      <div class="callout info">
+        <p>
+          <strong>사전 검증값.</strong> world 이름은 <code>lidar_sensor</code>, RGB-D model과
+          sensor 이름은 모두 <code>rgbd_camera</code>, 해상도는 320×240, update rate는
+          30 Hz입니다. 회차 당일 실제 topic 출력이 다르면 문서값보다 런타임을 우선합니다.
+        </p>
+      </div>
+
+      <h3>A-2 · 공식 world 실행과 Gazebo topic 확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · GUI에서 재생 상태 확인</b><span class="where">Container (T1)</span><button class="copy">복사</button></div>
+<pre>gz sim -v 1 -r sensors_demo.sdf</pre>
+      </div>
+      <p>
+        Gazebo 창의 RGBD image·depth 패널에 장면이 보이는지 확인합니다. <code>-r</code>가 있어
+        자동 재생되지만, 영상이 정지해 있으면 우측 상단 재생 버튼도 확인합니다.
+      </p>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · bridge 전에 Gazebo 원본부터 확인</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>gz topic -l | grep '^/rgbd_camera'
+gz topic -i -t /rgbd_camera/image
+gz topic -i -t /rgbd_camera/depth_image
+gz topic -i -t /rgbd_camera/camera_info</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Text · 정상 topic 네 개</b><span class="where">예상값</span><button class="copy">복사</button></div>
+<pre>/rgbd_camera/camera_info
+/rgbd_camera/depth_image
+/rgbd_camera/image
+/rgbd_camera/points</pre>
+      </div>
+      <p>
+        image·depth는 <code>gz.msgs.Image</code>, CameraInfo는
+        <code>gz.msgs.CameraInfo</code>여야 합니다. 아무 topic도 없다면 ROS 문제가 아니라
+        Sensors system·렌더러 문제이므로 A-6의 첫 행으로 갑니다.
+      </p>
+
+      <h3>A-3 · ROS 2로 단방향 bridge</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 한 process에 네 topic</b><span class="where">Container (T2)</span><button class="copy">복사</button></div>
+<pre>ros2 run ros_gz_bridge parameter_bridge \
+  "/rgbd_camera/image@sensor_msgs/msg/Image[gz.msgs.Image" \
+  "/rgbd_camera/depth_image@sensor_msgs/msg/Image[gz.msgs.Image" \
+  "/rgbd_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo" \
+  "/rgbd_camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked"</pre>
+      </div>
+      <p>
+        각 인자는 shell 해석을 피하려고 따옴표로 감쌉니다. <code>[</code>는 Gazebo → ROS
+        단방향입니다. 현재 bridge publisher는 RELIABLE로 확인됐고, 뒤의 probe는
+        sensor-data QoS subscriber를 사용합니다.
+      </p>
+
+      <h3>A-4 · ROS 메시지 계약을 실제 값으로 채운다</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 한 field씩 확인</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>ros2 topic list --no-daemon | grep '^/rgbd_camera'
+ros2 topic info /rgbd_camera/image -v
+
+timeout 10 ros2 topic echo /rgbd_camera/image \
+  sensor_msgs/msg/Image --once --field header
+timeout 10 ros2 topic echo /rgbd_camera/image \
+  sensor_msgs/msg/Image --once --field width
+timeout 10 ros2 topic echo /rgbd_camera/image \
+  sensor_msgs/msg/Image --once --field height
+timeout 10 ros2 topic echo /rgbd_camera/image \
+  sensor_msgs/msg/Image --once --field encoding
+
+timeout 10 ros2 topic echo /rgbd_camera/depth_image \
+  sensor_msgs/msg/Image --once --field header
+timeout 10 ros2 topic echo /rgbd_camera/depth_image \
+  sensor_msgs/msg/Image --once --field width
+timeout 10 ros2 topic echo /rgbd_camera/depth_image \
+  sensor_msgs/msg/Image --once --field height
+timeout 10 ros2 topic echo /rgbd_camera/depth_image \
+  sensor_msgs/msg/Image --once --field encoding
+
+timeout 10 ros2 topic echo /rgbd_camera/camera_info \
+  sensor_msgs/msg/CameraInfo --once</pre>
+      </div>
+      <div class="callout ok">
+        <p>
+          <strong>사전 검증에서 나온 기준값.</strong> RGB는 320×240 <code>rgb8</code>,
+          depth는 320×240 <code>32FC1</code>, 두 영상과 CameraInfo의 raw
+          <code>frame_id</code>는 <code>rgbd_camera/link/rgbd_camera</code>였습니다.
+          <code>fx=fy=277.191356</code>, <code>cx=160</code>, <code>cy=120</code>,
+          distortion은 0이었습니다. 이 값은 “정답을 베껴 쓰는 칸”이 아니라 당일 결과를
+          빠르게 이상 탐지하는 기준입니다.
+        </p>
+      </div>
+
+      <h3>A-5 · registration·optical frame·depth 단위를 판정한다</h3>
+      <table>
+        <thead><tr><th style="width:44px">#</th><th style="width:230px">확인 항목</th><th>판정 방법과 기록할 것</th></tr></thead>
+        <tbody>
+          <tr><td class="num">6</td><td><b>registration</b></td><td>Gazebo의 RGBD image·depth 패널에서 중앙 물체와 좌우 경계 세 곳을 골라 같은 <code>(u,v)</code>에 경계가 겹치는지 확인합니다. 같은 해상도·frame·한 RGB-D sensor라는 사실은 강한 근거지만, <b>그것만으로 통과시키지는 않습니다.</b> 캡처에 확인 픽셀을 적습니다.</td></tr>
+          <tr><td class="num">7</td><td>정렬 안 됨</td><td>사용할 aligned topic 이름 또는 별도 좌표 변환 경로를 확정해 기록합니다.</td></tr>
+          <tr><td class="num">8</td><td><b>optical frame 축</b></td><td>raw <code>frame_id</code> 문자열만 보고 optical이라고 부르지 않습니다. Gazebo camera link의 +X forward·+Y left·+Z up과 ROS optical <code>+x right, +y down, +z forward</code> 사이의 standard transform을 선언하고, 알려진 점의 좌우·상하·거리 방향으로 확인합니다.</td></tr>
+          <tr><td class="num">9</td><td>frame 보정</td><td>아래 static transform과 bridge <code>override_frame_id</code>를 함께 사용합니다. 이름만 바꾸고 transform을 생략하는 요술은 좌표계를 바꾸지 못합니다.</td></tr>
+          <tr><td class="num">10</td><td><b>depth 단위·invalid</b></td><td><code>32FC1</code> 배열을 알려진 장면 거리와 비교합니다. 사전 검증에서는 중앙 1.95, finite 범위 0.116~9.221로 <b>m</b>가 확인됐고 invalid는 <code>inf</code> 33,554개, NaN·0은 0개였습니다. 당일 한 프레임도 같은 방식으로 기록합니다.</td></tr>
+          <tr><td class="num">11</td><td>5분 유지</td><td>RGB와 depth를 동시에 5분 측정해 끊김과 실제 평균 Hz를 기록합니다. publisher 설정값 30 Hz를 결과값으로 베끼지 않습니다.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-head"><b>Bash · raw camera frame → ROS optical frame</b><span class="where">Container (별도 shell)</span><button class="copy">복사</button></div>
+<pre>ros2 run tf2_ros static_transform_publisher \
+  --x 0 --y 0 --z 0 \
+  --roll -1.57079632679 --pitch 0 --yaw -1.57079632679 \
+  --frame-id rgbd_camera/link/rgbd_camera \
+  --child-frame-id rgbd_camera_optical_frame</pre>
+      </div>
+      <p>
+        위 transform을 띄운 뒤 T2 bridge를 종료하고 같은 네 topic 인자 뒤에
+        <code>--ros-args -p override_frame_id:=rgbd_camera_optical_frame</code>을 붙여 다시
+        시작합니다. <code>ros2 topic echo ... --field header</code>와
+        <code>ros2 run tf2_ros tf2_echo rgbd_camera/link/rgbd_camera
+        rgbd_camera_optical_frame</code>로 둘 다 확인합니다.
+      </p>
+
+      <div class="code-block">
+        <div class="code-head"><b>Bash · RGB/depth 5분 동시 유지</b><span class="where">Container (T3·추가 shell)</span><button class="copy">복사</button></div>
+<pre><span class="comment"># shell 1</span>
+timeout -s INT 300 ros2 topic hz /rgbd_camera/image --wall-time \
+  2&gt;&amp;1 | tee /workspace/week0_spike/logs/rgb_hz_5min.log
+
+<span class="comment"># shell 2 — 같은 시점에 시작</span>
+timeout -s INT 300 ros2 topic hz /rgbd_camera/depth_image --wall-time \
+  2&gt;&amp;1 | tee /workspace/week0_spike/logs/depth_hz_5min.log</pre>
+      </div>
+
+      <h3>A-6 · 실패 시 fallback — 커리큘럼 원문</h3>
+      <div class="callout warn">
+        <p>
+          <strong><code>spike A 실패 = 무조건 AprilTag</code>로 처리하지 않습니다.</strong>
+          실패 <b>원인별로</b> 다른 fallback을 고릅니다.
+        </p>
+      </div>
+      <table>
+        <thead><tr><th style="width:34%">실패</th><th>fallback</th></tr></thead>
+        <tbody>
+          <tr><td>공식 demo 자체가 안 됨</td><td>bridge 설정이 아니라 <b>렌더러·GPU 문제</b>일 가능성이 높습니다. Session 0-1의 GUI 진단으로 되돌아갑니다.</td></tr>
+          <tr><td>topic은 뜨는데 주기 불안정</td><td>QoS를 sensor data profile로 맞춰 재확인합니다.</td></tr>
+          <tr><td>depth만 실패</td><td>AprilTag pose에 동결한 <code>tag_to_object_center_offset_tag</code>를 회전·적용합니다.</td></tr>
+          <tr><td>RGB-depth registration만 실패</td><td>RGB의 AprilTag pose에 같은 offset을 회전·적용하거나 depth 좌표계에서 별도 검출합니다.</td></tr>
+          <tr><td>RGB 전체 실패</td><td>고정 bag으로 Session 8 알고리즘 개발만 계속하고 <code>sensor_path_status=deferred</code>로 기록합니다. <b>이는 최종 P2가 아니며</b> live source 복구 전에는 Session 9·Week 3 Gate·최종 평가를 통과할 수 없습니다.</td></tr>
+          <tr><td>CameraInfo 실패</td><td>고정 intrinsics를 YAML에 명시하고 해상도 일치를 검증합니다.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout danger">
+        <p>
+          <strong>P0(Gazebo ground truth)는 fallback이 아닙니다.</strong> 실행 pose 생성·보정에
+          사용 금지이며 진단에만 씁니다. AprilTag를 쓰더라도 downstream에는 <b>보정된 중심 위치만</b>
+          전달하고, tag 원점을 물체 중심으로 간주하지 않습니다.
+          <code>tag_to_object_center_offset_tag</code>의 frame·부호·단위를 config에 기록하십시오.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= SPIKE B ================= -->
+    <section id="spikeB">
+      <div class="kicker">Spike B · 40~100분</div>
+      <h2><span class="step-badge">B</span>pose 추종과 reset backend</h2>
+      <p class="subtitle">
+        <b>이번 spike에서 가장 중요합니다.</b> T1 Pose follower는 “코드로 Gazebo 물체의 위치를
+        바꿀 수 있다”는 전제 위에 서 있고, 이 전제가 깨지면 Session 6B 전체와 평가 reset이
+        성립하지 않습니다.
+      </p>
+
+      <div class="callout info">
+        <p>
+          <strong>왜 세 단계로 나누는가.</strong> 물체를 <b>한 번</b> 옮기는 데 성공하는 것과,
+          follower가 <b>매 주기 안정적으로</b> 옮기는 것은 다른 검증입니다. one-shot이 증명하는 것은
+          service bridge 존재, entity 이름 일치, 요청 형식 적합, 기본 pose 복귀 경로까지입니다.
+          반복 호출 안정성·왕복 지연·물리와의 경합·quaternion 연속성·정지 시점 정합은 남습니다.
+        </p>
+      </div>
+
+      <h3>B-0 · pose와 twist를 함께 관찰할 최소 world를 만든다</h3>
+      <p>
+        B-1과 B-2는 pose 변경 service만 있으면 되지만 B-3는 actual twist까지 필요합니다.
+        따라서 처음부터 <code>OdometryPublisher</code>를 붙인 5 cm cube 하나를 사용합니다.
+        이 SDF는 현재 Gazebo 8.11.0에서 headless 기동과 odometry 발행을 사전 검증했습니다.
+      </p>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 제공 파일 복사</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>cp /workspace/2026-pnp-study/guides/assets/session-0-3/week0_spike.sdf \
+  /workspace/week0_spike/worlds/
+cp /workspace/2026-pnp-study/guides/assets/session-0-3/follow_spike.py \
+  /workspace/2026-pnp-study/guides/assets/session-0-3/reset_probe.py \
+  /workspace/week0_spike/scripts/
+chmod +x /workspace/week0_spike/scripts/*.py
+
+ls -l /workspace/week0_spike/worlds/week0_spike.sdf \
+  /workspace/week0_spike/scripts/follow_spike.py \
+  /workspace/week0_spike/scripts/reset_probe.py</pre>
+      </div>
+      <p>
+        아래 긴 코드 블록은 파일 내용을 검토하기 위한 것입니다. 직접 다시 타이핑할 필요는 없습니다.
+        원본은 <a href="./assets/session-0-3/week0_spike.sdf">week0_spike.sdf</a>,
+        <a href="./assets/session-0-3/follow_spike.py">follow_spike.py</a>,
+        <a href="./assets/session-0-3/reset_probe.py">reset_probe.py</a>로 함께 배포됩니다.
+      </p>
+      <div class="code-block">
+        <div class="code-head"><b>SDF · 편집기에 저장</b><span class="where">/workspace/week0_spike/worlds/week0_spike.sdf</span><button class="copy">복사</button></div>
+<pre>&lt;?xml version="1.0"?&gt;
+&lt;sdf version="1.10"&gt;
+  &lt;world name="week0_spike"&gt;
+    &lt;physics name="1ms" type="ignored"&gt;
+      &lt;max_step_size&gt;0.001&lt;/max_step_size&gt;
+      &lt;real_time_factor&gt;1.0&lt;/real_time_factor&gt;
+    &lt;/physics&gt;
+
+    &lt;plugin filename="gz-sim-physics-system"
+            name="gz::sim::systems::Physics"/&gt;
+    &lt;plugin filename="gz-sim-user-commands-system"
+            name="gz::sim::systems::UserCommands"/&gt;
+    &lt;plugin filename="gz-sim-scene-broadcaster-system"
+            name="gz::sim::systems::SceneBroadcaster"/&gt;
+
+    &lt;light name="sun" type="directional"&gt;
+      &lt;pose&gt;0 0 10 0 0 0&lt;/pose&gt;
+      &lt;cast_shadows&gt;true&lt;/cast_shadows&gt;
+      &lt;direction&gt;-0.5 0.1 -0.9&lt;/direction&gt;
+      &lt;diffuse&gt;0.8 0.8 0.8 1&lt;/diffuse&gt;
+    &lt;/light&gt;
+
+    &lt;model name="ground_plane"&gt;
+      &lt;static&gt;true&lt;/static&gt;
+      &lt;link name="link"&gt;
+        &lt;collision name="collision"&gt;
+          &lt;geometry&gt;
+            &lt;plane&gt;&lt;normal&gt;0 0 1&lt;/normal&gt;&lt;size&gt;10 10&lt;/size&gt;&lt;/plane&gt;
+          &lt;/geometry&gt;
+        &lt;/collision&gt;
+        &lt;visual name="visual"&gt;
+          &lt;geometry&gt;
+            &lt;plane&gt;&lt;normal&gt;0 0 1&lt;/normal&gt;&lt;size&gt;10 10&lt;/size&gt;&lt;/plane&gt;
+          &lt;/geometry&gt;
+        &lt;/visual&gt;
+      &lt;/link&gt;
+    &lt;/model&gt;
+
+    &lt;model name="spike_cube"&gt;
+      &lt;pose&gt;0.25 0 0.025 0 0 0&lt;/pose&gt;
+      &lt;link name="link"&gt;
+        &lt;inertial&gt;
+          &lt;mass&gt;0.05&lt;/mass&gt;
+          &lt;inertia&gt;
+            &lt;ixx&gt;2.083333e-5&lt;/ixx&gt;
+            &lt;iyy&gt;2.083333e-5&lt;/iyy&gt;
+            &lt;izz&gt;2.083333e-5&lt;/izz&gt;
+            &lt;ixy&gt;0&lt;/ixy&gt;&lt;ixz&gt;0&lt;/ixz&gt;&lt;iyz&gt;0&lt;/iyz&gt;
+          &lt;/inertia&gt;
+        &lt;/inertial&gt;
+        &lt;collision name="collision"&gt;
+          &lt;geometry&gt;&lt;box&gt;&lt;size&gt;0.05 0.05 0.05&lt;/size&gt;&lt;/box&gt;&lt;/geometry&gt;
+        &lt;/collision&gt;
+        &lt;visual name="visual"&gt;
+          &lt;geometry&gt;&lt;box&gt;&lt;size&gt;0.05 0.05 0.05&lt;/size&gt;&lt;/box&gt;&lt;/geometry&gt;
+          &lt;material&gt;
+            &lt;ambient&gt;0 0.4 1 1&lt;/ambient&gt;
+            &lt;diffuse&gt;0 0.4 1 1&lt;/diffuse&gt;
+          &lt;/material&gt;
+        &lt;/visual&gt;
+      &lt;/link&gt;
+
+      &lt;plugin filename="gz-sim-odometry-publisher-system"
+              name="gz::sim::systems::OdometryPublisher"&gt;
+        &lt;odom_frame&gt;world&lt;/odom_frame&gt;
+        &lt;robot_base_frame&gt;spike_cube&lt;/robot_base_frame&gt;
+        &lt;odom_publish_frequency&gt;50&lt;/odom_publish_frequency&gt;
+        &lt;odom_topic&gt;/spike_cube/odometry&lt;/odom_topic&gt;
+        &lt;dimensions&gt;3&lt;/dimensions&gt;
+      &lt;/plugin&gt;
+    &lt;/model&gt;
+  &lt;/world&gt;
+&lt;/sdf&gt;</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · world 기동</b><span class="where">Container (T1)</span><button class="copy">복사</button></div>
+<pre>gz sim -v 1 -r /workspace/week0_spike/worlds/week0_spike.sdf</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · service·odometry 확인</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>gz service -l | grep -E '^/world/week0_spike/(set_pose|control)$'
+gz topic -i -t /spike_cube/odometry
+
+<span class="comment"># interface 정의가 설치됐다는 것과 provider가 있다는 것은 다릅니다.</span>
+ros2 service list -t --no-daemon | grep '^/gzserver/' \
+  || echo "/gzserver provider 없음 — 검증된 ControlWorld 경로 사용"</pre>
+      </div>
+
+      <h3>B-1 · ROS 2 one-shot A → B → A (필수)</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 세 bridge를 함께 상주</b><span class="where">Container (T2)</span><button class="copy">복사</button></div>
+<pre>ros2 run ros_gz_bridge parameter_bridge \
+  "/world/week0_spike/set_pose@ros_gz_interfaces/srv/SetEntityPose" \
+  "/world/week0_spike/control@ros_gz_interfaces/srv/ControlWorld" \
+  "/spike_cube/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry"</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 타입과 초기 A 위치</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>ros2 service type /world/week0_spike/set_pose
+ros2 interface show ros_gz_interfaces/msg/Entity
+gz model -m spike_cube -p</pre>
+      </div>
+      <p>
+        <code>Entity.MODEL=2</code>를 확인한 뒤 아래 왕복을 실행합니다. 각 response의
+        <code>success: true</code>, Gazebo 화면, 마지막 <code>gz model</code>의 실제 pose를
+        모두 확인합니다. service 응답만 보고 큐브가 움직였다고 상상하지 않습니다.
+      </p>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · A(0.25, 0.00) → B(0.25, 0.10) → A</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>for y in 0.00 0.10 0.00; do
+  echo "target_y=$y"
+  /usr/bin/time -f "RTT_wall=%e s" \
+    ros2 service call \
+      /world/week0_spike/set_pose \
+      ros_gz_interfaces/srv/SetEntityPose \
+      "{entity: {name: spike_cube, type: 2}, pose: {position: {x: 0.25, y: $y, z: 0.025}, orientation: {w: 1.0}}}"
+  sleep 1
+  gz model -m spike_cube -p
+done 2&gt;&amp;1 | tee /workspace/week0_spike/logs/spike_b1.log</pre>
+      </div>
+      <div class="callout ok">
+        <p>
+          <strong>사전 검증 결과.</strong> 같은 container에서 세 호출 모두
+          <code>success=True</code>였고 실제 pose가 A→B→A로 복귀했습니다. 회차 당일에도
+          같은 결과를 재현하고 wall RTT를 기록해야 B-1이 닫힙니다.
+        </p>
+      </div>
+      <div class="callout danger">
+        <p>
+          <strong>B-1 실패는 transport hard blocker입니다.</strong> 어떤 ROS 2 경로로도 one-shot
+          pose를 바꾸지 못하면 T1뿐 아니라 같은 갱신 경로를 쓰는 T0도 불가능합니다.
+          pose-update adapter를 복구하거나 transport 설계를 다시 정하기 전에는 Week 1로 가지 않습니다.
+        </p>
+      </div>
+
+      <h3>B-2 · 10 Hz × 5초 연속 추종 (필수)</h3>
+      <p>
+        여기서는 <b>“되는가”만</b> 봅니다. 주기 최적화·정량 오차·보간은 Session 6B의 일입니다.
+        요구 사항은 세 가지입니다 — <b>동시 요청 1개</b>, <b>latest-wins</b>, <b>dropped·timeout 기록</b>.
+      </p>
+      <div class="callout warn">
+        <p>
+          <strong>timeout이 나도 outstanding future를 버리지 않습니다.</strong> 응답이 늦었다고
+          <code>inflight=false</code>로 바꾸면 아직 살아 있는 요청 위에 새 요청이 쌓여
+          “동시 요청 1개” 계약을 스스로 깨게 됩니다. 아래 코드는 timeout을 한 번 기록하되
+          기존 future가 끝날 때까지 기다리고, 그동안에는 최신 목표 하나만 보관합니다.
+        </p>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Python · 사전 실행 검증</b><span class="where">/workspace/week0_spike/scripts/follow_spike.py</span><button class="copy">복사</button></div>
+<pre>#!/usr/bin/env python3
+"""spike B-2: 10 Hz x 5s, 1-in-flight + latest-wins."""
+import math
+import statistics
+import time
+
+import rclpy
+from geometry_msgs.msg import Pose
+from nav_msgs.msg import Odometry
+from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
+from ros_gz_interfaces.msg import Entity
+from ros_gz_interfaces.srv import SetEntityPose
+
+SERVICE   = '/world/week0_spike/set_pose'
+MODEL     = 'spike_cube'
+RATE_HZ   = 10.0
+DURATION  = 5.0
+TOTAL     = int(RATE_HZ * DURATION)
+TIMEOUT_S = 0.5
+A         = (0.25, 0.0, 0.025)
+
+class Follower(Node):
+    def __init__(self):
+        super().__init__('spike_b_follower')
+        self.cli = self.create_client(SetEntityPose, SERVICE)
+        if not self.cli.wait_for_service(timeout_sec=5.0):
+            raise RuntimeError(f'service not available: {SERVICE}')
+
+        self.inflight = None
+        self.inflight_started = None
+        self.timeout_counted = False
+        self.pending = None       <span class="comment"># latest-wins 보관함: 최대 1개</span>
+        self.sample_index = 0
+        self.generated = 0
+        self.sent = 0
+        self.completed = 0
+        self.failures = 0
+        self.dropped = 0
+        self.timeouts = 0
+        self.max_inflight = 0
+        self.max_backlog = 0      <span class="comment"># inflight + pending</span>
+        self.rtts_ms = []
+        self.actual = None
+        self.odom_sequence = 0
+        self.last_send_odom_sequence = 0
+
+        self.create_subscription(
+            Odometry, '/spike_cube/odometry', self.on_odom,
+            qos_profile_sensor_data)
+        self.timer = self.create_timer(1.0 / RATE_HZ, self.on_tick)
+        self.watch = self.create_timer(0.05, self.on_watchdog)
+
+    def target(self, t):
+        angle = 2.0 * math.pi * t / DURATION
+        p = Pose()
+        <span class="comment"># A에서 출발해 작은 타원을 한 바퀴 돌고 정확히 A로 복귀</span>
+        p.position.x = A[0] + 0.03 * (1.0 - math.cos(angle))
+        p.position.y = A[1] + 0.05 * math.sin(angle)
+        p.position.z = A[2]
+        p.orientation.w = 1.0
+        return p
+
+    def on_tick(self):
+        if self.sample_index &gt;= TOTAL:
+            self.timer.cancel()
+            return
+
+        self.sample_index += 1
+        self.generated += 1
+        pose = self.target(self.sample_index / RATE_HZ)
+        if self.inflight is not None:
+            if self.pending is not None:
+                self.dropped += 1     <span class="comment"># 이전 대기 목표를 최신 목표로 교체</span>
+            self.pending = pose
+            self.max_backlog = max(self.max_backlog, 2)
+            return
+        self.send(pose)
+
+    def send(self, pose):
+        req = SetEntityPose.Request()
+        req.entity.name = MODEL
+        req.entity.type = Entity.MODEL
+        req.pose = pose
+
+        self.sent += 1
+        self.last_send_odom_sequence = self.odom_sequence
+        self.inflight_started = time.monotonic()
+        self.timeout_counted = False
+        self.inflight = self.cli.call_async(req)
+        self.inflight.add_done_callback(self.on_done)
+        self.max_inflight = max(self.max_inflight, 1)
+        self.max_backlog = max(self.max_backlog, 1)
+
+    def on_done(self, future):
+        self.rtts_ms.append(
+            (time.monotonic() - self.inflight_started) * 1000.0)
+        self.completed += 1
+        try:
+            response = future.result()
+            if response is None or not response.success:
+                self.failures += 1
+        except Exception as exc:
+            self.failures += 1
+            self.get_logger().error(f'service future failed: {exc!r}')
+
+        self.inflight = None
+        self.inflight_started = None
+        if self.pending is not None:
+            nxt, self.pending = self.pending, None
+            self.send(nxt)
+
+    def on_watchdog(self):
+        if (self.inflight is not None and not self.timeout_counted and
+                time.monotonic() - self.inflight_started &gt; TIMEOUT_S):
+            self.timeouts += 1
+            self.timeout_counted = True
+            <span class="comment"># 중요: 아직 끝나지 않은 future는 유지한다.</span>
+
+    def on_odom(self, msg):
+        self.actual = msg.pose.pose
+        self.odom_sequence += 1
+
+    def report(self):
+        final_completed = (
+            self.generated == TOTAL and
+            self.completed == self.sent and
+            self.inflight is None and self.pending is None)
+        final_error_mm = float('inf')
+        if self.actual is not None:
+            dx = self.actual.position.x - A[0]
+            dy = self.actual.position.y - A[1]
+            dz = self.actual.position.z - A[2]
+            final_error_mm = 1000.0 * math.sqrt(dx*dx + dy*dy + dz*dz)
+
+        mean_ms = statistics.mean(self.rtts_ms) if self.rtts_ms else float('nan')
+        max_ms = max(self.rtts_ms) if self.rtts_ms else float('nan')
+        passed = (
+            final_completed and self.failures == 0 and self.timeouts == 0 and
+            self.max_inflight &lt;= 1 and self.max_backlog &lt;= 2 and
+            final_error_mm &lt;= 1.0)
+        print(
+            f'generated={self.generated} sent={self.sent} '
+            f'completed={self.completed} failures={self.failures} '
+            f'dropped={self.dropped} timeouts={self.timeouts} '
+            f'max_inflight={self.max_inflight} '
+            f'max_backlog={self.max_backlog}')
+        print(f'rtt_mean_ms={mean_ms:.3f} rtt_max_ms={max_ms:.3f}')
+        print(
+            f'final_completed={final_completed} '
+            f'final_error_mm={final_error_mm:.3f} pass={passed}')
+        return passed
+
+def main():
+    rclpy.init()
+    node = Follower()
+    passed = False
+    try:
+        end = time.monotonic() + DURATION + 3.0
+        while rclpy.ok() and time.monotonic() &lt; end:
+            rclpy.spin_once(node, timeout_sec=0.05)
+            if (node.sample_index == TOTAL and node.inflight is None and
+                    node.pending is None and node.actual is not None and
+                    node.odom_sequence &gt;= node.last_send_odom_sequence + 2):
+                break
+    finally:
+        passed = node.report()
+        node.destroy_node()
+        rclpy.shutdown()
+    raise SystemExit(0 if passed else 1)
+
+if __name__ == '__main__':
+    main()</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 실행과 로그 보존</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>cd /workspace/week0_spike/scripts
+python3 follow_spike.py 2&gt;&amp;1 | tee ../logs/spike_b2_$(date +%H%M%S).log</pre>
+      </div>
+      <table>
+        <thead><tr><th style="width:44px">#</th><th>완료 기준 (커리큘럼)</th><th style="width:230px">기록할 값</th></tr></thead>
+        <tbody>
+          <tr><td class="num">7·8</td><td>10 Hz × 5초 갱신에서 <b>실패·무제한 backlog 없음</b>, 동시 요청 1개</td><td>generated·sent·completed·failures, max_inflight</td></tr>
+          <tr><td class="num">9·10</td><td>latest-wins에서 dropped update와 timeout이 기록됨</td><td>dropped, timeouts, max_backlog, RTT 평균·최대</td></tr>
+          <tr><td class="num">11</td><td>육안상 심한 점프나 발산이 없음</td><td>영상 또는 관찰 소견</td></tr>
+          <tr><td class="num">12</td><td>정지 후 최종 pose가 A에 유지됨</td><td>final_completed, final_error_mm, pass</td></tr>
+        </tbody>
+      </table>
+      <div class="callout ok">
+        <p>
+          <strong>사전 검증 결과.</strong> 같은 container에서
+          <code>generated=50</code>, <code>sent=50</code>, <code>completed=50</code>,
+          <code>failures=0</code>, <code>dropped=0</code>, <code>timeouts=0</code>,
+          <code>max_inflight=1</code>, <code>max_backlog=2</code>였고 마지막 A 위치 오차는
+          0.014 mm였습니다. RTT 평균 3.025 ms, 최대 101.812 ms였습니다. 이는 회차 당일의
+          결과를 대신하지 않으며, 당일 로그도 별도로 남깁니다.
+        </p>
+      </div>
+      <div class="callout info">
+        <p>
+          <strong>B-2만 실패했다면 회차가 끝난 것이 아닙니다.</strong> 검증된 B-1 one-shot을
+          <b>T0</b>로 동결하고 <code>L1-fallback</code>으로 전환하면 Gate를 통과할 수 있습니다.
+          B-1이 성공했는데 B-2에서 밀리거나 떨린다면 1-in-flight·latest-wins·RTT·timeout을 점검한 뒤
+          한 번 더 시도하고, 그래도 불안정하면 그 자리에서 T0로 결정하십시오.
+        </p>
+      </div>
+
+      <h3>B-3 · reset backend 판정 (필수)</h3>
+      <div class="callout danger">
+        <p>
+          <strong><code>SetEntityPose</code>의 성공 응답은 속도 초기화의 증거가 아닙니다.</strong>
+          B-1은 pose 갱신 경로만 검증합니다. 반복 평가 reset은 물체가 실제로 움직이는 상태를 만든 뒤,
+          <b>별도 상태 topic</b>에서 pose와 twist가 모두 초기화됐는지 측정해야 합니다.
+        </p>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · provider와 실제 경로 구분</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre><span class="comment"># interface 정의는 설치돼 있지만 이번 image에서 /gzserver provider는 확인되지 않았습니다.</span>
+ros2 interface list | grep 'simulation_interfaces/srv/SetEntityState'
+ros2 service list -t --no-daemon | grep '^/gzserver/' \
+  || echo "/gzserver provider 없음"
+
+<span class="comment"># 이번 회차에서 실제로 사용할 세 경로</span>
+ros2 service type /world/week0_spike/set_pose
+ros2 service type /world/week0_spike/control
+ros2 topic type /spike_cube/odometry</pre>
+      </div>
+      <table>
+        <thead><tr><th style="width:280px">동결 항목</th><th>이번 회차의 사전 검증 후보</th></tr></thead>
+        <tbody>
+          <tr><td class="cmd">reset_backend</td><td><code>ControlWorld reset.model_only</code> → <code>SetEntityPose(A)</code> 복합 경로</td></tr>
+          <tr><td class="cmd">reset_state_source</td><td><code>/spike_cube/odometry</code> · <code>nav_msgs/msg/Odometry</code> · 50 Hz</td></tr>
+          <tr><td class="cmd">reset_position_tolerance_mm</td><td><b>1.0 mm</b></td></tr>
+          <tr><td class="cmd">reset_orientation_tolerance_deg</td><td><b>1.0°</b></td></tr>
+          <tr><td class="cmd">linear_speed_threshold_mps</td><td><b>0.005 m/s</b></td></tr>
+          <tr><td class="cmd">angular_speed_threshold_rad_s</td><td><b>0.01 rad/s</b></td></tr>
+          <tr><td class="cmd">quaternion_norm_tolerance</td><td><b>0.001</b>; zero·NaN·Inf는 즉시 실패</td></tr>
+        </tbody>
+      </table>
+
+      <h4>낙하 중 복합 reset을 3회 반복한다</h4>
+      <p>
+        각 trial을 같은 복합 backend로 정돈한 뒤 큐브를 초기 A에서 x=+0.10 m, y=+0.08 m,
+        z=0.50 m로 옮기고, 실제 낙하 속도가 0.20 m/s를 넘은 것을 odometry에서 본 뒤
+        reset합니다. 이는 reset 합격 기준 0.005 m/s의 40배이며, 자연 낙하만으로는 x·y가
+        A로 돌아오지 않습니다. 따라서 “원래부터 정지해 있던 물체를 다시 정지시킨”
+        허술한 시험이 아닙니다.
+        아래 파일을 그대로 저장합니다.
+      </p>
+      <div class="code-block">
+        <div class="code-head"><b>Python · 사전 실행 검증</b><span class="where">/workspace/week0_spike/scripts/reset_probe.py</span><button class="copy">복사</button></div>
+<pre>#!/usr/bin/env python3
+"""spike B-3: falling-state reset, measured independently by odometry."""
+import math
+import time
+
+import rclpy
+from nav_msgs.msg import Odometry
+from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
+from ros_gz_interfaces.msg import Entity
+from ros_gz_interfaces.srv import ControlWorld, SetEntityPose
+
+SET_POSE = '/world/week0_spike/set_pose'
+CONTROL = '/world/week0_spike/control'
+ODOM = '/spike_cube/odometry'
+A = (0.25, 0.0, 0.025)
+
+POSITION_TOL_MM = 1.0
+ORIENTATION_TOL_DEG = 1.0
+LINEAR_SPEED_TOL = 0.005
+ANGULAR_SPEED_TOL = 0.01
+QUATERNION_NORM_TOL = 0.001
+
+class Probe(Node):
+    def __init__(self):
+        super().__init__('spike_b_reset_probe')
+        self.set_pose = self.create_client(SetEntityPose, SET_POSE)
+        self.control = self.create_client(ControlWorld, CONTROL)
+        self.latest = None
+        self.sequence = 0
+        self.create_subscription(
+            Odometry, ODOM, self.on_odom, qos_profile_sensor_data)
+        for client, name in ((self.set_pose, SET_POSE),
+                             (self.control, CONTROL)):
+            if not client.wait_for_service(timeout_sec=5.0):
+                raise RuntimeError(f'service not available: {name}')
+
+    def on_odom(self, msg):
+        self.latest = msg
+        self.sequence += 1
+
+    def wait_for(self, predicate, timeout_s, label):
+        deadline = time.monotonic() + timeout_s
+        while rclpy.ok() and time.monotonic() &lt; deadline:
+            rclpy.spin_once(self, timeout_sec=0.02)
+            if predicate():
+                return
+        raise RuntimeError(f'timeout while waiting for {label}')
+
+    def call(self, client, request, label):
+        future = client.call_async(request)
+        self.wait_for(future.done, 5.0, label)
+        response = future.result()
+        if response is None or not response.success:
+            raise RuntimeError(f'{label} returned success=false')
+
+    def lift(self):
+        request = SetEntityPose.Request()
+        request.entity.name = 'spike_cube'
+        request.entity.type = Entity.MODEL
+        request.pose.position.x = A[0] + 0.10
+        request.pose.position.y = A[1] + 0.08
+        request.pose.position.z = 0.50
+        request.pose.orientation.w = 1.0
+        self.call(self.set_pose, request, 'lift')
+
+    def set_initial_pose(self):
+        request = SetEntityPose.Request()
+        request.entity.name = 'spike_cube'
+        request.entity.type = Entity.MODEL
+        request.pose.position.x = A[0]
+        request.pose.position.y = A[1]
+        request.pose.position.z = A[2]
+        request.pose.orientation.w = 1.0
+        self.call(self.set_pose, request, 'set initial pose')
+
+    def reset_candidate(self):
+        request = ControlWorld.Request()
+        request.world_control.reset.model_only = True
+        self.call(self.control, request, 'model reset')
+        self.set_initial_pose()
+
+def vector_norm(v):
+    return math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z)
+
+def measured_values(msg):
+    p = msg.pose.pose.position
+    q = msg.pose.pose.orientation
+    dx, dy, dz = p.x-A[0], p.y-A[1], p.z-A[2]
+    position_mm = 1000.0 * math.sqrt(dx*dx + dy*dy + dz*dz)
+
+    q_norm = math.sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w)
+    if not math.isfinite(q_norm) or q_norm == 0.0:
+        orientation_deg = float('inf')
+    else:
+        dot = min(1.0, max(0.0, abs(q.w / q_norm)))
+        orientation_deg = math.degrees(2.0 * math.acos(dot))
+
+    linear = vector_norm(msg.twist.twist.linear)
+    angular = vector_norm(msg.twist.twist.angular)
+    return position_mm, orientation_deg, linear, angular, q_norm
+
+def values_pass(values):
+    pos_mm, ori_deg, linear, angular, q_norm = values
+    return (
+        pos_mm &lt;= POSITION_TOL_MM and
+        ori_deg &lt;= ORIENTATION_TOL_DEG and
+        linear &lt;= LINEAR_SPEED_TOL and
+        angular &lt;= ANGULAR_SPEED_TOL and
+        abs(q_norm - 1.0) &lt;= QUATERNION_NORM_TOL)
+
+def wait_for_settled(node, timeout_s, label):
+    deadline = time.monotonic() + timeout_s
+    last_sequence = node.sequence
+    consecutive = 0
+    latest_values = None
+    while rclpy.ok() and time.monotonic() &lt; deadline:
+        rclpy.spin_once(node, timeout_sec=0.02)
+        if node.sequence == last_sequence or node.latest is None:
+            continue
+        last_sequence = node.sequence
+        latest_values = measured_values(node.latest)
+        consecutive = consecutive + 1 if values_pass(latest_values) else 0
+        if consecutive &gt;= 3:
+            return latest_values
+    raise RuntimeError(
+        f'timeout while waiting for {label}; '
+        f'last_values={latest_values!r}')
+
+def main():
+    rclpy.init()
+    node = Probe()
+    all_passed = True
+    try:
+        node.wait_for(lambda: node.latest is not None, 3.0, 'first odometry')
+        for trial in range(1, 4):
+            node.reset_candidate()
+            wait_for_settled(node, 3.0, 'pre-trial settled state')
+            before_lift = node.sequence
+            node.lift()
+            node.wait_for(
+                lambda: (
+                    node.sequence &gt; before_lift and
+                    node.latest.pose.pose.position.x &gt; A[0] + 0.08 and
+                    node.latest.pose.pose.position.y &gt; A[1] + 0.06 and
+                    node.latest.pose.pose.position.z &gt; 0.40),
+                3.0, 'measured lifted state')
+            node.wait_for(
+                lambda: (node.latest is not None and
+                         vector_norm(node.latest.twist.twist.linear) &gt; 0.20),
+                3.0, 'measured falling state')
+            pre_reset_speed = vector_norm(node.latest.twist.twist.linear)
+
+            reset_started = time.monotonic()
+            node.reset_candidate()
+            <span class="comment"># 네 threshold를 새 odometry 3개가 연속 만족해야 settle입니다.</span>
+            values = wait_for_settled(
+                node, 3.0, 'post-reset settled state')
+            settle_ms = (time.monotonic() - reset_started) * 1000.0
+            pos_mm, ori_deg, linear, angular, q_norm = values
+            passed = values_pass(values)
+            all_passed = all_passed and passed
+            print(
+                f'trial={trial} pre_reset_speed_mps={pre_reset_speed:.6f} '
+                f'settle_ms={settle_ms:.3f} '
+                f'position_error_mm={pos_mm:.6f} '
+                f'orientation_error_deg={ori_deg:.6f} '
+                f'linear_speed_mps={linear:.6f} '
+                f'angular_speed_rad_s={angular:.6f} '
+                f'quaternion_norm={q_norm:.9f} '
+                f'state_measured=true pass={str(passed).lower()}')
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+    raise SystemExit(0 if all_passed else 1)
+
+if __name__ == '__main__':
+    main()</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 3회 시험과 로그 보존</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>cd /workspace/week0_spike/scripts
+set -o pipefail
+python3 reset_probe.py \
+  2&gt;&amp;1 | tee ../logs/spike_b3_$(date +%H%M%S).log
+RESET_RC=${PIPESTATUS[0]}
+echo "reset_probe_exit=$RESET_RC"
+test "$RESET_RC" -eq 0</pre>
+      </div>
+      <div class="callout ok">
+        <p>
+          <strong>사전 검증 결과.</strong> 세 시험의 reset 직전 낙하 속도는
+          0.328~0.338 m/s, settle은 59.897~60.149 ms였습니다. reset 뒤 position error는
+          0.355~0.365 mm, orientation error 0°, linear speed 0.001 m/s,
+          angular speed 0 rad/s, quaternion norm 1.0으로 모든 threshold를 통과했습니다.
+          회차 당일에도 로그의 <code>state_measured=true</code>와 세 줄의 <code>pass=true</code>를
+          확인해야 B-3가 닫힙니다.
+        </p>
+      </div>
+      <div class="callout warn">
+        <p>
+          <strong>현재 backend는 비원자적 두 단계 경로입니다.</strong>
+          <code>model_only</code>는 simulation time은 유지하지만 world의 모든 model 속도를
+          초기화하고, 이어지는 <code>SetEntityPose(A)</code>는 cube pose만 복귀시킵니다.
+          두 호출 사이에 짧은 틈이 있으므로 최종 robot world에서는 pause를 포함한 atomic adapter와
+          controller 복구를 다시 검증해야 합니다. 이번 회차 산출물에는
+          <code>reset_backend=control_model_only_then_set_pose_A</code>와 이 제한을 함께 적습니다.
+          측정 없는 fallback은 없습니다.
+        </p>
+      </div>
+
+      <h3>B-4 · 실패 시 전환 — 커리큘럼 원문</h3>
+      <table>
+        <thead><tr><th style="width:38%">증상</th><th>대응</th></tr></thead>
+        <tbody>
+          <tr><td>gz 서비스는 있으나 ROS bridge가 안 붙음</td><td><code>ros_gz</code> 버전과 service bridge 지원 범위를 확인한 뒤 재시도</td></tr>
+          <tr><td>B-1은 되는데 10 Hz B-2에서 밀리거나 떨림</td><td>1-in-flight/latest-wins·RTT·timeout 점검 후 재시험. 그래도 불안정하면 B-1 one-shot을 T0로 쓰고 <code>L1-fallback</code>으로 전환</td></tr>
+          <tr><td>ROS service bridge 경로가 없음</td><td>gz topic publish 또는 다른 ROS 2 pose-update adapter를 시험. <b>one-shot A→B→A 확인 전에는 T1·T0를 모두 동결하지 않음</b></td></tr>
+          <tr><td>어떤 ROS 2 경로로도 one-shot이 안 됨</td><td><b>transport hard blocker.</b> Week 0 Gate 실패</td></tr>
+          <tr><td>pose는 돌아오지만 속도가 남음</td><td><code>SetEntityPose</code> 단독 사용을 중지하고, B-3처럼 twist 초기화와 pose 복귀를 분리한 복합 backend를 actual state로 재시험</td></tr>
+          <tr><td>reset backend를 못 정함</td><td>자동 평가를 시작하지 않고 <code>RESET_FAILED</code>로 Gate 실패 처리</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================= SPIKE C ================= -->
+    <section id="spikeC">
+      <div class="kicker">Spike C · 100~140분</div>
+      <h2><span class="step-badge">C</span>코드 기반 goal과 IK mode 동결</h2>
+      <p class="subtitle">
+        RViz에서 마우스로 계획하는 것과 코드에서 목표를 주는 것은 다릅니다. 더 중요한 것은
+        KDL의 <code>position_only_ik</code> 값에 따라 <b>같은 pose goal의 의미가 달라진다</b>는 점입니다.
+      </p>
+
+      <h3>C-1 · effective parameter를 먼저 확인한다</h3>
+      <div class="callout warn">
+        <p>
+          <strong>제가 확인한 사실.</strong> ROBOTIS <code>jazzy</code> commit <code>32975f8</code>의
+          <code>open_manipulator_moveit_config/config/open_manipulator_x/kinematics.yaml</code>에는
+          <code>position_only_ik: True</code>가 <b>이미 들어 있습니다.</b> 솔버는
+          <code>kdl_kinematics_plugin/KDLKinematicsPlugin</code>입니다.
+        </p>
+        <p>
+          다만 커리큘럼의 경고대로 <b>“공식 기본값이 당연히 true”라고 가정하지 않습니다.</b>
+          container는 image 빌드 시점의 clone을 쓰고, 우리 host 저장소가
+          <code>/root/ros2_ws/src/open_manipulator/</code>에 <b>덮어 마운트</b>됩니다.
+          <code>--symlink-install</code>로 빌드되었으므로 install 경로가 어느 파일을 가리키는지
+          실제로 따라가 확인해야 합니다.
+        </p>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>CFG=$(ros2 pkg prefix open_manipulator_moveit_config)/share/open_manipulator_moveit_config/config/open_manipulator_x/kinematics.yaml
+readlink -f "$CFG"
+cat "$CFG"
+
+<span class="comment"># MoveIt 실행 중이라면 실제 반영값도 확인</span>
+ros2 param get /move_group robot_description_kinematics.arm.position_only_ik</pre>
+      </div>
+      <p>기록할 세 값은 커리큘럼이 이름까지 정해 두었습니다.</p>
+      <div class="code-block">
+        <div class="code-head"><b>Text · 반드시 기록</b><span class="where">week0_spike.md</span><button class="copy">복사</button></div>
+<pre>robotis_commit
+effective_kinematics_parameters
+position_only_ik_effective</pre>
+      </div>
+
+      <h3>C-2 · 최소 실행 파일 만들기</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 검증된 패키지 복사</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>cd /workspace/week0_spike/ws/src
+test ! -e pnp_spike || {
+  echo "pnp_spike가 이미 있습니다. 덮어쓰지 말고 내용을 먼저 확인하십시오."
+  exit 1
+}
+cp -a \
+  /workspace/2026-pnp-study/guides/assets/session-0-3/pnp_spike \
+  ./pnp_spike
+
+find pnp_spike -maxdepth 3 -type f -print | sort</pre>
+      </div>
+      <p>
+        패키지는 <a href="./assets/session-0-3/pnp_spike/CMakeLists.txt">CMakeLists.txt</a>,
+        <a href="./assets/session-0-3/pnp_spike/package.xml">package.xml</a>,
+        <a href="./assets/session-0-3/pnp_spike/launch/ik_mode_moveit.launch.py">IK mode launch wrapper</a>,
+        <a href="./assets/session-0-3/pnp_spike/src/pose_goal_spike.cpp">pose_goal_spike.cpp</a>로
+        구성됩니다. 긴 코드를 다시 타이핑하지 말고 링크에서 먼저 읽은 뒤 제공 파일을 복사합니다.
+      </p>
+      <div class="callout info">
+        <p>
+          <strong>코드가 하는 일.</strong> <code>mode</code> parameter에 따라
+          <code>setPositionTarget()</code> 또는 <code>setPoseTarget()</code>을 선택하고, 세 안전점
+          (0.16, 0, 0.12), (0.17, 0.05, 0.12), (0.17, −0.05, 0.12)를 실행합니다.
+          매 점에서 plan과 execute를 분리해 기록하고 actual position·orientation 오차와 tool tilt를
+          출력합니다. 마지막에는 도달 불가능한 (1.50, 0, 0.50)이 오류를 반환하는지도 확인합니다.
+        </p>
+      </div>
+      <div class="callout warn">
+        <p>
+          <strong>접근축은 <code>+X_tool</code>입니다.</strong> URDF의
+          <code>end_effector_joint</code>는 <code>link5</code>에서 +X로 0.126 m 뻗고 finger는
+          ±Y로 움직입니다. 따라서 코드는 회전 행렬의 <b>첫 번째 열</b>을 접근축으로 사용합니다.
+          초안처럼 세 번째 열(+Z)을 쓰면 tilt 판정이 전부 틀립니다.
+        </p>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 먼저 빌드만 검증</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>cd /workspace/week0_spike/ws
+source /opt/ros/jazzy/setup.bash
+source /root/ros2_ws/install/setup.bash
+colcon build --symlink-install --packages-select pnp_spike
+source install/setup.bash
+
+ros2 pkg executables pnp_spike
+ros2 launch pnp_spike ik_mode_moveit.launch.py --show-args</pre>
+      </div>
+      <div class="callout ok">
+        <p>
+          <strong>현재 검증 범위.</strong> 제공 package는 이번 container의 ROS 2 Jazzy,
+          MoveIt 2.12.4에서 실제 <code>colcon build</code>에 성공했고 launch 파일의 import·인자
+          구성을 점검했습니다. 다만 주인님께서 아직 회차를 진행하는 날이 아니라고 하셨으므로,
+          arm을 실제로 움직이는 runtime은 일부러 실행하지 않았습니다. 따라서 C의 결과는
+          <b>사전 성공값이 아니라 회차 당일 채울 값</b>입니다.
+        </p>
+      </div>
+
+      <h3>C-3 · 경로 A와 경로 B 비교</h3>
+      <table>
+        <thead><tr><th style="width:150px">경로</th><th style="width:190px">override</th><th>측정할 것</th></tr></thead>
+        <tbody>
+          <tr><td><b>A · position-only</b></td><td><code>position_only_ik: true</code></td><td>세 점의 plan·execute 성공 여부와 <code>actual_tool_tilt_deg</code>. <b>계획 성공을 top-down 성공으로 간주하지 않습니다.</b></td></tr>
+          <tr><td><b>B · full-pose</b></td><td><code>position_only_ik: false</code></td><td>같은 세 점의 <b>position error와 orientation error를 별도로</b>. 위치별 base yaw를 생성합니다.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout info">
+        <p>
+          <strong>측정 전에 허용값을 선언합니다.</strong>
+          position error ≤ <b>5 mm</b>, tool tilt ≤ <b>10°</b>를 공통 기준으로 사용하고,
+          full-pose에는 orientation error ≤ <b>2°</b>를 추가합니다. position-only의
+          orientation error는 참고값이며 통과 기준은 tool tilt입니다. 결과를 본 뒤 숫자를
+          넓히면 검증이 아니라 소급 합격입니다.
+        </p>
+      </div>
+
+      <h4>C-3-1 · Gazebo를 공식 OpenMANIPULATOR-X world로 전환</h4>
+      <p>
+        B의 world·bridge를 <code>Ctrl+C</code>로 정상 종료한 뒤 시작합니다. Zenoh router(T0)는
+        그대로 둡니다.
+      </p>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · robot simulation</b><span class="where">Container (T1)</span><button class="copy">복사</button></div>
+<pre>ros2 launch open_manipulator_bringup \
+  open_manipulator_x_gazebo.launch.py</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · readiness</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>ros2 control list_controllers
+ros2 topic echo /joint_states sensor_msgs/msg/JointState --once
+ros2 topic echo /clock rosgraph_msgs/msg/Clock --once</pre>
+      </div>
+
+      <h4>C-3-2 · position-only를 한 번 실행</h4>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · MoveIt mode A</b><span class="where">Container (T4)</span><button class="copy">복사</button></div>
+<pre>source /workspace/week0_spike/ws/install/setup.bash
+ros2 launch pnp_spike ik_mode_moveit.launch.py \
+  use_sim:=true \
+  position_only_ik:=true \
+  start_rviz:=true</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · effective 값과 실행 로그</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>source /workspace/week0_spike/ws/install/setup.bash
+ros2 param get /move_group \
+  robot_description_kinematics.arm.position_only_ik
+
+set -o pipefail
+ros2 run pnp_spike pose_goal_spike --ros-args \
+  -p use_sim_time:=true \
+  -p mode:=position_only \
+  -p tilt_limit_deg:=10.0 \
+  -p tool_yaw_offset_rad:=0.0 \
+  2&gt;&amp;1 | tee /workspace/week0_spike/logs/ik_position_only.log
+IK_RC=${PIPESTATUS[0]}
+echo "position_only_exit=$IK_RC"</pre>
+      </div>
+
+      <h4>C-3-3 · move_group 하나만 종료하고 full-pose로 다시 실행</h4>
+      <p>
+        T4에서 <code>Ctrl+C</code>를 눌러 MoveIt·RViz만 종료합니다. Gazebo와 controller는
+        유지합니다. <code>/move_group</code>이 사라진 것을 확인한 뒤 반대 mode를 띄웁니다.
+        move_group 둘을 동시에 띄우면 결과가 어느 쪽 parameter인지 알 수 없게 됩니다.
+      </p>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 종료 확인</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>ros2 node list --no-daemon | grep -x '/move_group' \
+  &amp;&amp; echo "아직 move_group이 남아 있습니다" \
+  || echo "이전 move_group 종료 확인"</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · MoveIt mode B</b><span class="where">Container (T4)</span><button class="copy">복사</button></div>
+<pre>source /workspace/week0_spike/ws/install/setup.bash
+ros2 launch pnp_spike ik_mode_moveit.launch.py \
+  use_sim:=true \
+  position_only_ik:=false \
+  start_rviz:=true</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · effective 값과 실행 로그</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>ros2 param get /move_group \
+  robot_description_kinematics.arm.position_only_ik
+
+set -o pipefail
+ros2 run pnp_spike pose_goal_spike --ros-args \
+  -p use_sim_time:=true \
+  -p mode:=full_pose \
+  -p tilt_limit_deg:=10.0 \
+  -p tool_yaw_offset_rad:=0.0 \
+  2&gt;&amp;1 | tee /workspace/week0_spike/logs/ik_full_pose.log
+IK_RC=${PIPESTATUS[0]}
+echo "full_pose_exit=$IK_RC"</pre>
+      </div>
+      <div class="callout warn">
+        <p>
+          <strong>process exit code만으로 합격시키지 않습니다.</strong> 현재 도구는 target 거부,
+          plan 실패, execute 실패를 exit code에 반영하지만, position·orientation·tilt threshold는
+          각 <code>RESULT</code> 줄을 보고 표에 직접 판정합니다.
+          <code>UNREACHABLE expected_fail=true</code>도 확인합니다.
+        </p>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Text · full-pose의 base yaw (커리큘럼 원문)</b><span class="where">참고</span><button class="copy">복사</button></div>
+<pre>base_yaw ≈ atan2(object_y - joint1_origin_y,
+                 object_x - joint1_origin_x)
+           + tool_frame_offset</pre>
+      </div>
+      <ul>
+        <li><code>object</code>와 <code>joint1</code> 원점은 <b>모두 <code>planning_frame</code></b>에 표현합니다.</li>
+        <li><code>tool_frame_offset</code>은 알려진 성공 pose에서 역산합니다.</li>
+        <li>모든 위치에 <b>같은 quaternion</b>을 넣지 않습니다.</li>
+        <li><code>setGoalOrientationTolerance()</code> 하나로 모든 축을 느슨하게 하지 않습니다. 필요하면 <code>OrientationConstraint</code>의 축별 tolerance로 yaw는 넓게, tool tilt는 좁게 둡니다.</li>
+        <li>이 팔에는 별도 wrist yaw가 없습니다. 방위각을 만드는 것은 <code>joint1</code>, 즉 <b>팔 전체 회전</b>입니다.</li>
+      </ul>
+
+      <h3>C-4 · <code>ik_mode</code> 동결 규칙</h3>
+      <table>
+        <thead><tr><th style="width:46%">조건</th><th style="width:180px">선택</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td>position-only가 <b>세 점</b>에서 tilt 제한 만족</td><td>position-only <b>권장</b></td><td class="cmd">ik_mode_status=final</td></tr>
+          <tr><td>tilt는 무너지지만 full-pose가 같은 세 점의 position·orientation 제한 만족</td><td>full-pose</td><td class="cmd">ik_mode_status=final</td></tr>
+          <tr><td>둘 다 세 점을 못 통과했지만, 한 mode가 <b>안전한 1점</b>에서 plan·execute·tool 자세를 검증</td><td>그 mode와 그 점을 기록</td><td class="cmd">ik_mode_status=provisional</td></tr>
+          <tr><td>어느 mode도 안전한 1점을 검증하지 못함</td><td>—</td><td><b>Gate 실패</b></td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn">
+        <p>
+          <strong>이번 회차의 사전 선언값은 10°입니다.</strong> 위 두 실행 모두
+          <code>tilt_limit_deg:=10.0</code>을 명시합니다. 실제 결과가 이를 넘으면 값을 조용히
+          바꾸지 말고 실패로 기록한 뒤 full-pose 또는 provisional 경로를 선택합니다.
+        </p>
+      </div>
+
+      <h3>C-5 · 프레임 기록</h3>
+      <p>Gate 항목입니다. 아래 값을 실제 출력으로 채웁니다.</p>
+      <table>
+        <thead><tr><th style="width:210px">이름</th><th style="width:220px">고정 규칙 (커리큘럼)</th><th>확인 방법</th></tr></thead>
+        <tbody>
+          <tr><td class="cmd">planning_frame</td><td>런타임 확인</td><td><code>getPlanningFrame()</code> 출력</td></tr>
+          <tr><td class="cmd">arm_base_frame</td><td>공식 모델의 <code>link1</code></td><td>URDF에서 확인 (<code>base_link</code>는 없습니다)</td></tr>
+          <tr><td class="cmd">eef_frame</td><td><code>end_effector_link</code></td><td><code>getEndEffectorLink()</code> 출력</td></tr>
+          <tr><td class="cmd">world_frame</td><td>공식 모델의 <code>world</code></td><td>URDF 최상위 link</td></tr>
+          <tr><td class="cmd">sensor source frame</td><td>spike A에서 선택한 것</td><td>A-5의 <code>frame_id</code></td></tr>
+        </tbody>
+      </table>
+      <div class="callout info">
+        <p>
+          공식 URDF에는 <code>base_link</code>가 <b>없습니다</b>. 목표 pose와 카메라 변환 목적지는
+          <code>planning_frame</code> 기준, base yaw 계산은 <code>link1</code>/<code>joint1</code> 원점
+          기준으로 <b>분리</b>합니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= STEP E ================= -->
+    <section id="stepE">
+      <div class="kicker">140~160분</div>
+      <h2><span class="step-badge">E</span>산출물과 기록</h2>
+      <p class="subtitle">
+        커리큘럼이 지정한 Session 0-3 산출물은 <b><code>docs/setup/week0_spike.md</code></b>입니다.
+        이 회차에서 처음 만드는 파일입니다.
+      </p>
+
+      <div class="code-block">
+        <div class="code-head"><b>Markdown</b><span class="where">docs/setup/week0_spike.md</span><button class="copy">복사</button></div>
+<pre># Week 0 spike 결과와 동결값 (Session 0-3)
+
+- 수행일: [YYYY-MM-DD]
+- 담당: [이름]
+- 결과: [완료 / 부분 / 차단]
+- Week 0 Gate 판정: [통과 / 조건부 통과 / 실패]
+
+## 1. spike A — RGB-D
+
+| 항목 | 값 |
+|---|---|
+| 사용한 world | Gazebo 8.11.0 vendor의 `sensors_demo.sdf` |
+| RGB topic | [이름] · [width x height] · [encoding] |
+| depth topic | [이름] · [width x height] · [encoding] |
+| CameraInfo topic | `/rgbd_camera/camera_info` · RGB/depth 공용 여부 [확인] |
+| intrinsics | fx [값] fy [값] cx [값] cy [값] |
+| registration | [정렬됨 / 미정렬 → 사용할 aligned topic 또는 변환 경로] |
+| optical frame | [frame_id] · 축 [ROS 규약 일치 / 불일치 → 조치] |
+| depth 단위 | [m / mm] · invalid 표현 [inf / NaN / 0] |
+| 5분 유지 | [성공 / 실패] · Hz [값] |
+| 역투영 조합 | image [값] + CameraInfo [값] + optical frame [값] |
+| 판정 | [P1 진행 가능 / P2 fallback → 사유 / sensor_path_status=deferred] |
+
+## 2. spike B — pose 추종과 reset
+
+### 2.1 B-1 one-shot
+
+| 항목 | 값 |
+|---|---|
+| world 이름 | `week0_spike` |
+| gz/ROS 서비스 | `/world/week0_spike/set_pose` |
+| ROS 경로 | `ros_gz_bridge` direct service bridge |
+| A → B → A | [성공 / 실패] |
+| 1회 호출 지연 | [ms] |
+
+### 2.2 B-2 연속 추종
+
+| 항목 | 값 |
+|---|---|
+| 조건 | 10 Hz x 5초, 동시 요청 1개, latest-wins |
+| generated / sent / completed | [개수] / [개수] / [개수] |
+| failures | [개수] |
+| dropped update | [개수] |
+| timeout | [개수] |
+| max inflight / max backlog | [개수] / [개수] |
+| RTT | 평균 [ms] / 최대 [ms] |
+| 육안 점프·발산 | [없음 / 있음 → 설명] |
+| 정지 후 최종 A pose | completed [true/false] · error [mm] |
+| 판정 | [T1 가능 / T0 + L1-fallback] |
+
+### 2.3 B-3 reset
+
+| 항목 | 값 |
+|---|---|
+| `reset_backend` | `control_model_only_then_set_pose_A` |
+| backend 명령 | `/world/week0_spike/control` → `/world/week0_spike/set_pose` |
+| backend 제한 | 비원자적 2단계·모든 model 속도 reset; 최종 robot world 재검증 필요 |
+| `reset_state_source` | `/spike_cube/odometry` (`nav_msgs/msg/Odometry`, 50 Hz) |
+| `reset_position_tolerance_mm` | 1.0 |
+| `reset_orientation_tolerance_deg` | 1.0 |
+| linear speed threshold | 0.005 m/s |
+| angular speed threshold | 0.01 rad/s |
+| quaternion norm tolerance | 0.001 |
+
+3회 연속 시험 로그:
+
+| 회차 | position_error_mm | orientation_error_deg | linear_speed_mps | angular_speed_rad_s | state_measured | 판정 |
+|---|---|---|---|---|---|---|
+| 1 | | | | | | |
+| 2 | | | | | | |
+| 3 | | | | | | |
+
+## 3. spike C — IK mode
+
+| 항목 | 값 |
+|---|---|
+| `robotis_commit` | [40자리] |
+| `effective_kinematics_parameters` | [파일 경로와 내용] |
+| `position_only_ik_effective` | mode A [true 확인] / mode B [false 확인] |
+| solver | kdl_kinematics_plugin/KDLKinematicsPlugin |
+| `planning_frame` | [값] |
+| `arm_base_frame` | link1 |
+| `eef_frame` | end_effector_link |
+| 접근축 | `+X_tool` |
+| 선언한 position 제한 | 5 mm |
+| 선언한 orientation 제한 | 2° (full-pose) |
+| 선언한 tilt 제한 | 10° |
+
+| 점 | mode | plan | execute | position_error_mm | orientation_error_deg | actual_tool_tilt_deg |
+|---|---|---|---|---|---|---|
+| p1 | position-only | | | | NA | |
+| p2 | position-only | | | | NA | |
+| p3 | position-only | | | | NA | |
+| p1 | full-pose | | | | | |
+| p2 | full-pose | | | | | |
+| p3 | full-pose | | | | | |
+
+- 도달 불가능 목표의 오류 반환: [확인됨 / 미확인]
+- 빌드 명령: [colcon 명령]
+- 실행 명령: [ros2 run 명령]
+
+### 동결
+
+```text
+ik_mode:        [position-only / full-pose]
+ik_mode_status: [final / provisional]
+```
+
+## 4. 세 spike의 성공·실패와 계획 변경
+
+| spike | 결과 | 계획 변경 |
+|---|---|---|
+| A | [성공 / 원인별 fallback] | [내용 / 없음] |
+| B | [성공 / T0 전환 / blocker] | [내용 / 없음] |
+| C | [final / provisional / 실패] | [내용 / 없음] |
+
+## 5. Week 0 Gate 판정
+
+- 판정: [통과 / 조건부 통과 / 실패]
+- 조건부인 경우 조건과 재검증 시점: [내용]
+- 두 사람 확인: [이름] / [이름]</pre>
+      </div>
+
+      <h3>progress.md 회차 로그</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Markdown</b><span class="where">progress.md · 회차 로그 최상단</span><button class="copy">복사</button></div>
+<pre>### [YYYY-MM-DD] — Session 0-3 · 핵심 위험 3종 spike
+
+- **상태:** [완료 / 진행 중 / 보류 / 차단]
+- **목표:** RGB-D 입력 경로, ROS 경로의 entity pose 갱신과 reset backend,
+  코드 pose goal과 IK mode를 확인하고 Week 0 Gate를 판정
+- **수행:** spike A [world와 topic], spike B [B-1/B-2/B-3 수행 내용],
+  spike C [두 mode 비교와 세 점 결과]
+- **결과:** A [판정], B-1 [O/X, 지연 ms], B-2 [sent/dropped/timeout],
+  B-3 [backend·state source·3회 통과 여부], C [ik_mode·status·tilt],
+  Week 0 Gate [통과 / 조건부 / 실패]
+- **문제:** [원인과 재현 조건 / 없음]
+- **결정:** [동결값 전체와 fallback 선택 근거]
+- **다음:** [Week 1 Session 1 / blocker 복구 일정]
+- **증빙:** [docs/setup/week0_spike.md](./docs/setup/week0_spike.md), [로그 경로], [commit 링크]</pre>
+      </div>
+      <p>
+        같은 commit에서 <b>다음 작업</b> 체크박스와 단계별 현황 표의 Week 0 행을 갱신하고,
+        Gate를 통과했다면 Week 1 행의 진입 조건도 함께 손봅니다.
+      </p>
+
+      <div class="code-block">
+        <div class="code-head"><b>Bash · branch · commit · PR</b><span class="where">Ubuntu (WSL host) · 2026-pnp-study</span><button class="copy">복사</button></div>
+<pre>cd ~/open_manipulator/docker/workspace/2026-pnp-study
+git switch main
+git pull --ff-only origin main
+git switch -c docs/session-0-3-results
+git add docs/setup/week0_spike.md progress.md
+git diff --cached --check
+git diff --cached
+git commit -m "docs: Session 0-3 핵심 위험 3종 spike 결과와 Week 0 Gate 판정"
+git push -u origin docs/session-0-3-results</pre>
+      </div>
+    </section>
+
+    <!-- ================= GATE ================= -->
+    <section id="gate">
+      <div class="kicker">Week 0 Gate</div>
+      <h2>Gate 판정</h2>
+      <p class="subtitle">
+        이 Gate는 <b>모든 primary 경로의 성공만 요구하지 않습니다.</b> 환경·reset·최소 IK 검증은
+        hard blocker이고, RGB-D와 T1은 명시적 fallback 계약으로 닫을 수 있습니다.
+      </p>
+
+      <h4>환경</h4>
+      <ul class="checklist">
+        <li><input type="checkbox" id="g1"><label for="g1">Docker 환경 재실행 가능</label><span class="tag">S0-1</span></li>
+        <li><input type="checkbox" id="g2"><label for="g2">Gazebo와 RViz 동시 실행</label><span class="tag">S0-2</span></li>
+        <li><input type="checkbox" id="g3"><label for="g3">arm과 gripper 제어</label><span class="tag">S0-2</span></li>
+        <li><input type="checkbox" id="g4"><label for="g4"><code>/clock</code>, <code>/joint_states</code>, TF 확인</label><span class="tag">S0-2</span></li>
+        <li><input type="checkbox" id="g5"><label for="g5">프로젝트 코드를 저장할 영속 workspace 확정</label><span class="tag">필수</span></li>
+        <li><input type="checkbox" id="g6"><label for="g6">ROBOTIS commit과 <code>RMW_IMPLEMENTATION</code> 기록</label><span class="tag">S0-1</span></li>
+      </ul>
+
+      <h4>위험 검증</h4>
+      <ul class="checklist">
+        <li><input type="checkbox" id="g7"><label for="g7">RGB·depth·CameraInfo가 5분 안정 수신되고 registration 계약이 확정, 또는 실패 원인별 <b>live P2</b> 입력·frame·평가 계약이 확정</label><span class="tag">A</span></li>
+        <li><input type="checkbox" id="g8"><label for="g8">ROS 경로의 A→B→A와 10 Hz × 5초 1-in-flight 추종 성공, 또는 T0 one-shot 왕복과 <code>L1-fallback</code> 확정</label><span class="tag">B-1·B-2</span></li>
+        <li><input type="checkbox" id="g9"><label for="g9"><code>reset_backend</code>와 독립 <code>reset_state_source</code>가 확정되고 actual 측정으로 네 threshold를 <b>3회 연속</b> 통과 <b>(측정 없는 fallback 없음)</b></label><span class="tag">B-3</span></li>
+        <li><input type="checkbox" id="g10"><label for="g10">코드 실행만으로 최소 안전 위치 <b>1점</b>의 goal plan·execute와 tool 자세 검증 <b>(검증 자체에 fallback 없음)</b></label><span class="tag">C</span></li>
+        <li><input type="checkbox" id="g11"><label for="g11"><code>planning_frame</code>, <code>arm_base_frame</code>, <code>eef_frame</code>과 sensor source frame 기록</label><span class="tag">C</span></li>
+        <li><input type="checkbox" id="g12"><label for="g12"><code>ik_mode</code>, <code>ik_mode_status</code>와 실제 tool tilt/orientation 검증 규칙 동결</label><span class="tag">C</span></li>
+      </ul>
+
+      <h3>Gate 실패 시 판정 규칙 — 커리큘럼 원문</h3>
+      <table>
+        <thead><tr><th style="width:24%">실패 항목</th><th>판정</th><th style="width:24%">Week 0 Gate</th></tr></thead>
+        <tbody>
+          <tr><td>Docker 또는 smoke test</td><td>환경을 먼저 복구</td><td><b>실패</b></td></tr>
+          <tr><td>spike A (RGB-D)</td><td>live P2 입력·frame·평가 방법을 고정하면 통과. 고정 bag만 있으면 <code>sensor_path_status=deferred</code>로 Week 1·2까지만 조건부 진행</td><td>live P1/P2면 통과, deferred면 Week 3 진입 전 재검증</td></tr>
+          <tr><td>spike B-1</td><td>ROS 2 경로의 A→B→A를 복구하거나 transport 설계를 재결정</td><td><b>성공 전까지 실패</b></td></tr>
+          <tr><td>spike B-2</td><td>B-1 one-shot을 T0로 동결하고 <code>L1-fallback</code>으로 전환</td><td>T0 경로와 완료 확인이 닫히면 통과 가능</td></tr>
+          <tr><td>spike B-3</td><td><code>reset_backend</code>와 <code>reset_state_source</code>를 구현하고 3회 연속 settle 재시험</td><td><b>성공 전까지 실패</b></td></tr>
+          <tr><td>spike C</td><td>workspace를 안전한 1점까지 줄여 한 mode를 검증하고 <code>ik_mode_status=provisional</code>로 동결. Session 5 재동결 전 6A 진입 금지</td><td>1점도 검증 못 하면 <b>실패</b></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn">
+        <p>
+          <strong>세 spike 중 둘 이상이 실패하면</strong> Week 1 시작 전에 팀 회의를 한 번 더 합니다.
+          Gate 판정과 fallback은 <b>두 사람이 확인</b>하고 근거 파일을 링크해야 합니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= VALIDATION BOUNDARY ================= -->
+    <section id="validation-boundary">
+      <div class="kicker">Validation boundary</div>
+      <h2>사전 검증한 것과 회차 당일 확인할 것</h2>
+      <p class="subtitle">
+        이 자료는 미리 준비한 실행 가이드입니다. 환경·명령·샘플 코드가 성립하는지는 가능한 범위에서
+        먼저 확인했지만, <b>Session 0-3 결과나 Week 0 Gate를 미리 합격 처리하지는 않았습니다.</b>
+      </p>
+      <table>
+        <thead><tr><th style="width:22%">영역</th><th>2026-07-31 사전 검증</th><th style="width:34%">회차 당일 남은 일</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>A · RGB-D</b></td>
+            <td>공식 <code>sensors_demo.sdf</code> 기동, 네 Gazebo topic, 네 ROS bridge, 320×240 RGB·depth·CameraInfo 실제 메시지, depth m 단위·invalid 표현 확인</td>
+            <td>화면에서 registration 픽셀 근거 남기기, optical transform 방향 확인, RGB·depth 5분 동시 유지</td>
+          </tr>
+          <tr>
+            <td><b>B · pose/reset</b></td>
+            <td>제공 SDF 기동, service·odometry bridge, A→B→A, 10 Hz×5초 1-in-flight, 낙하 중 복합 reset 3회 실제 실행</td>
+            <td>같은 환경에서 재현하고 당일 RTT·dropped·threshold 로그 및 육안 관찰 기록</td>
+          </tr>
+          <tr>
+            <td><b>C · IK</b></td>
+            <td>URDF 접근축 +X 확인, kinematics 기본값 확인, C++ package의 MoveIt 2.12.4 빌드, launch 구성·인자 점검</td>
+            <td><b>실제 arm runtime 전체.</b> 두 mode의 세 점 plan·execute·오차·tilt와 unreachable 오류 확인</td>
+          </tr>
+          <tr>
+            <td><b>기록·Gate</b></td>
+            <td>결과 템플릿과 실패 전환 규칙 준비</td>
+            <td><code>week0_spike.md</code>·<code>progress.md</code>를 실제 값으로 작성하고 두 사람이 판정</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout info">
+        <p>
+          제공 파일은 <a href="./assets/session-0-3/week0_spike.sdf">world</a>,
+          <a href="./assets/session-0-3/follow_spike.py">follower</a>,
+          <a href="./assets/session-0-3/reset_probe.py">reset probe</a>,
+          <a href="./assets/session-0-3/pnp_spike/src/pose_goal_spike.cpp">MoveIt probe</a>입니다.
+          가이드 본문과 파일이 다르면 저장소에 함께 배포된 파일을 기준으로 삼고 차이를 기록합니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= SOURCES ================= -->
+    <section id="sources">
+      <div class="kicker">Sources</div>
+      <h2>근거</h2>
+      <p class="subtitle">
+        커리큘럼 조항과, ROBOTIS 공식 저장소 <code>jazzy</code> branch commit
+        <code>32975f8</code>에서 직접 확인한 파일입니다.
+      </p>
+      <ul class="sources">
+        <li><a href="../curriculum.md">스터디 커리큘럼 v3.5.5</a> · §6 Session 0-3 — spike A/B/C 실습·완료 기준·실패 시 전환, 시간 배분, Week 0 Gate와 실패 판정 규칙</li>
+        <li>커리큘럼 · 프레임 고정표 — <code>planning_frame</code>, <code>arm_base_frame=link1</code>, <code>eef_frame=end_effector_link</code>, <code>base_link</code> 부재</li>
+        <li>커리큘럼 · fallback 용어표 — <code>T1</code>/<code>T0</code>, <code>P1</code>/<code>P2</code>/<code>P0</code>, <code>L1-fallback</code>, 최종 실행 구성 필드</li>
+        <li>커리큘럼 · <code>ResetTrial.srv</code>와 §4.5 — 네 측정값, <code>state_measured</code>, orientation 오차 정의, 동결 대상 threshold 이름</li>
+        <li>Session 0-1·0-2 기록 · <a href="../docs/setup/docker.md">Docker 환경·실행 결과</a>, <a href="../progress.md">진행 기록</a> — Zenoh router 규칙, 환경 확정값, 터미널 규약</li>
+        <li><a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/pull/13">PR #13 · Session 0-2 Git 소유권 오류 기록</a> 및 <a href="https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/pull/14">PR #14 · 복구 명령 대비 개선</a> — 정확한 저장소 경로만 <code>safe.directory</code>로 허용하고 읽기 쉬운 복사형 코드 블록으로 제공</li>
+        <li><a href="https://github.com/gazebosim/gz-sim/blob/gz-sim8/examples/worlds/sensors_demo.sdf">Gazebo Sim 8 · sensors_demo.sdf</a> — RGB-D sensor의 공식 예제 world</li>
+        <li><a href="https://github.com/gazebosim/ros_gz/blob/ros2/ros_gz_bridge/README.md">ros_gz_bridge 공식 README</a> — topic·service bridge 구문과 camera optical-frame 주의사항</li>
+        <li><a href="https://gazebosim.org/api/sim/8/classgz_1_1sim_1_1systems_1_1OdometryPublisher.html">Gazebo Sim 8 · OdometryPublisher API</a> — 3D odometry·topic·발행 주기 SDF parameter</li>
+        <li><a href="https://gazebosim.org/docs/latest/ros2_sim_interfaces/">Gazebo · ROS 2 Simulation Interfaces</a> — interface 설치와 runtime provider 존재를 구분하기 위한 기준</li>
+        <li><a href="https://github.com/ROBOTIS-GIT/open_manipulator/blob/32975f87efdb089e82c9ad103f068ef532aabfd2/open_manipulator_bringup/worlds/empty_world.sdf">ROBOTIS · empty_world.sdf</a> — <code>UserCommands</code> system plugin과 ground plane</li>
+        <li>ROBOTIS · 저장소 전체 검색 — <code>&lt;sensor&gt;</code> 태그 <b>0건</b>. <code>camera_realsense.launch.py</code>·<code>camera_usb_cam.launch.py</code>는 실물 하드웨어용</li>
+        <li><a href="https://github.com/ROBOTIS-GIT/open_manipulator/blob/32975f87efdb089e82c9ad103f068ef532aabfd2/open_manipulator_moveit_config/config/open_manipulator_x/kinematics.yaml">ROBOTIS · kinematics.yaml</a> — KDL solver, <b><code>position_only_ik: True</code></b>, search resolution·timeout 0.005</li>
+        <li><a href="https://github.com/ROBOTIS-GIT/open_manipulator/blob/32975f87efdb089e82c9ad103f068ef532aabfd2/open_manipulator_description/urdf/open_manipulator_x/open_manipulator_x.urdf">ROBOTIS · OpenMANIPULATOR-X URDF</a> — link·joint·end effector와 실제 접근축 확인</li>
+        <li><a href="https://github.com/ROBOTIS-GIT/open_manipulator/blob/32975f87efdb089e82c9ad103f068ef532aabfd2/open_manipulator_moveit_config/config/open_manipulator_x/joint_limits.yaml">ROBOTIS · joint_limits.yaml</a> — 기본 velocity·acceleration scaling 0.1</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>2026 PNP STUDY · Session 0-3 일일 실행 가이드 · 2026-07-31 · UTF-8</footer>
+  <script>
+    const progressBar = document.getElementById("progress-bar");
+    const updateProgress = () => {
+      const root = document.documentElement;
+      const max = root.scrollHeight - root.clientHeight;
+      progressBar.style.width = `${max > 0 ? (root.scrollTop / max) * 100 : 0}%`;
+    };
+    addEventListener("scroll", updateProgress, { passive: true });
+    addEventListener("resize", updateProgress);
+    updateProgress();
+
+    const copyText = async (text) => {
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return;
+        } catch {}
+      }
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const copied = document.execCommand("copy");
+      textarea.remove();
+      if (!copied) throw new Error("copy command unavailable");
+    };
+
+    document.querySelectorAll(".copy").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const text = button.closest(".code-block").querySelector("pre").innerText;
+        const original = button.textContent;
+        try {
+          await copyText(text);
+          button.textContent = "복사됨";
+        } catch {
+          button.textContent = "복사 실패";
+        }
+        setTimeout(() => { button.textContent = original; }, 1300);
+      });
+    });
+
+    document.querySelectorAll('.checklist input[type="checkbox"]').forEach((box) => {
+      const key = `pnp-session-0-3:${box.id}`;
+      try { box.checked = localStorage.getItem(key) === "1"; } catch {}
+      box.addEventListener("change", () => {
+        try { localStorage.setItem(key, box.checked ? "1" : "0"); } catch {}
+      });
+    });
+  </script>
+</body>
+</html>
