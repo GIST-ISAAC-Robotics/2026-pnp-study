@@ -1535,7 +1535,7 @@ test "$RESET_RC" -eq 0</pre>
       <h3>C-1 · effective parameter를 먼저 확인한다</h3>
       <div class="callout warn">
         <p>
-          <strong>제가 확인한 사실.</strong> ROBOTIS <code>jazzy</code> commit <code>32975f8</code>의
+          <strong>사전 검증에서 확인한 사실.</strong> ROBOTIS <code>jazzy</code> commit <code>32975f8</code>의
           <code>open_manipulator_moveit_config/config/open_manipulator_x/kinematics.yaml</code>에는
           <code>position_only_ik: True</code>가 <b>이미 들어 있습니다.</b> 솔버는
           <code>kdl_kinematics_plugin/KDLKinematicsPlugin</code>입니다.
@@ -1618,8 +1618,8 @@ ros2 launch pnp_spike ik_mode_moveit.launch.py --show-args</pre>
         <p>
           <strong>현재 검증 범위.</strong> 제공 package는 이번 container의 ROS 2 Jazzy,
           MoveIt 2.12.4에서 실제 <code>colcon build</code>에 성공했고 launch 파일의 import·인자
-          구성을 점검했습니다. 다만 주인님께서 아직 회차를 진행하는 날이 아니라고 하셨으므로,
-          arm을 실제로 움직이는 runtime은 일부러 실행하지 않았습니다. 따라서 C의 결과는
+          구성을 점검했습니다. 다만 여기까지는 회차 당일 실행을 전제로 한 사전 검증이므로,
+          arm을 실제로 움직이는 runtime은 의도적으로 실행하지 않았습니다. 따라서 C의 결과는
           <b>사전 성공값이 아니라 회차 당일 채울 값</b>입니다.
         </p>
       </div>
