@@ -221,7 +221,31 @@ timestamp 역행이나 topic 단절로 판정하지 않았다.
 운영 결정에 따라 기능이 정상 동작한 1회차와 시간 보정 뒤 전체 기준을 통과한 2회차를
 Session 0-2의 두 재현으로 인정한다.
 
-### 11.6 메인 PC에서만 발생한 시각 동기화 문제
+### 11.6 Step 0-4 Git 소유권 보호 오류
+
+- 증상: 기준 환경 재확인에서 branch와 commit을 읽는 두 `git -C ... rev-parse`
+  명령이 `fatal: detected dubious ownership in repository at
+  '/root/ros2_ws/src/open_manipulator'`로 실패함
+- 원인: container에서 Git 명령을 실행한 사용자와 저장소 소유자가 다르다고 Git이
+  판단해 보안상 저장소 접근을 거부함
+- 영향: 해당 Step 0-4에서는 branch와 commit의 실제 출력값을 얻지 못함.
+  Session 0-1에서 이미 검증·동결한 `jazzy`,
+  `32975f87efdb089e82c9ad103f068ef532aabfd2`를 기준값으로 유지했으며
+  `ros2 control list_controllers --help | head`의 `usage:` 출력은 정상 도움말로 판정함
+- 후속 가이드 조치: 같은 오류가 발생하면 정확한 저장소 경로만 신뢰 대상으로 등록한 뒤
+  두 `rev-parse` 명령을 다시 실행하도록 Step 0-4에 복구 절차를 추가함
+
+```bash
+git config --global --add safe.directory /root/ros2_ws/src/open_manipulator
+git -C /root/ros2_ws/src/open_manipulator rev-parse --abbrev-ref HEAD
+git -C /root/ros2_ws/src/open_manipulator rev-parse HEAD
+```
+
+모든 저장소를 허용하는 `safe.directory '*'`는 사용하지 않는다. 이는 ROS, controller,
+Gazebo 또는 MoveIt 동작 실패가 아니라 Git의 저장소 소유권 보호 기능에 따른 사전 확인
+실패다.
+
+### 11.7 메인 PC에서만 발생한 시각 동기화 문제
 
 - 증상: Zenoh가 `incoming timestamp ... exceeding delta 500ms is rejected`를
   반복 출력하고 `ros2 topic hz`의 최소 interval이 약 `-2.49 s`로 표시됨
@@ -248,7 +272,7 @@ container process를 끊으므로 실행 중간에 바로 사용하지 않는다
 오차가 충분히 `500 ms` 아래이고, topic interval이 모두 양수이며, 새 로그에 timestamp
 오류가 반복되지 않는 것이다.
 
-### 11.7 관찰된 비차단 경고
+### 11.8 관찰된 비차단 경고
 
 - MoveIt의 `Cannot infer URDF/SRDF` 뒤 `/robot_description` topic fallback
 - `/recognize_objects` action server 미사용 안내
@@ -260,7 +284,7 @@ container process를 끊으므로 실행 중간에 바로 사용하지 않는다
 위 메시지만으로 실패 판정하지 않았고 node·controller·action server·관절값과 실제 GUI
 동작을 함께 확인했다.
 
-### 11.8 clean stop
+### 11.9 clean stop
 
 1. MoveIt·RViz에 SIGINT
 2. Gazebo launch에 SIGINT
