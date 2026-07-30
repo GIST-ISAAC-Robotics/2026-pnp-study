@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <world name="week0_spike">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system"
+            name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"
+            name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system"
+            name="gz::sim::systems::SceneBroadcaster"/>
+
+    <light name="sun" type="directional">
+      <pose>0 0 10 0 0 0</pose>
+      <cast_shadows>true</cast_shadows>
+      <direction>-0.5 0.1 -0.9</direction>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10 10</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10 10</size>
+            </plane>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="spike_cube">
+      <pose>0.25 0 0.025 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>2.083333e-5</ixx>
+            <iyy>2.083333e-5</iyy>
+            <izz>2.083333e-5</izz>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <box><size>0.05 0.05 0.05</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.05 0.05 0.05</size></box>
+          </geometry>
+          <material>
+            <ambient>0.0 0.4 1.0 1</ambient>
+            <diffuse>0.0 0.4 1.0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <plugin filename="gz-sim-odometry-publisher-system"
+              name="gz::sim::systems::OdometryPublisher">
+        <odom_frame>world</odom_frame>
+        <robot_base_frame>spike_cube</robot_base_frame>
+        <odom_publish_frequency>50</odom_publish_frequency>
+        <odom_topic>/spike_cube/odometry</odom_topic>
+        <dimensions>3</dimensions>
+      </plugin>
+    </model>
+  </world>
+</sdf>

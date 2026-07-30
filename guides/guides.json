@@ -1,7 +1,21 @@
 {
   "schema_version": 1,
-  "updated": "2026-07-29",
+  "updated": "2026-07-31",
   "guides": [
+    {
+      "date": "2026-07-31",
+      "session": "Session 0-3",
+      "title": "핵심 위험 3종 spike",
+      "description": "RGB-D 입력 계약, ROS 경로의 물체 pose 추종과 reset backend, 코드 기반 goal과 IK mode를 확인하고 Week 0 Gate를 판정합니다.",
+      "path": "./2026-07-31-session-0-3-week0-spikes.html",
+      "tags": [
+        "Week 0",
+        "RGB-D",
+        "Gazebo",
+        "MoveIt",
+        "Gate"
+      ]
+    },
     {
       "date": "2026-07-29",
       "session": "Session 0-2",
