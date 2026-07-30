@@ -1,10 +1,10 @@
 # 진행 상황과 실행 로그
 
-> **현재 단계:** Week 0 진행 중 — Session 0-1 완료
+> **현재 단계:** Week 0 진행 중 — Session 0-1·0-2 완료
 >
-> **다음 Gate:** Week 0 Gate — Session 0-2·0-3 미완료
+> **다음 Gate:** Week 0 Gate — Session 0-3 미완료
 >
-> **마지막 업데이트:** 2026-07-29
+> **마지막 업데이트:** 2026-07-31
 
 이 문서는 스터디 진행 상황의 단일 기록 원본이다. 회차 종료 시 최신 항목을 위에 추가하고, 성공뿐 아니라 실패·축소·보류 판정도 증빙과 함께 남긴다.
 
@@ -13,7 +13,7 @@
 | 단계 | 상태 | 현재 결과 / 진입 조건 |
 |---|---|---|
 | 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.5 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리 |
-| Week 0 — 환경·위험 제거 | **진행 중** | S0-1 Docker·volume·Zenoh·RViz 검증 완료; S0-2 공식 smoke test부터 계속 |
+| Week 0 — 환경·위험 제거 | **진행 중** | S0-1 Docker 환경과 S0-2 공식 Gazebo·MoveIt smoke test 완료; S0-3 핵심 위험 3종 spike부터 계속 |
 | Week 1 — ROS 2 시스템 뼈대 | 대기 | Week 0 Gate 통과 후 시작 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
 | Week 3 — RGB-D 인식 통합 | 대기 | Week 2 Gate 통과 후 시작 |
@@ -25,15 +25,26 @@
 ## 다음 작업
 
 - [x] Session 0-1: ROBOTIS Docker 환경 구축
-- [ ] Session 0-2: 공식 Gazebo·MoveIt smoke test
+- [x] Session 0-2: 공식 Gazebo·MoveIt smoke test
 - [ ] Session 0-3: RGB-D, pose 추종/reset, pose goal·IK mode spike
 - [x] `docs/setup/docker.md`에 S0-1 환경 기록
-- [ ] S0-2 종료 시 `docs/setup/docker.md`에 공식 smoke test 결과 추가
+- [x] S0-2 종료 시 `docs/setup/docker.md`에 공식 smoke test 결과 추가
 - [ ] `docs/setup/week0_spike.md`에 동결값과 Gate 판정 기록
 
 세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 0](./curriculum.md#6-week-0--환경-구축과-위험-제거)을 따른다.
 
 ## 회차 로그
+
+### 2026-07-31 — Session 0-2 · 공식 Gazebo·MoveIt smoke test
+
+- **상태:** 완료
+- **목표:** 공식 OpenMANIPULATOR-X 시뮬레이션에서 Gazebo·RViz 동시 유지, arm·gripper 동작, 네 토픽과 sim time, joint state 일치, 2회 재현을 확인
+- **수행:** Zenoh router를 별도 shell에 유지한 채 `open_manipulator_x_gazebo.launch.py`와 `open_manipulator_x_moveit.launch.py use_sim:=true`를 실행했다. controller 3개와 MoveIt action server를 확인하고 RViz에서 arm `home`·`init`, gripper `open`·`close`를 계획·실행했다. `/joint_states`, `/tf`, `/tf_static`, `/clock`, sim time과 clean stop을 확인하고 같은 smoke test를 2회 수행했다.
+- **결과:** controller 3개가 모두 `active`, arm·gripper의 모든 plan/execute가 `SUCCEEDED`, action server는 arm·gripper 각각 1개였다. 2회차 실측은 `/tf` 약 `20 Hz`, `/clock` 약 `200 Hz`, `/joint_states` 305초 유지 후 `99.617 Hz`였고 시간 간격은 모두 양수였다. gripper 좌우 관절은 open 약 `0.01892`, close 약 `-0.00992`로 일치했다. MoveIt·Gazebo 로그의 Zenoh timestamp 오류는 각각 0건이었으며, 종료 뒤 router만 남긴 상태에서 `ros2 node list --no-daemon`이 빈 출력임을 확인하고 router까지 종료했다. 운영 판정은 **2회 재현 완료**다.
+- **문제:** 1회차에서 주인님 PC에만 Zenoh `incoming timestamp ... exceeding delta 500ms` 오류와 `ros2 topic hz`의 음수 간격이 반복됐고 팀원 PC에서는 같은 오류가 발생하지 않았다. Windows 외부 시각 오차 약 `2.87 s`, WSL 시각 offset 약 `2.50 s`를 확인해 공통 ROS·router 설정이 아니라 해당 PC의 Windows↔WSL 시각 동기화 문제로 분리했다.
+- **결정:** Windows 시간을 동기화하고 WSL을 정상 종료·재기동한 뒤 외부 시각 오차를 ms 단위로 낮췄다. 팀 공통 환경은 변경하지 않으며 같은 오류가 특정 PC에서만 나타날 때 해당 PC의 NTP offset을 먼저 확인한다. 기능이 정상 동작한 1회차와 시간 보정 뒤 전체 기준을 통과한 2회차를 Session 0-2의 두 재현으로 확정한다.
+- **다음:** Session 0-3에서 RGB-D topic/registration, pose 추종·reset backend, 코드 pose goal·IK mode의 핵심 위험 3종을 검증하고 `docs/setup/week0_spike.md`를 작성
+- **증빙:** [Docker 개발 환경과 S0-2 결과](./docs/setup/docker.md), [Session 0-2 실행 가이드](./guides/2026-07-29-session-0-2-gazebo-moveit-smoke-test.html)
 
 ### 2026-07-29 — Session 0-1 · ROBOTIS Docker 환경 구축
 

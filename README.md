@@ -2,9 +2,9 @@
 
 ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤플레이스 시스템을 처음부터 반복 평가까지 완주하는 2인 스터디입니다.
 
-> **현재 상태 — 2026-07-29**
+> **현재 상태 — 2026-07-31**
 >
-> 실행 커리큘럼 `v3.5.5` · **Session 0-1 Docker 환경 구축 완료** · 다음 Session 0-2 공식 smoke test
+> 실행 커리큘럼 `v3.5.5` · **Session 0-1·0-2 완료** · 다음 Session 0-3 핵심 위험 3종 spike
 
 ## 바로가기
 
@@ -77,7 +77,7 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 ├── docs/
 │   ├── README.md                     # 전문 산출물 경로표
 │   ├── setup/
-│   │   ├── docker.md                 # S0-1에서 최초 작성
+│   │   ├── docker.md                 # S0-1 최초 작성 · S0-2 smoke test 갱신
 │   │   └── week0_spike.md            # S0-3에서 최초 작성
 │   ├── system_architecture.md        # S1 최초 작성 · S2~S3·S10 갱신 · S12 최종화
 │   ├── frames.md                     # S3 최초 작성 · S5·S7·S9 갱신 · S12 최종화
