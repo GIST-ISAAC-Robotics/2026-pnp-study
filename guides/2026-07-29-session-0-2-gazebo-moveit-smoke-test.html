@@ -600,9 +600,12 @@ ros2 control list_controllers --help | head</pre>
           판정되어 두 <code>rev-parse</code> 명령이 모두 실패했습니다. 아래처럼
           <b>이 저장소 경로 하나만</b> 신뢰 대상으로 등록한 뒤 두 명령을 다시 실행합니다.
         </p>
-        <pre>git config --global --add safe.directory /root/ros2_ws/src/open_manipulator
+        <div class="code-block">
+          <div class="code-head"><b>Bash · 오류가 발생했을 때만</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
+<pre>git config --global --add safe.directory /root/ros2_ws/src/open_manipulator
 git -C /root/ros2_ws/src/open_manipulator rev-parse --abbrev-ref HEAD
 git -C /root/ros2_ws/src/open_manipulator rev-parse HEAD</pre>
+        </div>
         <p>
           <code>safe.directory '*'</code>처럼 모든 저장소를 허용하지 않습니다. 재실행 결과가
           branch <code>jazzy</code>와 위 commit이 아니거나 오류가 계속되면 Step 0-5로 넘어가지
