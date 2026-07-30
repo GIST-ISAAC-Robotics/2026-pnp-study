@@ -539,8 +539,9 @@
         </p>
         <p>
           ② 설치된 <code>ros_gz_bridge 1.0.22</code>는 <code>SetEntityPose</code> 서비스를
-          한 줄 명령으로 bridge합니다. <code>Entity.MODEL</code>의 실제 값은 <b><code>2</code></b>이며,
-          초안의 추정치 <code>6</code>은 SENSOR입니다.
+          한 줄 명령으로 bridge합니다. 공식 메시지 정의에서 <code>Entity.MODEL</code>은
+          <b><code>2</code></b>, <code>Entity.SENSOR</code>는 <code>6</code>입니다.
+          타입 번호를 직접 추측하지 말고 해당 상수를 사용합니다.
         </p>
         <p>
           ③ <code>simulation_interfaces</code> 정의는 설치돼 있지만 <code>/gzserver/*</code> provider는
@@ -1599,7 +1600,7 @@ find pnp_spike -maxdepth 3 -type f -print | sort</pre>
           <strong>접근축은 <code>+X_tool</code>입니다.</strong> URDF의
           <code>end_effector_joint</code>는 <code>link5</code>에서 +X로 0.126 m 뻗고 finger는
           ±Y로 움직입니다. 따라서 코드는 회전 행렬의 <b>첫 번째 열</b>을 접근축으로 사용합니다.
-          초안처럼 세 번째 열(+Z)을 쓰면 tilt 판정이 전부 틀립니다.
+          세 번째 열(+Z)은 이 모델의 접근축이 아니므로 사용하면 tilt 판정이 틀어집니다.
         </p>
       </div>
       <div class="code-block">
