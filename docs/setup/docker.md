@@ -1,9 +1,9 @@
-# Docker 개발 환경 (Session 0-1)
+# Docker 개발 환경과 공식 smoke test (Session 0-1·0-2)
 
-- 수행일: 2026-07-29
+- 수행일: 2026-07-29 (S0-1) · 2026-07-31 (S0-2)
 - 담당: `leejinh0225` (메인 PC)
-- 결과: **완료**
-- 다음 회차: Session 0-2 · 공식 Gazebo·MoveIt smoke test
+- 결과: **Session 0-1·0-2 완료**
+- 다음 회차: Session 0-3 · 핵심 위험 3종 spike
 
 ## 1. Windows / WSL host
 
@@ -142,5 +142,136 @@ cd ~/open_manipulator
 ./docker/container.sh enter
 ros2 run rmw_zenoh_cpp rmw_zenohd
 ```
+
+## 11. Session 0-2 · 공식 Gazebo·MoveIt smoke test
+
+### 11.1 실행 환경과 명령
+
+Session 0-1에서 확정한 ROBOTIS `jazzy` commit
+`32975f87efdb089e82c9ad103f068ef532aabfd2`, image
+`robotis/open-manipulator:5.0.0`, `rmw_zenoh_cpp`, `ROS_DOMAIN_ID=30` 환경을
+그대로 사용했다. router를 별도 container shell에서 계속 실행한 뒤 Gazebo와 MoveIt을
+순서대로 올렸다.
+
+```bash
+# T0 · router
+ros2 run rmw_zenoh_cpp rmw_zenohd
+
+# T1 · Gazebo
+ros2 launch open_manipulator_bringup open_manipulator_x_gazebo.launch.py
+
+# T2 · MoveIt + RViz
+ros2 launch open_manipulator_moveit_config \
+  open_manipulator_x_moveit.launch.py use_sim:=true
+```
+
+### 11.2 준비 gate
+
+| 항목 | 결과 |
+|---|---|
+| 필수 토픽 | `/clock`, `/joint_states`, `/tf`, `/tf_static` 모두 publisher 확인 |
+| controller | `joint_state_broadcaster`, `arm_controller`, `gripper_controller` 모두 `active` |
+| MoveIt node | `/move_group`, `/rviz2_moveit` 확인 |
+| sim time | `move_group=true`, `rviz2_moveit=true`, `robot_state_publisher=false` |
+| action server | `/arm_controller/follow_joint_trajectory` 1개, `/gripper_controller/gripper_cmd` 1개 |
+| RViz | MotionPlanning `Status: Ok`, RobotModel 표시 |
+
+`robot_state_publisher=false`는 공식 Gazebo launch가 해당 노드에 `use_sim_time`을
+명시하지 않는 현재 구성의 예상값이다. `/tf` 수신과 RViz 상태가 정상이므로 임의로
+변경하지 않았다.
+
+### 11.3 arm·gripper 실행 결과
+
+RViz MotionPlanning에서 매 동작의 Start State를 `<current>`로 두고 Plan 성공 뒤
+Execute를 눌렀다.
+
+| 동작 | 결과 | 완료 직후 관절값 |
+|---|---|---|
+| arm `home` | plan/execute `SUCCEEDED` | `joint2=-1.00002`, `joint3=0.70004`, `joint4=0.29996` |
+| arm `init` | plan/execute `SUCCEEDED` | `joint1~4` 절댓값 최대 약 `4.5e-5` |
+| gripper `open` | plan/execute `SUCCEEDED` | left=`0.018919`, right=`0.018919` |
+| gripper `close` | plan/execute `SUCCEEDED` | left=`-0.009917`, right=`-0.009917` |
+
+Gazebo의 joint state를 RViz가 같은 자세로 표시했고, gripper right mimic joint가 left와
+같은 값으로 움직였다.
+
+### 11.4 토픽·시간과 5분 유지
+
+| 항목 | 2회차 실측 |
+|---|---|
+| `/tf` | 약 `19.98~20.00 Hz`, interval `0.047~0.060 s` |
+| `/clock` | 약 `200.00 Hz`, interval `0.003~0.007 s` |
+| `/joint_states` 유지 | `2026-07-31 03:12:36~03:17:41 KST`, 총 `305 s` |
+| `/joint_states` 최종 | `99.617 Hz`, 최근 10,000 sample interval `0.004~0.021 s` |
+| Gazebo Zenoh timestamp 오류 | `0` |
+| MoveIt Zenoh timestamp 오류 | `0` |
+| GUI | Gazebo·RViz 동시 생존, RViz MotionPlanning `Status: Ok` |
+
+`ros2 topic hz`를 정해진 시간 뒤 종료할 때의 wait-set invalid-context 한 줄은
+`Ctrl+C` 또는 `timeout`으로 context를 종료하면서 생긴 측정 종료 메시지다. 실행 중
+timestamp 역행이나 topic 단절로 판정하지 않았다.
+
+### 11.5 두 차례 재현 판정
+
+| 회차 | 판정 | 근거 |
+|---|---|---|
+| 1회차 | **성공으로 확정** | Gazebo·RViz, controller, arm·gripper와 topic 흐름이 동작했다. 메인 PC의 host clock skew 때문에 Zenoh timestamp 오류가 섞였지만 팀원 PC에서는 같은 오류가 없었고 공통 launch·router 문제는 아니었다. |
+| 2회차 | **성공** | 시간 보정 뒤 전체 준비 gate, 네 동작, 네 토픽, sim time, 305초 유지, joint state 일치와 clean stop을 통과했고 timestamp 오류는 0건이었다. |
+
+운영 결정에 따라 기능이 정상 동작한 1회차와 시간 보정 뒤 전체 기준을 통과한 2회차를
+Session 0-2의 두 재현으로 인정한다.
+
+### 11.6 메인 PC에서만 발생한 시각 동기화 문제
+
+- 증상: Zenoh가 `incoming timestamp ... exceeding delta 500ms is rejected`를
+  반복 출력하고 `ros2 topic hz`의 최소 interval이 약 `-2.49 s`로 표시됨
+- 범위: 주인님 메인 PC에서만 재현됐으며 팀원 PC에는 동일 오류가 없었음
+- 원인 분리: Windows의 `time.windows.com` 대비 오차 약 `-2.87 s`, WSL NTP offset
+  약 `-2.50 s`를 확인. router 중복이나 Gazebo·MoveIt 중복 process는 없었음
+- 조치: Windows 「날짜 및 시간」에서 시간을 동기화한 뒤 MoveIt → Gazebo → router
+  순서로 정상 종료하고 `wsl --shutdown` 후 재기동
+- 결과: 동기화 직후 외부 시각 오차 약 `2~3 ms`, 시험 종료 뒤 재확인 약 `68 ms`.
+  Windows↔WSL 비교도 명령 실행 지연을 포함해 약 `93 ms`였고 WSL NTP 동기화 상태는
+  `yes`
+
+같은 오류가 특정 PC에서만 발생하면 팀 공통 ROS 설정을 바꾸기 전에 해당 PC에서 다음을
+확인한다.
+
+```powershell
+w32tm /stripchart /computer:time.windows.com /samples:5 /dataonly
+```
+
+오차가 Zenoh 기준 `500 ms`를 넘거나 topic interval이 음수라면 실행 중인 작업을 먼저
+clean stop하고 Windows 시간을 동기화한다. 그 뒤 `wsl --shutdown`으로 WSL 시계를
+재생성하고 container와 router부터 다시 시작한다. `wsl --shutdown`은 모든 WSL shell과
+container process를 끊으므로 실행 중간에 바로 사용하지 않는다. 정상 기준은 외부 시각
+오차가 충분히 `500 ms` 아래이고, topic interval이 모두 양수이며, 새 로그에 timestamp
+오류가 반복되지 않는 것이다.
+
+### 11.7 관찰된 비차단 경고
+
+- MoveIt의 `Cannot infer URDF/SRDF` 뒤 `/robot_description` topic fallback
+- `/recognize_objects` action server 미사용 안내
+- RViz 내부 node의 동일 이름 경고 — 실제 RViz process는 1개
+- Gazebo physics engine의 mimic constraint 미지원 안내 — ros2_control joint state에서
+  left/right 값 일치 확인
+- SIGINT clean stop 때 launch가 자식 process의 exit code `-2`를 기록하는 종료 로그
+
+위 메시지만으로 실패 판정하지 않았고 node·controller·action server·관절값과 실제 GUI
+동작을 함께 확인했다.
+
+### 11.8 clean stop
+
+1. MoveIt·RViz에 SIGINT
+2. Gazebo launch에 SIGINT
+3. router가 살아 있는 동안 `ros2 node list --no-daemon`이 빈 출력이고
+   `gz sim`, `move_group`, `rviz2` process가 없는지 확인
+4. 이번 회차에서 띄운 router에 SIGINT
+5. router·Gazebo·MoveIt·RViz·robot_state_publisher·bridge process가 모두 없는지 확인
+
+최종 확인을 통과했다. `ros2 node list --no-daemon`의 완전한 빈 출력은 다른 ROS 작업이
+없는 이 격리 환경에서 정상이다. 다른 작업이 함께 실행 중이라면 전체가 비어야 하는 것이
+아니라 `/move_group`, `/rviz2_moveit`, `/controller_manager`,
+`/robot_state_publisher`가 사라졌는지를 판정한다.
 
 인증 코드·토큰·개인 이메일 등 비밀값은 기록하지 않았다.
