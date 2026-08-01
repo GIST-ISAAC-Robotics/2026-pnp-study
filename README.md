@@ -46,6 +46,7 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 
 | 제작일 | 회차 | 가이드 |
 |---|---|---|
+| 2026-07-31 | Session 0-3 | [핵심 위험 3종 spike](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-31-session-0-3-week0-spikes.html) |
 | 2026-07-29 | Session 0-2 | [공식 Gazebo·MoveIt smoke test](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-29-session-0-2-gazebo-moveit-smoke-test.html) |
 | 2026-07-28 | Session 0-1 | [ROBOTIS Docker 환경 구축](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-28-session-0-1-docker-setup.html) |
 
@@ -72,8 +73,10 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 │   ├── README.md                     # 새 가이드 추가·관리 규칙
 │   ├── index.html                    # GitHub Pages 가이드 보관함
 │   ├── guides.json                   # 가이드 목록의 단일 원본
+│   ├── assets/                       # 가이드에서 내려받는 예제 코드·모델
 │   ├── 2026-07-28-session-0-1-docker-setup.html
-│   └── 2026-07-29-session-0-2-gazebo-moveit-smoke-test.html
+│   ├── 2026-07-29-session-0-2-gazebo-moveit-smoke-test.html
+│   └── 2026-07-31-session-0-3-week0-spikes.html
 ├── docs/
 │   ├── README.md                     # 전문 산출물 경로표
 │   ├── setup/

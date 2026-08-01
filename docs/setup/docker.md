@@ -249,7 +249,7 @@ Gazebo 또는 MoveIt 동작 실패가 아니라 Git의 저장소 소유권 보�
 
 - 증상: Zenoh가 `incoming timestamp ... exceeding delta 500ms is rejected`를
   반복 출력하고 `ros2 topic hz`의 최소 interval이 약 `-2.49 s`로 표시됨
-- 범위: 메인 실습 PC에서만 재현됐으며 팀원 PC에는 동일 오류가 없었음
+- 범위: 메인 PC에서만 재현됐으며 팀원 PC에는 동일 오류가 없었음
 - 원인 분리: Windows의 `time.windows.com` 대비 오차 약 `-2.87 s`, WSL NTP offset
   약 `-2.50 s`를 확인. router 중복이나 Gazebo·MoveIt 중복 process는 없었음
 - 조치: Windows 「날짜 및 시간」에서 시간을 동기화한 뒤 MoveIt → Gazebo → router

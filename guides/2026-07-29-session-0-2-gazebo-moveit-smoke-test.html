@@ -876,12 +876,28 @@ ros2 action info -c /gripper_controller/gripper_cmd</pre>
       <table>
         <thead><tr><th style="width:110px">Planning group</th><th style="width:120px">Named state</th><th>관절 값</th></tr></thead>
         <tbody>
-          <tr><td rowspan="2"><b>arm</b><br><span style="font-size:12px">joint1~4 + end_effector_joint</span></td><td class="cmd">init</td><td>joint1~4 모두 <code>0</code> — 곧게 선 자세</td></tr>
+          <tr><td rowspan="2"><b>arm</b><br><span style="font-size:12px">joint1~4 + end_effector_joint</span></td><td class="cmd">init</td><td>joint1~4 모두 <code>0</code> — 위팔은 위로, 아래팔부터 앞으로 뻗은 ㄱ자 자세</td></tr>
           <tr><td class="cmd">home</td><td>joint1 <code>0</code>, joint2 <code>-1</code>, joint3 <code>0.7</code>, joint4 <code>0.3</code></td></tr>
           <tr><td rowspan="2"><b>gripper</b><br><span style="font-size:12px">left 명령 + right mimic</span></td><td class="cmd">open</td><td>gripper_left_joint <code>0.019</code></td></tr>
           <tr><td class="cmd">close</td><td>gripper_left_joint <code>-0.01</code></td></tr>
         </tbody>
       </table>
+      <div class="callout info">
+        <p>
+          <strong><code>init</code>은 팔이 일직선으로 서는 자세가 아닙니다.</strong>
+          <code>open_manipulator_x_arm.urdf.xacro</code>의 joint origin은 모두 <code>rpy="0 0 0"</code>이라
+          관절 영점에 회전 offset은 없습니다. 대신 링크가 이어지는 방향이 꺾여 있습니다.
+          <code>joint2 → joint3</code> offset이 <code>0.024 0 0.128</code>이라 위팔은 거의 위로 서고,
+          <code>joint3 → joint4</code> offset이 <code>0.124 0 0</code>이라 아래팔부터는 앞으로 뻗습니다.
+          그래서 네 관절 값이 모두 <code>0</code>이어도 화면에는 ㄱ자로 보이며, 이때 end effector는
+          <code>world</code>(=<code>link1</code>) 기준 약 <code>x 0.286 m</code>, <code>z 0.188 m</code>에 놓입니다.
+        </p>
+        <p>
+          위팔의 가로 offset <code>0.024 m</code> 때문에 위팔 방향은 연직에서
+          <code>atan(0.024 / 0.128) ≈ 10.62°</code> 기울어져 있습니다. 관절 값이 <code>0</code>이라는 것과
+          링크가 일직선이라는 것은 다르므로, 이후 회차에서 pose goal을 손으로 계산할 때 이 offset을 함께 넣습니다.
+        </p>
+      </div>
 
       <h3>C-2 · 실행 순서 — 매번 현재 상태에서 시작</h3>
       <ol>
