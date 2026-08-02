@@ -4,7 +4,7 @@
 - 담당: `leejinh0225` (메인 PC)
 - 결과: **부분 완료**
 - Week 0 Gate 판정: **조건부 통과**
-- 미완료 확인: RGB-depth registration 캡처·두 사람 확인, Session 5의 IK mode 재동결
+- 미완료 확인: 두 사람 확인, Session 5의 IK mode 재동결
 
 ## 1. spike A — RGB-D
 
@@ -16,16 +16,16 @@
 | RGB | `/rgbd_camera/image` · 320×240 · `rgb8` |
 | depth | `/rgbd_camera/depth_image` · 320×240 · `32FC1` |
 | CameraInfo | `/rgbd_camera/camera_info` · RGB/depth 공용 topic |
-| intrinsics 기준값 | `fx=fy=277.191356`, `cx=160`, `cy=120`; 이번 회차의 CameraInfo 전문은 별도 로그로 보존하지 못함 |
-| registration | 같은 RGB-D sensor·해상도·CameraInfo 경로는 확인했으나, 경계 3점 육안 비교 캡처가 증빙으로 남지 않음 |
+| CameraInfo 실제값 | 320×240, `plumb_bob`, distortion 0; `fx=fy=277.19135641132203`, `cx=160`, `cy=120` |
+| registration | 하단 `RGBD: image`·`RGBD: depth`에서 상자·작은 물체·원뿔의 좌우·상단 경계가 같은 픽셀 위치에 대응함을 실습 중 확인 |
 | optical frame | `rgbd_camera_optical_frame`; depth probe의 실제 `frame_id`로 확인 |
 | depth 단위 | `32FC1` canonical depth이므로 REP-118에 따라 m |
 | depth 통계 | valid 43464, NaN 0, inf 33336, zero 0, negative 0; min 0.115979m, max 9.240039m, center 1.949998m |
 | 5분 유지 최초 결과 | RGB 약 12.701Hz, depth 약 12.710Hz였으나 `min=-2.427s`, Zenoh timestamp 거부 RGB 206건·depth 226건으로 무효 |
 | 시간 보정 | Windows Time 서비스 시작·강제 동기화 전 WSL/컨테이너가 Windows보다 약 0.7~0.85초 뒤짐; 보정 뒤 약 0.09~0.22초 차이로 감소 |
 | 5분 유지 재시험 | RGB 14.047Hz, depth 14.048Hz; min 0.055s/0.056s, max 0.107s, timestamp 오류 각 0건 |
-| 역투영 조합 | `/rgbd_camera/image` + `/rgbd_camera/camera_info` + `rgbd_camera_optical_frame`; registration 캡처 뒤 최종 확정 |
-| 판정 | `sensor_path_status=deferred`; live 수신과 단위·frame·5분 안정성은 확인, registration 증빙은 Week 3 진입 전에 보완 |
+| 역투영 조합 | `/rgbd_camera/image` + `/rgbd_camera/camera_info` + `rgbd_camera_optical_frame` |
+| 판정 | `sensor_path_status=live`; live 수신·단위·frame·CameraInfo·registration·5분 안정성 확인 완료 |
 
 ### A의 실패와 해결 증빙
 
@@ -132,7 +132,7 @@ rerun_condition=Session 5에서 tool_frame_offset과 workspace grid를 재검증
 
 | spike | 결과 | 계획 변경 |
 |---|---|---|
-| A | 5분 재시험 성공, registration 증빙 미완료 | `sensor_path_status=deferred`; Week 3 진입 전에 경계 3점 캡처로 registration 확정 |
+| A | live RGB-D·CameraInfo·registration·5분 재시험 성공 | `sensor_path_status=live`; Week 3까지 유지할 P1 입력 조합 확정 |
 | B | B-1·B-2·B-3 성공 | T1 유지; reset backend의 비원자성은 최종 robot world에서 재검증 |
 | C | `position-only / provisional`, 안전점 p1 검증 | Session 5에서 tool offset·grid 재시험 후 `final` 재동결; 그 전 6A 금지 |
 
@@ -140,9 +140,8 @@ rerun_condition=Session 5에서 tool_frame_offset과 workspace grid를 재검증
 
 - 판정: **조건부 통과**
 - 통과 근거: Docker·Gazebo·MoveIt 환경, B의 one-shot·연속 추종·actual pose/twist reset 3회, C의 코드 기반 안전점 1개가 검증됐다.
-- 조건 1: RGB-depth 경계 3점 registration 캡처와 CameraInfo 실제값을 Week 3 진입 전에 보존한다.
-- 조건 2: Session 5에서 IK workspace·tool offset을 재검증하고 `ik_mode_status=final`로 재동결하기 전에는 Session 6A에 진입하지 않는다.
-- 조건 3: Gate 판정과 fallback을 두 사람이 확인한다. 현재 두 번째 확인자는 미기록이다.
+- 조건 1: Session 5에서 IK workspace·tool offset을 재검증하고 `ik_mode_status=final`로 재동결하기 전에는 Session 6A에 진입하지 않는다.
+- 조건 2: Gate 판정과 fallback을 두 사람이 확인한다. 현재 두 번째 확인자는 미기록이다.
 
 ## 6. 증빙 파일과 hash
 

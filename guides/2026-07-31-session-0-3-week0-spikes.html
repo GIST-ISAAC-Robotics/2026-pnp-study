@@ -1048,6 +1048,17 @@ timeout -s INT 10 ros2 run tf2_ros tf2_echo \
         확인합니다. 세 위치가 모두 맞으면 화면을 캡처하고 <b>registration=정렬됨</b>으로 기록합니다.
         경계가 어긋나면 임의로 통과시키지 말고 실제 모습을 캡처합니다.
       </p>
+      <div class="callout warn">
+        <p>
+          <strong>아래 depth probe를 실행하기 전에 이 화면 캡처부터 남깁니다.</strong>
+          depth 코드가 성공해도 registration 확인을 대신하지 않습니다. 비교 대상은 위쪽의 별도
+          RGB·depth camera가 아니라, 같은 센서에서 나온 하단 <code>RGBD: image</code>와
+          <code>RGBD: depth</code> 두 패널입니다.
+        </p>
+      </div>
+      <div class="next-check">
+        하단 RGBD 두 패널에서 중앙·좌·우 경계 세 곳을 비교하고, 두 패널이 함께 보이는 캡처를 남겼습니다.
+      </div>
       <p>
         depth 값은 아래 제공 스크립트가 한 프레임을 받아 유효 최솟값·최댓값과
         <code>inf</code>·NaN·0 개수를 계산합니다. 스크립트 내용을 직접 입력하지 않습니다.
