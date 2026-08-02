@@ -13,8 +13,8 @@
 | 단계 | 상태 | 현재 결과 / 진입 조건 |
 |---|---|---|
 | 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.5 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리 |
-| Week 0 — 환경·위험 제거 | **진행 중** | S0-3 실행·결과 문서 완료, Gate 조건부 통과; A registration 증빙·두 사람 확인, C의 Session 5 `final` 재동결 조건 추적 |
-| Week 1 — ROS 2 시스템 뼈대 | 대기 | Week 0 조건부 판정을 두 사람이 확인한 뒤 시작 가능; A는 Week 3 전, C는 6A 전 재동결 |
+| Week 0 — 환경·위험 제거 | **진행 중** | S0-3 실행·결과 문서와 A registration 보완 완료, Gate 조건부 통과; 두 사람 확인과 C의 Session 5 `final` 재동결 조건 추적 |
+| Week 1 — ROS 2 시스템 뼈대 | 대기 | Week 0 조건부 판정을 두 사람이 확인한 뒤 시작 가능; C는 6A 전 재동결 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
 | Week 3 — RGB-D 인식 통합 | 대기 | Week 2 Gate 통과 후 시작 |
 | Week 4 — 신뢰성·평가·정리 | 대기 | Week 3 Gate 통과 후 시작 |
@@ -30,7 +30,7 @@
 - [x] `docs/setup/docker.md`에 S0-1 환경 기록
 - [x] S0-2 종료 시 `docs/setup/docker.md`에 공식 smoke test 결과 추가
 - [x] `docs/setup/week0_spike.md`에 동결값과 Gate 판정 기록
-- [ ] RGB-depth registration 경계 3점 캡처와 CameraInfo 실제값 보존 (Week 3 진입 전)
+- [x] RGB-depth registration 경계 3점과 CameraInfo 실제값 확인
 - [ ] Week 0 조건부 Gate와 fallback 두 사람 확인
 - [ ] Session 5에서 IK workspace·tool offset 재시험 후 `ik_mode_status=final` 재동결 (6A 진입 전)
 
@@ -43,10 +43,10 @@
 - **상태:** 진행 중 — 실행과 E 기록 완료, Week 0 Gate 조건부 통과
 - **목표:** RGB-D 입력·registration 계약, ROS 경로의 entity pose 추종과 actual pose/twist reset, 코드 pose goal과 IK mode를 검증하고 Week 0 Gate를 판정
 - **수행:** Gazebo `sensors_demo.sdf`의 image·depth·CameraInfo·points를 ROS로 bridge하고 32FC1 depth 통계와 optical frame을 확인했다. `week0_spike.sdf`에서 B-1 A→B→A, B-2 10Hz×5초 1-in-flight 추종, B-3 낙하 중 복합 reset을 수행했다. C에서는 실제 `position_only_ik` true/false를 각각 확인하고 세 안전점과 도달 불가능 목표를 코드로 실행했다. 반복된 Zenoh timestamp 오류는 모든 process를 종료한 뒤 Windows Time 서비스를 시작·강제 동기화하고 전체 topology를 재기동해 A 5분 측정과 C 두 mode를 다시 수행했다.
-- **결과:** A depth는 320×240 `32FC1`, `frame_id=rgbd_camera_optical_frame`, center 1.949998m였고 시간 보정 뒤 5분 실측은 RGB 14.047Hz·depth 14.048Hz, timestamp 오류 각 0건이었다. registration 캡처가 남지 않아 `sensor_path_status=deferred`다. B-1 세 호출과 실제 A→B→A가 성공했고, B-2는 50/50 완료·failure/drop/timeout 0·평균 RTT 1.596ms·최종 오차 0.015mm였다. B-3는 세 trial 모두 actual state 측정과 네 threshold를 통과했다. C 재시험에서 position-only는 세 점 모두 plan/execute 성공했지만 tilt는 p1 9.293°만 10° 이내였고, full-pose는 세 점 모두 plan 실패했다. `ik_mode=position-only`, `ik_mode_status=provisional`, 검증점 p1 `(0.16, 0, 0.12)`로 동결했다.
+- **결과:** A depth는 320×240 `32FC1`, `frame_id=rgbd_camera_optical_frame`, center 1.949998m였고 시간 보정 뒤 5분 실측은 RGB 14.047Hz·depth 14.048Hz, timestamp 오류 각 0건이었다. 보완 확인에서 실제 CameraInfo와 하단 RGBD image/depth의 상자·작은 물체·원뿔 경계 정합을 확인해 `sensor_path_status=live`로 확정했다. B-1 세 호출과 실제 A→B→A가 성공했고, B-2는 50/50 완료·failure/drop/timeout 0·평균 RTT 1.596ms·최종 오차 0.015mm였다. B-3는 세 trial 모두 actual state 측정과 네 threshold를 통과했다. C 재시험에서 position-only는 세 점 모두 plan/execute 성공했지만 tilt는 p1 9.293°만 10° 이내였고, full-pose는 세 점 모두 plan 실패했다. `ik_mode=position-only`, `ik_mode_status=provisional`, 검증점 p1 `(0.16, 0, 0.12)`로 동결했다.
 - **문제:** 최초 A 5분 로그에는 음수 간격 `-2.427s`와 Zenoh timestamp 거부 RGB 206건·depth 226건이 있었고, 최초 C 로그에도 같은 오류가 섞였다. 진단 당시 Windows Time 서비스가 정지돼 WSL/container가 Windows보다 약 0.7~0.85초 뒤져 500ms 제한을 넘었다. 가이드의 B-1은 존재하지 않는 `/usr/bin/time`을 사용했고, A-5-5의 미터 단위 근거와 C-4·C-5의 실제 판정·기록 절차도 부족했다.
-- **결정:** Windows 시간 동기화와 전체 process 재시작 뒤 오류 0건인 재시험 로그를 최종값으로 채택하고 최초 실패 로그도 보존한다. B는 T1과 복합 reset backend를 유지하되 비원자성은 최종 robot world에서 재검증한다. A는 Week 3 전 registration 증빙을 보완하고, C는 Session 5에서 tool offset·workspace grid를 재검증해 `final`로 재동결하기 전 6A 진입을 금지한다. 가이드는 REP-118 단위 근거, Bash 내장 `time`, C-4 로그 판정과 C-5 frame 확인 명령으로 보강한다.
-- **다음:** 팀원 한 명이 조건부 Gate와 fallback을 확인한 뒤 Session 1을 시작한다. A registration·CameraInfo 증빙은 Week 3 전, C의 `final` 재동결은 Session 5에서 완료한다.
+- **결정:** Windows 시간 동기화와 전체 process 재시작 뒤 오류 0건인 재시험 로그를 최종값으로 채택하고 최초 실패 로그도 보존한다. B는 T1과 복합 reset backend를 유지하되 비원자성은 최종 robot world에서 재검증한다. A는 실제 CameraInfo와 registration 경계 정합을 보완 확인해 live 경로로 닫고, C는 Session 5에서 tool offset·workspace grid를 재검증해 `final`로 재동결하기 전 6A 진입을 금지한다. 가이드는 REP-118 단위 근거, Bash 내장 `time`, C-4 로그 판정과 C-5 frame 확인 명령으로 보강한다.
+- **다음:** 팀원 한 명이 조건부 Gate와 fallback을 확인한 뒤 Session 1을 시작한다. C의 `final` 재동결은 Session 5에서 완료한다.
 - **증빙:** [Week 0 spike 결과와 동결값](./docs/setup/week0_spike.md), [Session 0-3 실행 가이드](./guides/2026-07-31-session-0-3-week0-spikes.html), container 영속 로그 `/workspace/week0_spike/logs/`
 
 ### 2026-07-31 — Session 0-2 · 공식 Gazebo·MoveIt smoke test
