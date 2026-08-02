@@ -936,7 +936,7 @@ timeout 10 ros2 topic echo /rgbd_camera/camera_info \
           <tr><td class="num">7</td><td>정렬 안 됨</td><td>사용할 aligned topic 이름 또는 별도 좌표 변환 경로를 확정해 기록합니다.</td></tr>
           <tr><td class="num">8</td><td><b>optical frame 축</b></td><td>raw <code>frame_id</code> 문자열만 보고 optical이라고 부르지 않습니다. Gazebo camera link의 +X forward·+Y left·+Z up과 ROS optical <code>+x right, +y down, +z forward</code> 사이의 standard transform을 선언하고, 알려진 점의 좌우·상하·거리 방향으로 확인합니다.</td></tr>
           <tr><td class="num">9</td><td>frame 보정</td><td>아래 static transform과 bridge <code>override_frame_id</code>를 함께 사용합니다. 이름만 바꾸고 transform을 생략하는 요술은 좌표계를 바꾸지 못합니다.</td></tr>
-          <tr><td class="num">10</td><td><b>depth 단위·invalid</b></td><td><code>32FC1</code> 한 프레임을 알려진 장면 거리와 비교해 m/mm를 판정하고, 유효 최솟값·최댓값과 <code>inf</code>·NaN·0 개수를 기록합니다. 설정값을 측정값으로 대신 쓰지 않습니다.</td></tr>
+          <tr><td class="num">10</td><td><b>depth 단위·invalid</b></td><td><code>/rgbd_camera/depth_image</code>가 <code>32FC1</code>이면 ROS REP-118의 canonical depth 표현이므로 픽셀값의 단위는 m입니다. 알려진 장면 거리와의 비교는 단위를 정하는 근거가 아니라 값이 상식적인지 확인하는 검산으로 사용합니다. 유효 최솟값·최댓값과 <code>inf</code>·NaN·0 개수도 함께 기록합니다.</td></tr>
           <tr><td class="num">11</td><td>5분 유지</td><td>RGB와 depth를 동시에 5분 측정해 끊김과 실제 평균 Hz를 기록합니다. publisher 설정값 30 Hz를 결과값으로 베끼지 않습니다.</td></tr>
         </tbody>
       </table>
@@ -1065,9 +1065,26 @@ python3 /workspace/week0_spike/scripts/depth_probe.py \
       </div>
       <p>
         성공하면 <code>DEPTH_PROBE</code>, <code>DEPTH_VALUES</code>, <code>DEPTH_RANGE_M</code>
-        세 줄이 나옵니다. <code>encoding=32FC1</code>과 해상도 320×240을 확인하고,
-        <code>DEPTH_RANGE_M</code>의 값이 화면 속 물체 거리와 같은 <b>미터 단위</b>인지 비교합니다.
+        세 줄이 나옵니다. <code>encoding=32FC1</code>과 해상도 320×240을 확인합니다.
         <code>DEPTH_PROBE_FAIL</code>이 나오면 그 줄을 기록하고 A 단계 fallback을 확인합니다.
+      </p>
+      <div class="callout info">
+        <p>
+          <strong>왜 미터인가.</strong> <code>DEPTH_RANGE_M</code>이라는 출력 이름이 단위의 증거는
+          아닙니다. 이 스크립트는 <code>/rgbd_camera/depth_image</code>를 구독하고
+          <code>encoding=32FC1</code>인지 검사합니다. ROS의
+          <a href="https://github.com/ros-infrastructure/rep/blob/master/rep-0118.rst#canonical-representation">REP-118 Depth Images 표준</a>은
+          이러한 canonical 32-bit float depth 영상의 각 픽셀을 카메라 Z축 방향의
+          <b>미터 단위 거리</b>로 정의합니다. 따라서 <code>center=1.949998</code>라면 중앙 픽셀의
+          깊이는 약 1.95 m입니다. 반대로 16-bit unsigned raw depth 표현은 mm일 수 있으므로
+          encoding을 확인하지 않고 숫자만 읽으면 안 됩니다.
+        </p>
+      </div>
+      <p>
+        마지막으로 화면 속 물체가 대략 그 거리에 보이는지 상식 검산하고,
+        <code>valid + nan + inf + zero + negative</code>가 <code>width × height</code>와 맞는지도
+        확인합니다. 예를 들어 이번 320×240 출력의 <code>valid=43464</code>와
+        <code>inf=33336</code>은 합계 76800으로 전체 픽셀 수와 일치합니다.
       </p>
       <div class="next-check">registration 캡처와 depth 단위·invalid 통계를 기록했습니다.</div>
 
@@ -1305,16 +1322,18 @@ gz model -m spike_cube -p</pre>
         <code>Entity.MODEL=2</code>를 확인한 뒤 아래 왕복을 실행합니다. 각 response의
         <code>success: true</code>, Gazebo 화면, 마지막 <code>gz model</code>의 실제 pose를
         모두 확인합니다. service 응답만 보고 큐브가 움직였다고 상상하지 않습니다.
+        이 컨테이너에는 별도 실행 파일 <code>/usr/bin/time</code>이 없으므로 설치가 필요 없는
+        Bash 내장 <code>time</code>과 <code>TIMEFORMAT</code>을 사용합니다.
       </p>
       <div class="code-block">
         <div class="code-head"><b>Bash · A(0.25, 0.00) → B(0.25, 0.10) → A</b><span class="where">Container (T3)</span><button class="copy">복사</button></div>
-<pre>for y in 0.00 0.10 0.00; do
+<pre>TIMEFORMAT='RTT_wall=%R s'
+for y in 0.00 0.10 0.00; do
   echo "target_y=$y"
-  /usr/bin/time -f "RTT_wall=%e s" \
-    ros2 service call \
-      /world/week0_spike/set_pose \
-      ros_gz_interfaces/srv/SetEntityPose \
-      "{entity: {name: spike_cube, type: 2}, pose: {position: {x: 0.25, y: $y, z: 0.025}, orientation: {w: 1.0}}}"
+  time ros2 service call \
+    /world/week0_spike/set_pose \
+    ros_gz_interfaces/srv/SetEntityPose \
+    "{entity: {name: spike_cube, type: 2}, pose: {position: {x: 0.25, y: $y, z: 0.025}, orientation: {w: 1.0}}}"
   sleep 1
   gz model -m spike_cube -p
 done 2&gt;&amp;1 | tee /workspace/week0_spike/logs/spike_b1.log</pre>
