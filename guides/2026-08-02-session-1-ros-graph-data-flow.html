@@ -307,8 +307,7 @@
         <a href="#step2">빌드</a>
         <a href="#step3">실행</a>
         <a href="#step4">Graph</a>
-        <a href="#step5">오류 입력</a>
-        <a href="#step6">YAML</a>
+        <a href="#step5">YAML 예제</a>
         <a href="#finish">마무리</a>
       </div>
     </nav>
@@ -321,7 +320,7 @@
       <h1>ROS graph와<br>데이터 흐름</h1>
       <p class="hero-lead">
         두 노드가 <code>PoseStamped</code>를 주고받는 가장 작은 시스템을 직접 만듭니다.
-        정상 pose는 받아들이고, 잘못된 frame·오래된 timestamp·workspace 밖 좌표는 이유와 함께 거부합니다.
+        YAML의 좌표를 읽어 발행하고, monitor가 같은 메시지를 받아 각 필드를 보여 주는 과정을 살펴봅니다.
       </p>
       <div class="pill-row">
         <span class="pill">예상 2~2.5시간</span>
@@ -338,7 +337,7 @@
       <h2>오늘은 “데이터가 어디서 와서 어디로 가는가”를 만듭니다</h2>
       <p class="subtitle">
         아직 카메라나 로봇 팔을 연결하지 않습니다. 인식 노드가 목표 좌표를 만들었다고 가정하고,
-        그 좌표를 다음 단계의 제어 로직이 안전하게 받을 수 있는지를 확인하는 뼈대를 만듭니다.
+        그 좌표가 topic을 지나 다음 노드에 도착하고 각 필드가 그대로 전달되는 과정을 확인합니다.
       </p>
 
       <div class="flow" aria-label="Session 1 데이터 흐름">
@@ -346,7 +345,7 @@
         <div class="flow-arrow">→</div>
         <div class="flow-topic"><b>/perception/target_pose</b><br><small>PoseStamped 데이터 통로</small></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-node"><b>target_pose_monitor</b><br><small>frame·시간·범위를 검사</small></div>
+        <div class="flow-node"><b>target_pose_monitor</b><br><small>받은 pose 필드를 로그로 표시</small></div>
       </div>
 
       <div class="grid">
@@ -354,7 +353,7 @@
         <div class="mini-card"><b>Topic</b><p>publisher에서 subscriber로 계속 흐르는 이름 붙은 데이터 통로입니다.</p></div>
         <div class="mini-card"><b>PoseStamped</b><p>위치·자세에 “어느 좌표계인지”와 “언제 측정했는지”를 붙인 메시지입니다.</p></div>
         <div class="mini-card"><b>QoS</b><p>메시지를 얼마나 신뢰성 있게, 몇 개까지 보관할지 정하는 전달 규칙입니다.</p></div>
-        <div class="mini-card"><b>Parameter</b><p>코드를 다시 쓰지 않고 frame, timeout, workspace 등을 바꾸는 설정값입니다.</p></div>
+        <div class="mini-card"><b>Parameter</b><p>코드를 다시 쓰지 않고 topic, 좌표, 발행 주기 등을 바꾸는 설정값입니다.</p></div>
         <div class="mini-card"><b>Launch</b><p>여러 노드와 설정을 한 명령으로 함께 시작하는 실행 묶음입니다.</p></div>
       </div>
 
@@ -365,10 +364,8 @@
       <h3>오늘 끝났다고 판단하는 기준</h3>
       <ul class="checklist">
         <li><input id="goal-graph" type="checkbox"><label for="goal-graph">두 노드와 <code>/perception/target_pose</code> 연결을 <code>rqt_graph</code> 또는 topic 상세 정보로 확인했습니다.</label><span class="tag">GRAPH</span></li>
-        <li><input id="goal-valid" type="checkbox"><label for="goal-valid">정상 pose에서 monitor의 <code>ACCEPT</code> 로그를 확인했습니다.</label><span class="tag">NORMAL</span></li>
-        <li><input id="goal-frame" type="checkbox"><label for="goal-frame">잘못된 frame에서 <code>FRAME_MISMATCH</code>를 확인했습니다.</label><span class="tag">FAULT</span></li>
-        <li><input id="goal-stale" type="checkbox"><label for="goal-stale">오래된 timestamp에서 <code>STALE_TIMESTAMP</code>를 확인했습니다.</label><span class="tag">FAULT</span></li>
-        <li><input id="goal-yaml" type="checkbox"><label for="goal-yaml">YAML의 workspace를 줄여 <code>OUT_OF_WORKSPACE</code>를 확인하고 원복했습니다.</label><span class="tag">CONFIG</span></li>
+        <li><input id="goal-flow" type="checkbox"><label for="goal-flow">publisher의 <code>PUBLISH</code>와 monitor의 <code>RECEIVE</code> 로그를 확인했습니다.</label><span class="tag">FLOW</span></li>
+        <li><input id="goal-yaml" type="checkbox"><label for="goal-yaml">YAML에서 바꾼 y 좌표가 두 노드의 로그에 반영되는 것을 확인했습니다.</label><span class="tag">YAML</span></li>
         <li><input id="goal-time" type="checkbox"><label for="goal-time">두 노드의 <code>use_sim_time</code>이 모두 <code>True</code>입니다.</label><span class="tag">TIME</span></li>
       </ul>
     </section>
@@ -397,7 +394,7 @@ docker ps --filter name=open_manipulator</pre>
         <div class="terminal-card"><span class="terminal-id">T1</span><b>Gazebo clock</b><p>GUI 없는 빈 world를 실행해 sim time을 만듭니다.</p></div>
         <div class="terminal-card"><span class="terminal-id">T2</span><b>Clock bridge</b><p>Gazebo <code>/clock</code>을 ROS 2로 전달합니다.</p></div>
         <div class="terminal-card"><span class="terminal-id">T3</span><b>Core launch</b><p>publisher와 monitor를 함께 실행합니다.</p></div>
-        <div class="terminal-card"><span class="terminal-id">T4</span><b>확인·오류 입력</b><p>topic, parameter, rqt_graph, fault 명령을 실행합니다.</p></div>
+        <div class="terminal-card"><span class="terminal-id">T4</span><b>확인·설정 예제</b><p>topic, parameter, rqt_graph, YAML 확인 명령을 실행합니다.</p></div>
       </div>
 
       <h3>0-3 · T0~T4에서 각각 container 진입</h3>
@@ -467,7 +464,7 @@ ros2 node list --no-daemon</pre>
           <thead><tr><th>패키지</th><th>이번 회차 역할</th><th>나중에 확장될 방향</th></tr></thead>
           <tbody>
             <tr><td><code>pnp_perception</code></td><td>임시 target pose 발행</td><td>RGB-D 인식 결과 발행</td></tr>
-            <tr><td><code>pnp_orchestrator</code></td><td>pose 계약 검사</td><td>작업 상태기계와 action 조정</td></tr>
+            <tr><td><code>pnp_orchestrator</code></td><td>받은 pose 내용 표시</td><td>작업 상태기계와 action 조정</td></tr>
             <tr><td><code>pnp_bringup</code></td><td>YAML과 launch</td><td>전체 시스템 상위 launch</td></tr>
           </tbody>
         </table>
@@ -546,7 +543,7 @@ find src/pnp_perception src/pnp_orchestrator src/pnp_bringup \
   | sort
 
 grep -n 'console_scripts' src/pnp_perception/setup.py src/pnp_orchestrator/setup.py
-grep -n 'use_sim_time\|workspace_max_x' src/pnp_bringup/config/common.yaml</pre>
+grep -n 'use_sim_time\|target_y' src/pnp_bringup/config/common.yaml</pre>
       </div>
       <p><code>target_pose_publisher.py</code>, <code>target_pose_monitor.py</code>, <code>common.yaml</code>, <code>core_skeleton.launch.py</code>가 모두 보여야 합니다.</p>
       <div class="next-check">세 패키지와 네 핵심 파일이 준비됐습니다.</div>
@@ -554,7 +551,7 @@ grep -n 'use_sim_time\|workspace_max_x' src/pnp_bringup/config/common.yaml</pre>
       <details class="fold">
         <summary>전체 코드 1 · target_pose_publisher.py <small>읽기용 · 직접 입력하지 않음</small></summary>
         <div class="fold-body">
-          <p>YAML에서 frame·좌표·주기·시간 offset을 읽고 <code>PoseStamped</code>를 발행합니다. <code>max_messages=1</code>은 뒤의 오류 입력에서 한 번만 발행하고 끝내기 위한 옵션입니다.</p>
+          <p>YAML에서 topic·frame·좌표·발행 주기를 읽고 현재 sim time을 넣은 <code>PoseStamped</code>를 계속 발행합니다.</p>
           <div class="code-block">
             <div class="code-head"><b>Python</b><span class="where">pnp_perception/target_pose_publisher.py</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>#!/usr/bin/env python3
@@ -568,16 +565,17 @@ from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPo
 
 
 class TargetPosePublisher(Node):
+    """Publish a configurable target pose for the Session 1 ROS graph exercise."""
+
     def __init__(self) -&gt; None:
         super().__init__('target_pose_publisher')
+
         self.declare_parameter('topic_name', '/perception/target_pose')
         self.declare_parameter('publish_rate_hz', 2.0)
         self.declare_parameter('frame_id', 'world')
         self.declare_parameter('target_x', 0.16)
         self.declare_parameter('target_y', 0.0)
         self.declare_parameter('target_z', 0.12)
-        self.declare_parameter('stamp_offset_sec', 0.0)
-        self.declare_parameter('max_messages', 0)
 
         self.topic_name = self.get_parameter('topic_name').value
         self.publish_rate_hz = float(self.get_parameter('publish_rate_hz').value)
@@ -587,8 +585,6 @@ class TargetPosePublisher(Node):
             float(self.get_parameter('target_y').value),
             float(self.get_parameter('target_z').value),
         )
-        self.stamp_offset_sec = float(self.get_parameter('stamp_offset_sec').value)
-        self.max_messages = int(self.get_parameter('max_messages').value)
         self._validate_parameters()
 
         qos = QoSProfile(
@@ -600,15 +596,13 @@ class TargetPosePublisher(Node):
         self.publisher = self.create_publisher(PoseStamped, self.topic_name, qos)
         self.timer = self.create_timer(1.0 / self.publish_rate_hz, self._publish_pose)
         self.published_count = 0
-        self.done = False
         self._waiting_for_clock_reported = False
 
         self.get_logger().info(
             'READY '
             f'topic={self.topic_name} frame_id={self.frame_id} '
             f'rate_hz={self.publish_rate_hz:.3f} '
-            f'position=({self.target[0]:.3f}, {self.target[1]:.3f}, {self.target[2]:.3f}) '
-            f'stamp_offset_sec={self.stamp_offset_sec:.3f} max_messages={self.max_messages}'
+            f'position=({self.target[0]:.3f}, {self.target[1]:.3f}, {self.target[2]:.3f})'
         )
 
     def _validate_parameters(self) -&gt; None:
@@ -620,25 +614,20 @@ class TargetPosePublisher(Node):
             raise ValueError('publish_rate_hz must be a finite positive number')
         if not all(math.isfinite(value) for value in self.target):
             raise ValueError('target_x, target_y and target_z must be finite')
-        if not math.isfinite(self.stamp_offset_sec) or self.stamp_offset_sec &lt; 0.0:
-            raise ValueError('stamp_offset_sec must be a finite non-negative number')
-        if self.max_messages &lt; 0:
-            raise ValueError('max_messages must be zero or a positive integer')
-
     def _publish_pose(self) -&gt; None:
         now_ns = self.get_clock().now().nanoseconds
-        offset_ns = int(self.stamp_offset_sec * 1_000_000_000)
-        if now_ns &lt;= offset_ns:
+
+        # When sim time is enabled, /clock can still be zero just after startup.
+        if now_ns == 0:
             if not self._waiting_for_clock_reported:
                 self.get_logger().info('WAITING_FOR_SIM_TIME')
                 self._waiting_for_clock_reported = True
             return
 
-        stamp_ns = now_ns - offset_ns
         message = PoseStamped()
         message.header.frame_id = self.frame_id
-        message.header.stamp.sec = stamp_ns // 1_000_000_000
-        message.header.stamp.nanosec = stamp_ns % 1_000_000_000
+        message.header.stamp.sec = now_ns // 1_000_000_000
+        message.header.stamp.nanosec = now_ns % 1_000_000_000
         message.pose.position.x = self.target[0]
         message.pose.position.y = self.target[1]
         message.pose.position.z = self.target[2]
@@ -653,17 +642,11 @@ class TargetPosePublisher(Node):
             f'position=({message.pose.position.x:.3f}, '
             f'{message.pose.position.y:.3f}, {message.pose.position.z:.3f})'
         )
-        if self.max_messages &gt; 0 and self.published_count &gt;= self.max_messages:
-            self.timer.cancel()
-            self.done = True
-
-
 def main(args=None) -&gt; None:
     rclpy.init(args=args)
     node = TargetPosePublisher()
     try:
-        while rclpy.ok() and not node.done:
-            rclpy.spin_once(node, timeout_sec=0.2)
+        rclpy.spin(node)
     except KeyboardInterrupt:
         pass
     finally:
@@ -681,44 +664,28 @@ if __name__ == '__main__':
       <details class="fold">
         <summary>전체 코드 2 · target_pose_monitor.py <small>읽기용 · 직접 입력하지 않음</small></summary>
         <div class="fold-body">
-          <p>수신 순서는 frame → timestamp → 유한한 숫자 → workspace입니다. 첫 실패 이유에서 즉시 끝내므로 로그가 무엇을 고쳐야 하는지 직접 알려 줍니다.</p>
+          <p>같은 topic을 구독하고, 받은 <code>PoseStamped</code>의 frame·timestamp·x·y·z를 로그로 보여 줍니다.</p>
           <div class="code-block">
             <div class="code-head"><b>Python</b><span class="where">pnp_orchestrator/target_pose_monitor.py</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>#!/usr/bin/env python3
-
-import math
 
 import rclpy
 from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
-from rclpy.time import Time
 
 
 class TargetPoseMonitor(Node):
+    """Receive target poses and print their important fields."""
+
     def __init__(self) -&gt; None:
         super().__init__('target_pose_monitor')
+
         self.declare_parameter('topic_name', '/perception/target_pose')
-        self.declare_parameter('expected_frame', 'world')
-        self.declare_parameter('max_age_sec', 0.5)
-        self.declare_parameter('future_tolerance_sec', 0.05)
-        self.declare_parameter('workspace_min_x', 0.10)
-        self.declare_parameter('workspace_max_x', 0.40)
-        self.declare_parameter('workspace_min_y', -0.20)
-        self.declare_parameter('workspace_max_y', 0.20)
-        self.declare_parameter('workspace_min_z', 0.05)
-        self.declare_parameter('workspace_max_z', 0.30)
 
         self.topic_name = self.get_parameter('topic_name').value
-        self.expected_frame = self.get_parameter('expected_frame').value
-        self.max_age_sec = float(self.get_parameter('max_age_sec').value)
-        self.future_tolerance_sec = float(self.get_parameter('future_tolerance_sec').value)
-        self.bounds = {
-            'x': (float(self.get_parameter('workspace_min_x').value), float(self.get_parameter('workspace_max_x').value)),
-            'y': (float(self.get_parameter('workspace_min_y').value), float(self.get_parameter('workspace_max_y').value)),
-            'z': (float(self.get_parameter('workspace_min_z').value), float(self.get_parameter('workspace_max_z').value)),
-        }
-        self._validate_parameters()
+        if not isinstance(self.topic_name, str) or not self.topic_name.startswith('/'):
+            raise ValueError('topic_name must be an absolute ROS topic beginning with /')
 
         qos = QoSProfile(
             history=HistoryPolicy.KEEP_LAST,
@@ -726,82 +693,24 @@ class TargetPoseMonitor(Node):
             reliability=ReliabilityPolicy.RELIABLE,
             durability=DurabilityPolicy.VOLATILE,
         )
-        self.subscription = self.create_subscription(PoseStamped, self.topic_name, self._on_pose, qos)
-        self.accepted_count = 0
-        self.rejected_count = 0
-        self.get_logger().info(
-            'READY '
-            f'topic={self.topic_name} expected_frame={self.expected_frame} '
-            f'max_age_sec={self.max_age_sec:.3f} '
-            f'workspace=x[{self.bounds["x"][0]:.3f},{self.bounds["x"][1]:.3f}] '
-            f'y[{self.bounds["y"][0]:.3f},{self.bounds["y"][1]:.3f}] '
-            f'z[{self.bounds["z"][0]:.3f},{self.bounds["z"][1]:.3f}]'
+        self.subscription = self.create_subscription(
+            PoseStamped,
+            self.topic_name,
+            self._on_pose,
+            qos,
         )
+        self.received_count = 0
 
-    def _validate_parameters(self) -&gt; None:
-        if not isinstance(self.topic_name, str) or not self.topic_name.startswith('/'):
-            raise ValueError('topic_name must be an absolute ROS topic beginning with /')
-        if not isinstance(self.expected_frame, str) or not self.expected_frame:
-            raise ValueError('expected_frame must be a non-empty string')
-        if not math.isfinite(self.max_age_sec) or self.max_age_sec &lt;= 0.0:
-            raise ValueError('max_age_sec must be a finite positive number')
-        if not math.isfinite(self.future_tolerance_sec) or self.future_tolerance_sec &lt; 0.0:
-            raise ValueError('future_tolerance_sec must be finite and non-negative')
-        for axis, (minimum, maximum) in self.bounds.items():
-            if not math.isfinite(minimum) or not math.isfinite(maximum):
-                raise ValueError(f'workspace {axis} bounds must be finite')
-            if minimum &gt; maximum:
-                raise ValueError(f'workspace_min_{axis} must be &lt;= workspace_max_{axis}')
-
-    def _reject(self, reason: str, detail: str) -&gt; None:
-        self.rejected_count += 1
-        self.get_logger().warning(f'REJECT count={self.rejected_count} reason={reason} {detail}')
+        self.get_logger().info(f'READY topic={self.topic_name}')
 
     def _on_pose(self, message: PoseStamped) -&gt; None:
-        if message.header.frame_id != self.expected_frame:
-            self._reject('FRAME_MISMATCH', f'expected={self.expected_frame} actual={message.header.frame_id}')
-            return
-
-        stamp_ns = Time.from_msg(message.header.stamp).nanoseconds
-        if stamp_ns == 0:
-            self._reject('ZERO_STAMP', 'timestamp=0.000000000')
-            return
-
-        age_sec = (self.get_clock().now().nanoseconds - stamp_ns) / 1_000_000_000.0
-        if age_sec &lt; -self.future_tolerance_sec:
-            self._reject('FUTURE_TIMESTAMP', f'age_sec={age_sec:.3f} tolerance_sec={self.future_tolerance_sec:.3f}')
-            return
-        if age_sec &gt; self.max_age_sec:
-            self._reject('STALE_TIMESTAMP', f'age_sec={age_sec:.3f} max_age_sec={self.max_age_sec:.3f}')
-            return
-
-        coordinates = {
-            'x': message.pose.position.x,
-            'y': message.pose.position.y,
-            'z': message.pose.position.z,
-        }
-        if not all(math.isfinite(value) for value in coordinates.values()):
-            self._reject('NON_FINITE_POSITION', f'position={coordinates}')
-            return
-
-        outside = [
-            axis for axis, value in coordinates.items()
-            if not self.bounds[axis][0] &lt;= value &lt;= self.bounds[axis][1]
-        ]
-        if outside:
-            self._reject(
-                'OUT_OF_WORKSPACE',
-                f'position=({coordinates["x"]:.3f},{coordinates["y"]:.3f},{coordinates["z"]:.3f}) '
-                f'outside={",".join(outside)}',
-            )
-            return
-
-        self.accepted_count += 1
+        self.received_count += 1
         self.get_logger().info(
-            'ACCEPT '
-            f'count={self.accepted_count} frame_id={message.header.frame_id} '
-            f'age_sec={age_sec:.3f} '
-            f'position=({coordinates["x"]:.3f},{coordinates["y"]:.3f},{coordinates["z"]:.3f})'
+            'RECEIVE '
+            f'count={self.received_count} frame_id={message.header.frame_id} '
+            f'stamp={message.header.stamp.sec}.{message.header.stamp.nanosec:09d} '
+            f'position=({message.pose.position.x:.3f},'
+            f'{message.pose.position.y:.3f},{message.pose.position.z:.3f})'
         )
 
 
@@ -839,30 +748,20 @@ if __name__ == '__main__':
     target_x: 0.16
     target_y: 0.0
     target_z: 0.12
-    stamp_offset_sec: 0.0
-    max_messages: 0
 
 target_pose_monitor:
   ros__parameters:
     use_sim_time: true
-    topic_name: /perception/target_pose
-    expected_frame: world
-    max_age_sec: 0.5
-    future_tolerance_sec: 0.05
-    workspace_min_x: 0.10
-    workspace_max_x: 0.40
-    workspace_min_y: -0.20
-    workspace_max_y: 0.20
-    workspace_min_z: 0.05
-    workspace_max_z: 0.30</pre>
+    topic_name: /perception/target_pose</pre>
           </div>
           <div class="code-block">
             <div class="code-head"><b>Python launch</b><span class="where">pnp_bringup/launch/core_skeleton.launch.py</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import PathJoinSubstitution
 
 
 def generate_launch_description() -&gt; LaunchDescription:
@@ -870,27 +769,30 @@ def generate_launch_description() -&gt; LaunchDescription:
     default_params_file = PathJoinSubstitution(
         [FindPackageShare('pnp_bringup'), 'config', 'common.yaml']
     )
-    return LaunchDescription([
-        DeclareLaunchArgument(
-            'params_file',
-            default_value=default_params_file,
-            description='Absolute path to the shared Session 1 parameter YAML',
-        ),
-        Node(
-            package='pnp_orchestrator',
-            executable='target_pose_monitor',
-            name='target_pose_monitor',
-            output='screen',
-            parameters=[params_file],
-        ),
-        Node(
-            package='pnp_perception',
-            executable='target_pose_publisher',
-            name='target_pose_publisher',
-            output='screen',
-            parameters=[params_file],
-        ),
-    ])</pre>
+
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                'params_file',
+                default_value=default_params_file,
+                description='Absolute path to the shared Session 1 parameter YAML',
+            ),
+            Node(
+                package='pnp_orchestrator',
+                executable='target_pose_monitor',
+                name='target_pose_monitor',
+                output='screen',
+                parameters=[params_file],
+            ),
+            Node(
+                package='pnp_perception',
+                executable='target_pose_publisher',
+                name='target_pose_publisher',
+                output='screen',
+                parameters=[params_file],
+            ),
+        ]
+    )</pre>
           </div>
         </div>
       </details>
@@ -991,16 +893,16 @@ set -o pipefail
 ros2 launch pnp_bringup core_skeleton.launch.py \
   2&gt;&amp;1 | tee /workspace/pick_place_ws/session1_core.log</pre>
       </div>
-      <p>처음에 두 <code>READY</code>가 나오고, 이후 publisher의 <code>PUBLISH</code>와 monitor의 <code>ACCEPT</code>가 약 0.5초마다 이어져야 합니다.</p>
+      <p>처음에 두 <code>READY</code>가 나오고, 이후 publisher의 <code>PUBLISH</code>와 monitor의 <code>RECEIVE</code>가 약 0.5초마다 이어져야 합니다.</p>
       <div class="code-block">
         <div class="code-head"><b>Text · 핵심 모양</b><span class="where">예상 출력 · 숫자는 달라도 됨</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>[target_pose_monitor]: READY topic=/perception/target_pose expected_frame=world ...
+<pre>[target_pose_monitor]: READY topic=/perception/target_pose
 [target_pose_publisher]: READY topic=/perception/target_pose frame_id=world ...
 [target_pose_publisher]: PUBLISH count=1 frame_id=world ... position=(0.160, 0.000, 0.120)
-[target_pose_monitor]: ACCEPT count=1 frame_id=world age_sec=... position=(0.160,0.000,0.120)</pre>
+[target_pose_monitor]: RECEIVE count=1 frame_id=world ... position=(0.160,0.000,0.120)</pre>
       </div>
       <div class="callout warn"><p><strong><code>WAITING_FOR_SIM_TIME</code>만 계속 나오면</strong> publisher 문제보다 <code>/clock</code> 문제입니다. T1의 Gazebo가 재생 중인지, T2의 bridge가 살아 있는지, T4에서 <code>/clock --once</code>가 되는지 순서대로 봅니다.</p></div>
-      <div class="next-check">T3에서 <code>PUBLISH</code>와 <code>ACCEPT</code>가 반복됩니다.</div>
+      <div class="next-check">T3에서 <code>PUBLISH</code>와 <code>RECEIVE</code>가 반복됩니다.</div>
     </section>
 
     <section id="step4">
@@ -1046,11 +948,12 @@ ros2 topic info -v /perception/target_pose</pre>
 <pre>ros2 param get /target_pose_publisher use_sim_time
 ros2 param get /target_pose_monitor use_sim_time
 
-ros2 param get /target_pose_monitor expected_frame
-ros2 param get /target_pose_monitor max_age_sec
-ros2 param get /target_pose_monitor workspace_max_x</pre>
+ros2 param get /target_pose_publisher topic_name
+ros2 param get /target_pose_publisher frame_id
+ros2 param get /target_pose_publisher publish_rate_hz
+ros2 param get /target_pose_monitor topic_name</pre>
       </div>
-      <p>앞의 두 출력이 모두 <code>Boolean value is: True</code>여야 합니다. 나머지는 각각 <code>world</code>, <code>0.5</code>, <code>0.4</code>입니다.</p>
+      <p>앞의 두 출력은 모두 <code>Boolean value is: True</code>여야 합니다. topic은 양쪽 모두 <code>/perception/target_pose</code>, frame은 <code>world</code>, 발행 주기는 <code>2.0</code>입니다.</p>
 
       <h3>4-5 · rqt_graph로 연결을 그림으로 확인</h3>
       <p>ROBOTIS 기본 이미지에는 <code>rqt_graph</code>가 없을 수 있습니다. 먼저 설치 여부를 확인하고, 없을 때만 패키지를 설치합니다.</p>
@@ -1092,77 +995,25 @@ ros2 topic info -v /perception/target_pose</pre>
 
     <section id="step5">
       <div class="kicker">Step 5 · 약 20분</div>
-      <h2><span class="step-badge">5</span>잘못된 입력을 일부러 보내기</h2>
-      <p class="subtitle">오류를 내는 것이 목적이 아니라, 시스템이 잘못된 데이터를 조용히 받아들이지 않고 정확한 이유로 거부하는지 확인하는 단계입니다. T3의 정상 launch는 계속 둡니다.</p>
+      <h2><span class="step-badge">5</span>YAML에서 목표 좌표 바꿔 보기</h2>
+      <p class="subtitle">코드는 그대로 두고 YAML의 y 좌표만 바꿉니다. 다시 실행했을 때 publisher와 monitor 로그가 함께 달라지는지 보면 parameter가 데이터 흐름에 적용되는 과정을 이해할 수 있습니다.</p>
 
-      <h3>5-1 · frame이 틀린 pose 한 개</h3>
-      <p>기본 노드와 같은 executable을 임시 이름으로 한 번만 실행하되, frame을 <code>camera_bad</code>로 바꿉니다. <code>use_sim_time:=true</code>도 꼭 넣습니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 한 메시지 후 자동 종료</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-ros2 run pnp_perception target_pose_publisher --ros-args \
-  -r __node:=wrong_frame_test \
-  -p use_sim_time:=true \
-  -p frame_id:=camera_bad \
-  -p max_messages:=1</pre>
-      </div>
-      <p>T4에는 <code>PUBLISH count=1 frame_id=camera_bad</code>가 나오고 자동 종료됩니다. 동시에 T3에는 다음 거부 줄이 끼어듭니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Text · T3에서 찾을 줄</b><span class="where">예상 출력</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>REJECT count=... reason=FRAME_MISMATCH expected=world actual=camera_bad</pre>
-      </div>
-      <p>이 거부가 필요한 이유는 <code>camera_bad</code> 좌표를 <code>world</code> 좌표처럼 사용하면 로봇이 전혀 다른 곳으로 움직일 수 있기 때문입니다.</p>
-
-      <h3>5-2 · 2초 오래된 pose 한 개</h3>
-      <p>이번에는 frame은 맞지만 timestamp에서 2초를 뺍니다. monitor의 허용 age는 YAML에서 0.5초이므로 반드시 거부되어야 합니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 한 메시지 후 자동 종료</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_perception target_pose_publisher --ros-args \
-  -r __node:=stale_timestamp_test \
-  -p use_sim_time:=true \
-  -p stamp_offset_sec:=2.0 \
-  -p max_messages:=1</pre>
-      </div>
-      <p>sim time이 아직 2초보다 작으면 <code>WAITING_FOR_SIM_TIME</code> 뒤에 잠시 기다렸다가 한 번 발행합니다. T3에서 다음을 찾습니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Text · T3에서 찾을 줄</b><span class="where">예상 출력 · age는 약 2초</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>REJECT count=... reason=STALE_TIMESTAMP age_sec=2.... max_age_sec=0.500</pre>
-      </div>
-
-      <h3>5-3 · 저장된 로그에서 두 거부 이유 확인</h3>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>grep -E 'REJECT.*(FRAME_MISMATCH|STALE_TIMESTAMP)' \
-  /workspace/pick_place_ws/session1_core.log</pre>
-      </div>
-      <p>서로 다른 이유의 줄이 최소 한 줄씩 있어야 합니다. <code>FRAME_MISMATCH</code>만 나오거나 둘 다 없다면 다음 단계로 넘어가지 않습니다.</p>
-      <div class="next-check"><code>FRAME_MISMATCH</code>와 <code>STALE_TIMESTAMP</code>를 각각 확인했습니다.</div>
-    </section>
-
-    <section id="step6">
-      <div class="kicker">Step 6 · 약 20분</div>
-      <h2><span class="step-badge">6</span>YAML 변경이 실제 판정을 바꾸는지 확인</h2>
-      <p class="subtitle">코드 속 숫자를 고치는 것이 아니라 YAML만 바꾸고 다시 실행해 workspace가 달라지는지 봅니다. 시험 뒤에는 반드시 원복합니다.</p>
-
-      <h3>6-1 · T3의 core launch 중지</h3>
+      <h3>5-1 · T3의 core launch 중지</h3>
       <p>T3를 선택하고 <kbd>Ctrl+C</kbd>를 한 번 누릅니다. <code>process has finished cleanly</code> 비슷한 종료 로그 뒤 prompt가 돌아오는지 기다립니다. T0·T1·T2는 계속 둡니다.</p>
 
-      <h3>6-2 · YAML을 백업하고 x 최대값을 0.10m로 축소</h3>
-      <p>정상 target x는 0.16m입니다. 최대값을 0.40m에서 0.10m로 줄이면 같은 target이 workspace 밖이 됩니다.</p>
+      <h3>5-2 · YAML을 백업하고 y 좌표를 0.05m로 변경</h3>
+      <p>기본 y 좌표는 0.0m입니다. 원본을 백업한 다음 0.05m로 바꾸고 x·y·z 값이 어떻게 적혀 있는지 확인합니다.</p>
       <div class="code-block">
         <div class="code-head"><b>Bash · 설정 변경</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>CFG=/workspace/pick_place_ws/src/pnp_bringup/config/common.yaml
-cp "$CFG" "$CFG.before-workspace-test"
+cp "$CFG" "$CFG.before-yaml-example"
 
-sed -i 's/workspace_max_x: 0.40/workspace_max_x: 0.10/' "$CFG"
-grep -n 'target_x\|workspace_min_x\|workspace_max_x' "$CFG"</pre>
+sed -i 's/target_y: 0.0/target_y: 0.05/' "$CFG"
+grep -n 'target_x\|target_y\|target_z' "$CFG"</pre>
       </div>
-      <p>출력에 <code>target_x: 0.16</code>, <code>workspace_min_x: 0.10</code>, <code>workspace_max_x: 0.10</code>이 보여야 합니다.</p>
+      <p>출력에 <code>target_x: 0.16</code>, <code>target_y: 0.05</code>, <code>target_z: 0.12</code>가 보여야 합니다.</p>
 
-      <h3>6-3 · bringup만 다시 build</h3>
+      <h3>5-3 · bringup만 다시 build</h3>
       <p>YAML도 install 영역에 포함되는 package 자산이므로 build해서 반영합니다.</p>
       <div class="code-block">
         <div class="code-head"><b>Bash</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
@@ -1174,7 +1025,7 @@ colcon build \
   --packages-select pnp_bringup</pre>
       </div>
 
-      <h3>6-4 · T3에서 launch 재실행</h3>
+      <h3>5-4 · T3에서 launch 재실행하고 좌표 확인</h3>
       <div class="code-block">
         <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws
@@ -1183,29 +1034,30 @@ source install/setup.bash
 set -o pipefail
 
 ros2 launch pnp_bringup core_skeleton.launch.py \
-  2&gt;&amp;1 | tee /workspace/pick_place_ws/session1_workspace_test.log</pre>
+  2&gt;&amp;1 | tee /workspace/pick_place_ws/session1_yaml_example.log</pre>
       </div>
-      <p>이번에는 같은 x=0.16 pose가 반복해서 아래처럼 거부되어야 합니다.</p>
+      <p>publisher와 monitor에 y=0.050이 함께 나타나야 합니다. 같은 메시지가 topic을 통과했으므로 두 로그의 좌표가 일치합니다.</p>
       <div class="code-block">
         <div class="code-head"><b>Text · T3에서 찾을 줄</b><span class="where">예상 출력</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>REJECT count=... reason=OUT_OF_WORKSPACE position=(0.160,0.000,0.120) outside=x</pre>
+<pre>[target_pose_publisher]: PUBLISH count=... frame_id=world ... position=(0.160, 0.050, 0.120)
+[target_pose_monitor]: RECEIVE count=... frame_id=world ... position=(0.160,0.050,0.120)</pre>
       </div>
-      <p>이 줄을 확인하면 T3에서 <kbd>Ctrl+C</kbd>를 눌러 다시 중지합니다.</p>
+      <p>두 줄을 확인하면 T3에서 <kbd>Ctrl+C</kbd>를 눌러 중지합니다.</p>
 
-      <h3>6-5 · 원래 YAML로 복원하고 최종 build</h3>
+      <h3>5-5 · 원래 YAML로 복원하고 최종 build</h3>
       <div class="code-block">
         <div class="code-head"><b>Bash · 반드시 실행</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>CFG=/workspace/pick_place_ws/src/pnp_bringup/config/common.yaml
-mv "$CFG.before-workspace-test" "$CFG"
+mv "$CFG.before-yaml-example" "$CFG"
 
 cd /workspace/pick_place_ws
 colcon build \
   --symlink-install \
   --packages-select pnp_bringup
 
-grep -n 'workspace_max_x' "$CFG"</pre>
+grep -n 'target_y' "$CFG"</pre>
       </div>
-      <p>마지막 값이 다시 <code>0.40</code>이어야 합니다. <code>.before-workspace-test</code> 파일이 없으면 제공 자산을 다시 복사한 뒤 build합니다.</p>
+      <p>마지막 값이 다시 <code>target_y: 0.0</code>이어야 합니다. 백업 파일이 없으면 제공 자산을 다시 복사한 뒤 build합니다.</p>
       <details class="fold">
         <summary>백업 파일이 없어 원복할 수 없을 때 <small>복구 명령</small></summary>
         <div class="fold-body">
@@ -1219,7 +1071,7 @@ colcon build --symlink-install --packages-select pnp_bringup</pre>
           </div>
         </div>
       </details>
-      <div class="next-check">YAML 변경으로 판정이 달라졌고, <code>workspace_max_x: 0.40</code>으로 원복했습니다.</div>
+      <div class="next-check">YAML의 y 좌표가 두 노드의 로그에 반영됐고, 마지막에는 <code>target_y: 0.0</code>으로 복원했습니다.</div>
     </section>
 
     <section id="finish">
@@ -1248,26 +1100,18 @@ sed -n '1,120p' "$DOC"</pre>
       <h3>E-2 · 로그에서 완료 기준을 한 번에 모으기</h3>
       <div class="code-block">
         <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>grep -m 1 'ACCEPT' /workspace/pick_place_ws/session1_core.log
-grep -m 1 'REJECT.*FRAME_MISMATCH' /workspace/pick_place_ws/session1_core.log
-grep -m 1 'REJECT.*STALE_TIMESTAMP' /workspace/pick_place_ws/session1_core.log
-grep -m 1 'REJECT.*OUT_OF_WORKSPACE' /workspace/pick_place_ws/session1_workspace_test.log
+<pre>grep -m 1 'PUBLISH' /workspace/pick_place_ws/session1_core.log
+grep -m 1 'RECEIVE' /workspace/pick_place_ws/session1_core.log
+grep -m 1 'PUBLISH.*position=(0.160, 0.050, 0.120)' \
+  /workspace/pick_place_ws/session1_yaml_example.log
+grep -m 1 'RECEIVE.*position=(0.160,0.050,0.120)' \
+  /workspace/pick_place_ws/session1_yaml_example.log
 
 git -C /workspace/2026-pnp-study status --short</pre>
       </div>
       <p>네 grep이 각각 한 줄을 출력해야 합니다. Git status에는 오늘 수정한 <code>docs/system_architecture.md</code> 같은 의도한 문서만 있어야 합니다.</p>
 
-      <h3>E-3 · 말로 설명해 보기</h3>
-      <p>아래 다섯 문장을 자신의 말로 이어서 설명할 수 있으면 “붙여넣기만 한 상태”에서 한 단계 벗어난 것입니다.</p>
-      <ol>
-        <li><code>target_pose_publisher</code>는 YAML 값을 읽어 <code>PoseStamped</code>를 만듭니다.</li>
-        <li><code>/perception/target_pose</code>는 두 노드 사이의 topic이고 type은 <code>geometry_msgs/msg/PoseStamped</code>입니다.</li>
-        <li>두 endpoint는 코드에서 reliable·keep last 10 QoS로 설정되며, 이 RMW의 CLI에서는 history/depth가 UNKNOWN으로 보일 수 있습니다.</li>
-        <li>monitor는 frame, timestamp age, workspace 순서로 검사합니다.</li>
-        <li>둘 다 Gazebo에서 bridge된 sim time을 사용합니다.</li>
-      </ol>
-
-      <h3>E-4 · 종료 순서</h3>
+      <h3>E-3 · 종료 순서</h3>
       <p>실행 중인 창에서 아래 순서로 각각 <kbd>Ctrl+C</kbd>를 한 번 누릅니다.</p>
       <ol>
         <li>T3: core launch가 남아 있다면 종료</li>
@@ -1287,7 +1131,7 @@ pgrep -af '[g]z sim|[p]arameter_bridge|[r]mw_zenohd' || true</pre>
         <li><input id="final-build" type="checkbox"><label for="final-build"><code>3 packages finished</code>로 build를 통과했습니다.</label><span class="tag">BUILD</span></li>
         <li><input id="final-flow" type="checkbox"><label for="final-flow">정상 <code>PoseStamped</code>가 publisher → topic → monitor로 흐릅니다.</label><span class="tag">FLOW</span></li>
         <li><input id="final-qos" type="checkbox"><label for="final-qos">type·publisher/subscriber 수·reliable QoS를 출력에서 확인하고, keep-last 10 설정을 코드에서 확인했습니다.</label><span class="tag">QOS</span></li>
-        <li><input id="final-fault" type="checkbox"><label for="final-fault">frame·stale·workspace 오류를 서로 다른 이유로 거부했습니다.</label><span class="tag">FAULT</span></li>
+        <li><input id="final-yaml" type="checkbox"><label for="final-yaml">YAML의 y 좌표 변경이 publisher와 monitor 로그에 함께 반영됐습니다.</label><span class="tag">YAML</span></li>
         <li><input id="final-doc" type="checkbox"><label for="final-doc"><code>docs/system_architecture.md</code> 첫 버전을 만들고 실제 결과를 표시했습니다.</label><span class="tag">DOC</span></li>
         <li><input id="final-clean" type="checkbox"><label for="final-clean">YAML을 원복하고 상주 process를 의도한 상태로 종료했습니다.</label><span class="tag">CLEAN</span></li>
       </ul>
@@ -1299,7 +1143,6 @@ pgrep -af '[g]z sim|[p]arameter_bridge|[r]mw_zenohd' || true</pre>
         <div class="fold-body">
           <ul>
             <li>각자 새 terminal에서 <code>/workspace/pick_place_ws</code> overlay를 source하고 launch를 한 번 재현합니다.</li>
-            <li>ROS graph를 3분 안에 말로 설명해 녹화합니다.</li>
             <li>그래프 캡처와 실제 확인 결과를 <code>docs/system_architecture.md</code>에 연결합니다.</li>
             <li>실패가 있었다면 숨기지 말고 오류 문자열, 원인, 복구 결과를 <code>progress.md</code>에 남깁니다.</li>
           </ul>
@@ -1324,9 +1167,8 @@ ros2 launch pnp_bringup core_skeleton.launch.py</pre>
             <tr><td><code>Package ... not found</code></td><td>build 전이거나 현재 terminal에서 overlay를 source하지 않음</td><td><code>source /workspace/pick_place_ws/install/setup.bash</code> 후 <code>ros2 pkg prefix</code> 재확인</td></tr>
             <tr><td><code>WAITING_FOR_SIM_TIME</code>만 반복</td><td>노드는 정상이나 ROS <code>/clock</code>이 0</td><td>T1 Gazebo → T2 bridge → <code>ros2 topic echo /clock --once</code> 순서로 확인</td></tr>
             <tr><td><code>incompatible QoS</code></td><td>publisher와 subscriber 전달 정책 불일치</td><td><code>ros2 topic info -v</code>에서 양쪽 Reliability·History·Depth 비교</td></tr>
-            <tr><td><code>FRAME_MISMATCH</code>가 정상 실행에서도 반복</td><td>YAML의 <code>frame_id</code>와 <code>expected_frame</code>가 다름</td><td>두 값을 모두 <code>world</code>로 원복하고 bringup rebuild</td></tr>
-            <tr><td><code>STALE_TIMESTAMP</code>가 정상 실행에서도 반복</td><td><code>/clock</code> 지연·정지 또는 PC/WSL 시간 문제 가능</td><td><code>/clock</code> 연속 증가 확인; Zenoh 500ms 오류가 함께 나면 시간 동기화 후 전체 topology 재기동</td></tr>
-            <tr><td><code>OUT_OF_WORKSPACE</code>가 원복 뒤에도 반복</td><td>install 쪽 YAML이 갱신되지 않음</td><td><code>workspace_max_x: 0.40</code> 확인 후 <code>colcon build --packages-select pnp_bringup</code> 재실행</td></tr>
+            <tr><td><code>PUBLISH</code>는 보이지만 <code>RECEIVE</code>가 없음</td><td>monitor가 실행되지 않았거나 같은 topic을 구독하지 않음</td><td><code>ros2 node list</code>와 <code>ros2 topic info -v /perception/target_pose</code>에서 subscriber 확인</td></tr>
+            <tr><td>YAML에서 바꾼 좌표가 로그에 반영되지 않음</td><td>install 영역의 YAML이 갱신되지 않았거나 overlay를 다시 source하지 않음</td><td><code>pnp_bringup</code>을 다시 build하고 T3에서 <code>source install/setup.bash</code> 후 launch</td></tr>
             <tr><td><code>detected dubious ownership</code></td><td>container 사용자와 Git 저장소 소유자 불일치</td><td>오류가 지목한 저장소 하나만 <code>safe.directory</code>에 추가</td></tr>
           </tbody>
         </table>

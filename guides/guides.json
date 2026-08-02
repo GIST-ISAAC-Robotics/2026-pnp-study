@@ -6,7 +6,7 @@
       "date": "2026-08-02",
       "session": "Session 1",
       "title": "ROS graph와 데이터 흐름",
-      "description": "두 ROS 2 노드와 PoseStamped topic을 만들고 QoS·sim time·YAML 설정을 확인한 뒤 잘못된 frame과 오래된 timestamp를 거부합니다.",
+      "description": "두 ROS 2 노드와 PoseStamped topic을 만들고 QoS·sim time을 확인한 뒤 YAML 좌표가 데이터 흐름에 반영되는 과정을 살펴봅니다.",
       "path": "./2026-08-02-session-1-ros-graph-data-flow.html",
       "tags": [
         "Week 1",

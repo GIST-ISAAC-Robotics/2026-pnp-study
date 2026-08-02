@@ -22,7 +22,7 @@ flowchart LR
 | 노드 | 패키지 | 입력 | 출력 | 현재 책임 |
 |---|---|---|---|---|
 | `/target_pose_publisher` | `pnp_perception` | YAML parameter, `/clock` | `/perception/target_pose` | 임시 목표 pose 생성 |
-| `/target_pose_monitor` | `pnp_orchestrator` | `/perception/target_pose`, YAML parameter, `/clock` | 로그 | frame·timestamp·workspace 검사 |
+| `/target_pose_monitor` | `pnp_orchestrator` | `/perception/target_pose`, YAML parameter | 로그 | 받은 pose의 주요 필드 표시 |
 
 ## 3. topic 계약
 
@@ -30,19 +30,16 @@ flowchart LR
 |---|---|---|---|---|
 | `/perception/target_pose` | `geometry_msgs/msg/PoseStamped` | reliable, keep last 10, volatile | `world` | sim time의 현재 시각 |
 
-## 4. 현재 검증 규칙
+## 4. 현재 데이터 예제
 
-- frame은 `expected_frame`과 같아야 한다.
-- timestamp age는 `max_age_sec` 이하여야 한다.
-- x, y, z는 `common.yaml`의 workspace 범위 안이어야 한다.
-- 위 조건을 모두 만족하면 `ACCEPT`, 하나라도 어기면 이유를 포함한 `REJECT` 로그를 남긴다.
+- publisher는 `common.yaml`의 frame, 좌표, 발행 주기를 읽는다.
+- publisher와 monitor는 같은 `/perception/target_pose` topic과 QoS를 사용한다.
+- monitor는 받은 `PoseStamped`의 frame, timestamp, x·y·z 좌표를 로그로 보여 준다.
 
 ## 5. Session 1 결과 기록
 
-- 정상 pose: `[ ] ACCEPT 확인`
-- 잘못된 frame: `[ ] FRAME_MISMATCH 확인`
-- 오래된 timestamp: `[ ] STALE_TIMESTAMP 확인`
-- YAML workspace 변경: `[ ] OUT_OF_WORKSPACE 확인 후 원복`
+- 기본 pose: `[ ] PUBLISH와 RECEIVE 확인`
+- YAML 좌표 변경: `[ ] 변경한 y 좌표가 양쪽 로그에 반영됨을 확인`
 - ROS graph 캡처: `TODO: 파일 또는 링크`
 - 재현 담당/날짜: `TODO`
 

@@ -20,8 +20,6 @@ class TargetPosePublisher(Node):
         self.declare_parameter('target_x', 0.16)
         self.declare_parameter('target_y', 0.0)
         self.declare_parameter('target_z', 0.12)
-        self.declare_parameter('stamp_offset_sec', 0.0)
-        self.declare_parameter('max_messages', 0)
 
         self.topic_name = self.get_parameter('topic_name').value
         self.publish_rate_hz = float(self.get_parameter('publish_rate_hz').value)
@@ -31,9 +29,6 @@ class TargetPosePublisher(Node):
             float(self.get_parameter('target_y').value),
             float(self.get_parameter('target_z').value),
         )
-        self.stamp_offset_sec = float(self.get_parameter('stamp_offset_sec').value)
-        self.max_messages = int(self.get_parameter('max_messages').value)
-
         self._validate_parameters()
 
         qos = QoSProfile(
@@ -45,15 +40,13 @@ class TargetPosePublisher(Node):
         self.publisher = self.create_publisher(PoseStamped, self.topic_name, qos)
         self.timer = self.create_timer(1.0 / self.publish_rate_hz, self._publish_pose)
         self.published_count = 0
-        self.done = False
         self._waiting_for_clock_reported = False
 
         self.get_logger().info(
             'READY '
             f'topic={self.topic_name} frame_id={self.frame_id} '
             f'rate_hz={self.publish_rate_hz:.3f} '
-            f'position=({self.target[0]:.3f}, {self.target[1]:.3f}, {self.target[2]:.3f}) '
-            f'stamp_offset_sec={self.stamp_offset_sec:.3f} max_messages={self.max_messages}'
+            f'position=({self.target[0]:.3f}, {self.target[1]:.3f}, {self.target[2]:.3f})'
         )
 
     def _validate_parameters(self) -> None:
@@ -65,28 +58,20 @@ class TargetPosePublisher(Node):
             raise ValueError('publish_rate_hz must be a finite positive number')
         if not all(math.isfinite(value) for value in self.target):
             raise ValueError('target_x, target_y and target_z must be finite')
-        if not math.isfinite(self.stamp_offset_sec) or self.stamp_offset_sec < 0.0:
-            raise ValueError('stamp_offset_sec must be a finite non-negative number')
-        if self.max_messages < 0:
-            raise ValueError('max_messages must be zero or a positive integer')
-
     def _publish_pose(self) -> None:
         now_ns = self.get_clock().now().nanoseconds
-        offset_ns = int(self.stamp_offset_sec * 1_000_000_000)
 
         # When sim time is enabled, /clock can still be zero just after startup.
-        # A stale test also needs enough simulated time to subtract its offset.
-        if now_ns <= offset_ns:
+        if now_ns == 0:
             if not self._waiting_for_clock_reported:
                 self.get_logger().info('WAITING_FOR_SIM_TIME')
                 self._waiting_for_clock_reported = True
             return
 
-        stamp_ns = now_ns - offset_ns
         message = PoseStamped()
         message.header.frame_id = self.frame_id
-        message.header.stamp.sec = stamp_ns // 1_000_000_000
-        message.header.stamp.nanosec = stamp_ns % 1_000_000_000
+        message.header.stamp.sec = now_ns // 1_000_000_000
+        message.header.stamp.nanosec = now_ns % 1_000_000_000
         message.pose.position.x = self.target[0]
         message.pose.position.y = self.target[1]
         message.pose.position.z = self.target[2]
@@ -101,18 +86,11 @@ class TargetPosePublisher(Node):
             f'position=({message.pose.position.x:.3f}, '
             f'{message.pose.position.y:.3f}, {message.pose.position.z:.3f})'
         )
-
-        if self.max_messages > 0 and self.published_count >= self.max_messages:
-            self.timer.cancel()
-            self.done = True
-
-
 def main(args=None) -> None:
     rclpy.init(args=args)
     node = TargetPosePublisher()
     try:
-        while rclpy.ok() and not node.done:
-            rclpy.spin_once(node, timeout_sec=0.2)
+        rclpy.spin(node)
     except KeyboardInterrupt:
         pass
     finally:

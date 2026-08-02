@@ -7,19 +7,8 @@ target_pose_publisher:
     target_x: 0.16
     target_y: 0.0
     target_z: 0.12
-    stamp_offset_sec: 0.0
-    max_messages: 0
 
 target_pose_monitor:
   ros__parameters:
     use_sim_time: true
     topic_name: /perception/target_pose
-    expected_frame: world
-    max_age_sec: 0.5
-    future_tolerance_sec: 0.05
-    workspace_min_x: 0.10
-    workspace_max_x: 0.40
-    workspace_min_y: -0.20
-    workspace_max_y: 0.20
-    workspace_min_z: 0.05
-    workspace_max_z: 0.30
