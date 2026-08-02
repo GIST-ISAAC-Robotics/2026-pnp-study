@@ -4,7 +4,8 @@
 - 담당: `leejinh0225` (메인 PC)
 - 결과: **부분 완료**
 - Week 0 Gate 판정: **조건부 통과**
-- 미완료 확인: 두 사람 확인, Session 5의 IK mode 재동결
+- 두 사람 확인: **완료** — 2026-08-02, 현재 판정이 완전 실패가 아니라 조건을 추적하며 계획대로 진행하는 상태임을 함께 확인
+- 미완료 확인: Session 5의 IK mode 재동결
 
 ## 1. spike A — RGB-D
 
@@ -141,7 +142,7 @@ rerun_condition=Session 5에서 tool_frame_offset과 workspace grid를 재검증
 - 판정: **조건부 통과**
 - 통과 근거: Docker·Gazebo·MoveIt 환경, B의 one-shot·연속 추종·actual pose/twist reset 3회, C의 코드 기반 안전점 1개가 검증됐다.
 - 조건 1: Session 5에서 IK workspace·tool offset을 재검증하고 `ik_mode_status=final`로 재동결하기 전에는 Session 6A에 진입하지 않는다.
-- 조건 2: Gate 판정과 fallback을 두 사람이 확인한다. 현재 두 번째 확인자는 미기록이다.
+- 조건 2: Gate 판정과 fallback을 두 사람이 확인한다. **2026-08-02 확인 완료** — 현재 결과를 완전 실패로 보지 않고, Session 5 재동결 조건을 유지한 채 계획대로 Session 1에 진입하기로 합의했다.
 
 ## 6. 증빙 파일과 hash
 
