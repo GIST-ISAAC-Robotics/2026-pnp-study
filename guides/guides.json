@@ -1,7 +1,21 @@
 {
   "schema_version": 1,
-  "updated": "2026-07-31",
+  "updated": "2026-08-02",
   "guides": [
+    {
+      "date": "2026-08-02",
+      "session": "Session 1",
+      "title": "ROS graph와 데이터 흐름",
+      "description": "두 ROS 2 노드와 PoseStamped topic을 만들고 QoS·sim time·YAML 설정을 확인한 뒤 잘못된 frame과 오래된 timestamp를 거부합니다.",
+      "path": "./2026-08-02-session-1-ros-graph-data-flow.html",
+      "tags": [
+        "Week 1",
+        "ROS graph",
+        "PoseStamped",
+        "QoS",
+        "launch"
+      ]
+    },
     {
       "date": "2026-07-31",
       "session": "Session 0-3",

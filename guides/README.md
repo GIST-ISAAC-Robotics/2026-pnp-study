@@ -6,11 +6,14 @@
 
 | 제작일 | 회차 | 가이드 |
 |---|---|---|
+| 2026-08-02 | Session 1 | [ROS graph와 데이터 흐름](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-08-02-session-1-ros-graph-data-flow.html) |
 | 2026-07-31 | Session 0-3 | [핵심 위험 3종 spike](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-31-session-0-3-week0-spikes.html) |
 | 2026-07-29 | Session 0-2 | [공식 Gazebo·MoveIt smoke test](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-29-session-0-2-gazebo-moveit-smoke-test.html) |
 | 2026-07-28 | Session 0-1 | [ROBOTIS Docker 환경 구축](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-28-session-0-1-docker-setup.html) |
 
 ## 새 가이드 추가 방법
+
+본문 구조, 초보자 설명, terminal 역할, 코드 접기, 검증 수준, 웹 디자인의 공통 규칙은 [`AUTHORING.md`](./AUTHORING.md)를 먼저 따릅니다. 원본 디자인 참고 파일은 [`design/crimson2.md`](./design/crimson2.md)에 보존합니다.
 
 1. 이 폴더에 제작일 기준 `YYYY-MM-DD-session-X-Y-주제.html` 형식으로 HTML 파일을 추가합니다.
 2. [`guides.json`](./guides.json)의 `guides` 배열 맨 앞에 제작일, 회차, 제목, 설명, 상대 경로, 태그를 추가합니다.
