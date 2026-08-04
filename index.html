@@ -1314,7 +1314,7 @@
     <div class="hero-inner">
       <div>
         <p class="eyebrow">2026 Summer · Pick and Place</p>
-        <h1 id="hero-title">끝까지 움직이는 시스템.<span>인식부터 반복 평가까지.</span></h1>
+        <h1 id="hero-title">전체 흐름을 잇는 시스템.<span>ROS에서 RGB-D 픽앤플레이스까지.</span></h1>
         <p class="hero-lead">
           ROS 2, Gazebo, MoveIt 2와 RGB-D를 하나의 실행 루프로 연결합니다.
           이 페이지는 원본 Markdown을 직접 읽어 언제나 저장소의 최신 커리큘럼과 진행 기록을 보여줍니다.
@@ -1355,18 +1355,18 @@
     <section class="section section-tight" id="overview" aria-labelledby="overview-title">
       <header class="section-header">
         <p class="eyebrow">01 · Study map</p>
-        <h2 id="overview-title">한 번 움직이는 데모보다, 다시 실행되는 시스템을 만듭니다.</h2>
-        <p>고정 좌표 baseline으로 조작을 먼저 닫고, RGB-D 인식과 평가를 순서대로 연결합니다. 각 주의 Gate가 다음 주의 입력 계약을 보장합니다.</p>
+        <h2 id="overview-title">각 기술을 깊게 파기보다, 전체 흐름을 직접 연결합니다.</h2>
+        <p>고정 좌표로 조작을 먼저 경험하고, RGB-D 인식과 간단한 평가를 차례로 연결합니다. 각 주의 Gate는 다음 개념으로 넘어갈 최소 정상 경로만 확인합니다.</p>
       </header>
 
       <div class="overview-grid">
         <article class="card">
           <p class="card-label">End-to-end loop</p>
-          <h3 id="pipeline-title">reset에서 CSV까지 이어지는 한 회의 실행</h3>
+          <h3 id="pipeline-title">sensor 입력에서 CSV까지 이어지는 한 회의 실행</h3>
           <ol class="pipeline">
             <li class="pipeline-step"><b>01</b><span>Reset<br>초기 상태 복원</span></li>
             <li class="pipeline-step"><b>02</b><span>Perception<br>RGB-D 목표 추정</span></li>
-            <li class="pipeline-step"><b>03</b><span>Planning<br>검증·경로 생성</span></li>
+            <li class="pipeline-step"><b>03</b><span>Planning<br>목표·경로 생성</span></li>
             <li class="pipeline-step"><b>04</b><span>Manipulation<br>pick·transport·place</span></li>
             <li class="pipeline-step"><b>05</b><span>Evaluation<br>GT·로그·CSV</span></li>
           </ol>
@@ -1379,7 +1379,7 @@
             <div class="snapshot-row"><b>환경</b><span>Windows + WSL2 · ROBOTIS Docker · ROS 2 Jazzy</span></div>
             <div class="snapshot-row"><b>조작</b><span>OpenMANIPULATOR-X · MoveIt 2</span></div>
             <div class="snapshot-row"><b>인지</b><span>RGB-D · HSV + depth · TF2</span></div>
-            <div class="snapshot-row"><b>완료</b><span>반복 runner · 오류 분류 · CSV · 재실행 문서</span></div>
+            <div class="snapshot-row"><b>완료</b><span>5회 runner · 최소 오류 분류 · CSV · 재실행 문서</span></div>
           </div>
         </article>
 
@@ -1394,7 +1394,7 @@
       <header class="section-header">
         <p class="eyebrow">02 · Daily guides</p>
         <h2 id="guides-title">오늘 할 일을, 오늘 바로 엽니다.</h2>
-        <p>각 회차의 준비물, 실행 명령, 검증 기준과 기록 양식을 한 화면에 정리합니다. 아래 최신 가이드를 바로 열거나 전체 보관함에서 지난 회차를 찾을 수 있습니다.</p>
+        <p>각 회차의 준비물, 실행 명령, 필수 완료 기준과 기록 양식을 한 화면에 정리합니다. 아래 최신 가이드를 바로 열거나 전체 보관함에서 지난 회차를 찾을 수 있습니다.</p>
       </header>
 
       <div class="guide-feature">
@@ -1405,7 +1405,7 @@
             <span class="guide-chip">Week 1</span>
           </div>
           <h3>Action과 상태기계 골격</h3>
-          <p>중첩 action 계약과 3층 상태기계를 만들고 성공·실패·취소·heartbeat timeout·SAFE_STOP 경로를 dummy server로 검증합니다.</p>
+          <p>두 단계 action과 간단한 상태 흐름을 만들고 정상 완료와 manual cancel을 한 번씩 경험합니다.</p>
           <a class="button button-light" href="./guides/2026-08-04-session-2-action-state-machine.html">다음 가이드 열기</a>
         </article>
 

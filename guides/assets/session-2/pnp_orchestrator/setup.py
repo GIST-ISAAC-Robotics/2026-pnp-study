@@ -14,9 +14,8 @@ setup(
     zip_safe=True,
     maintainer='PNP Study',
     maintainer_email='student@example.com',
-    description='Outer task orchestration skeleton for the pick-and-place study.',
+    description='Minimal RunTrial to PickPlace action chain for the study.',
     license='Apache-2.0',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'orchestrator = pnp_orchestrator.orchestrator:main',

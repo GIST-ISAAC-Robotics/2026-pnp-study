@@ -1,10 +1,10 @@
 # 진행 상황과 실행 로그
 
-> **현재 단계:** Week 1 진행 중 — Session 1 ROS graph와 데이터 흐름 완료
+> **현재 단계:** Week 1 진행 중 — v4.0.0 개편안 작성, Session 1 완료
 >
-> **다음 Gate:** Week 1 Gate — Session 1~3 시스템 뼈대 검증
+> **다음 Gate:** Week 1 Gate — Session 1~3 시스템 뼈대 연결
 >
-> **마지막 업데이트:** 2026-08-04
+> **마지막 업데이트:** 2026-08-05
 
 이 문서는 스터디 진행 상황의 단일 기록 원본이다. 회차 종료 시 최신 항목을 위에 추가하고, 성공뿐 아니라 실패·축소·보류 판정도 증빙과 함께 남긴다.
 
@@ -12,13 +12,13 @@
 
 | 단계 | 상태 | 현재 결과 / 진입 조건 |
 |---|---|---|
-| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.5 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리 |
+| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v4.0.0에서 Week 1~4를 개념 순회형으로 개편하고 Week 0은 보존 |
 | Week 0 — 환경·위험 제거 | **완료** | Gate 조건부 통과와 두 사람 확인 완료; C의 Session 5 `final` 재동결 조건은 6A 전까지 추적 |
-| Week 1 — ROS 2 시스템 뼈대 | **진행 중** | Session 1 완료; Session 2 action·상태기계 골격과 Session 3 상위 launch 검증 필요 |
+| Week 1 — ROS 2 시스템 뼈대 | **진행 중** | Session 1 완료; Session 2 간소화 action·상태 흐름과 Session 3 상위 launch 필요 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
 | Week 3 — RGB-D 인식 통합 | 대기 | Week 2 Gate 통과 후 시작 |
-| Week 4 — 신뢰성·평가·정리 | 대기 | Week 3 Gate 통과 후 시작 |
-| 최종 시연·회고 | 대기 | 반복 평가와 문서·영상 완료 |
+| Week 4 — 통합·평가·정리 | 대기 | Week 3 Gate 통과 후 시작 |
+| 최종 시연·회고 | 대기 | 5회 평가와 문서·영상 완료 |
 
 상태 표기는 `대기`, `진행 중`, `완료`, `보류`, `차단` 중 하나를 사용한다.
 
@@ -34,13 +34,24 @@
 - [x] Week 0 조건부 Gate와 fallback 두 사람 확인
 - [x] Session 1: ROS graph와 데이터 흐름 실습
 - [x] Session 2 시작 전 Windows·WSL·container 시간 동기화 확인과 Zenoh timestamp 오류 0건 재확인
-- [ ] Session 2: action과 3층 상태기계 골격
+- [ ] Session 2: 두 action과 간단한 상태기계 골격, 정상 실행·manual cancel
 - [ ] Session 3: controller와 상위 launch 연결 및 Week 1 Gate 판정
 - [ ] Session 5에서 IK workspace·tool offset 재시험 후 `ik_mode_status=final` 재동결 (6A 진입 전)
 
 세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 1](./curriculum.md#7-week-1--ros-2-시스템-뼈대)을 따른다.
 
 ## 회차 로그
+
+### 2026-08-05 — Week 1~4 커리큘럼 개편 · 개념 순회형 전환
+
+- **상태:** 완료 — 개편안 작성, PR 검토 대기
+- **목표:** Week 0은 보존하고 Week 1~4에서 핵심 학습을 벗어난 반복 검증·대규모 fault injection·평가 계약을 줄임
+- **수행:** 정상 경로 우선, 대표 오류 확인은 회차당 최대 한 가지, 같은 검증은 구현·환경 변경 때만 반복하는 원칙으로 `curriculum.md`를 v4.0.0으로 개편했다. Session 2의 heartbeat·중첩 cancel timeout·invalid profile/scope·`SAFE_STOP`·stage mask 시험을 필수에서 제거하고, Week 2·3은 각 3회, Week 4 최종 평가는 5회로 축소했다. Session 1 가이드의 GUI 설치·YAML 원복 재빌드·로그 재감사·회차 사이 의무 재실행도 제거했으며, Session 2 가이드와 제공 자산·가이드 목록·문서 작성 규칙을 같은 방향으로 정리했다.
+- **결과:** 커리큘럼은 3,756줄에서 1,747줄로 줄었고, main과 비교한 Week 0 구간은 줄바꿈 정규화 뒤 동일했다(SHA-256 `99269a8568f68f91155187fc66178ce698da7b555ff6657ed905034cee62ffb6`). 기존 상세 신뢰성 검증은 삭제하지 않고 §14의 선택 확장으로 이동했다.
+- **문제:** v3.5.5를 전제로 만든 Session 2 가이드·interface가 새 방향과 충돌했음
+- **결정:** 정상 action 완료 1회와 manual cancel 1회만 Session 2 필수 검증으로 유지하고, fault injection matrix와 batch 무결성 감사는 본과정 밖으로 분리
+- **다음:** 개편 PR 검토·merge 뒤 간소화한 Session 2 가이드 실행
+- **증빙:** [실행 커리큘럼 v4.0.0](./curriculum.md), [Session 1 실행 가이드](./guides/2026-08-02-session-1-ros-graph-data-flow.html), [Session 2 실행 가이드](./guides/2026-08-04-session-2-action-state-machine.html), [가이드 작성 지침](./guides/AUTHORING.md)
 
 ### 2026-08-04 — Session 1 · ROS graph와 데이터 흐름
 
@@ -50,7 +61,7 @@
 - **결과:** 기본 좌표 `(0.160, 0.000, 0.120)`의 `PUBLISH`와 `RECEIVE`가 각각 819건, YAML 변경 좌표 `(0.160, 0.050, 0.120)`가 각각 43건으로 수와 payload가 일치했다. 두 executable, `pnp_bringup` 설치 경로와 `params_file` launch argument가 검색됐고 source·install YAML 모두 `target_y: 0.0`으로 복원됐다. 후속 시간 복구 뒤 60초 재시험은 `/clock` 1회, `PUBLISH=119`, `RECEIVE=119`, Zenoh timestamp 오류 합계 0건이었다. core launch·clock bridge·Gazebo·Zenoh router 종료 후 관련 잔여 프로세스가 없음을 확인하고 `docs/system_architecture.md`의 최초 버전을 작성했다.
 - **문제:** 최초 두 로그에 Zenoh `exceeding delta 500ms` 오류가 각각 25,434건과 2,160건 기록됐다. pose 발행·수신은 일치했지만 transport 로그가 clean하지 않아 Windows·WSL·container 시각 경로를 별도로 진단했다.
 - **결정:** 메인 PC의 Windows NTP와 WSL 시각 보정 경로를 정리하고 절전 복귀 시 1회 자동 동기화를 구성했다. 전체 topology 재시험에서 오류 0건을 확인했으며 Zenoh 허용치 500ms는 완화하지 않는다. 상세 조치와 보조 스크립트는 Docker 환경 문서에만 기록한다.
-- **다음:** Session 2에서 action과 3층 상태기계 골격을 구현한다.
+- **다음:** Session 2에서 두 action의 정상 chain과 간단한 상태 흐름, manual cancel을 구현한다.
 - **증빙:** [시스템 구조와 인터페이스](./docs/system_architecture.md), [Docker 개발 환경과 시각 동기화 복구](./docs/setup/docker.md#117-메인-pc에서만-발생한-시각-동기화-문제), [Session 1 실행 가이드](./guides/2026-08-02-session-1-ros-graph-data-flow.html), 최초 container 로그 `/workspace/pick_place_ws/session1_core.log` (`SHA-256 e8f35a26...230db61`)·`session1_yaml_example.log` (`SHA-256 b97e17b9...be34a`), 복구 검증 로그 `/workspace/pick_place_ws/time_sync_fix_validation.log` (`SHA-256 b66b3c6a...4d76792`)
 
 ### 2026-08-02 — Session 0-3 · 핵심 위험 3종 spike와 Week 0 Gate

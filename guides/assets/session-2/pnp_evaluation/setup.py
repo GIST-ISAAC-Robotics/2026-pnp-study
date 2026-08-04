@@ -14,11 +14,11 @@ setup(
     zip_safe=True,
     maintainer='PNP Study',
     maintainer_email='student@example.com',
-    description='Dummy evaluator and action-chain checks for Session 2.',
+    description='Minimal dummy server and action client for Session 2.',
     license='Apache-2.0',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'dummy_pick_place_server = pnp_evaluation.dummy_pick_place_server:main',
             'scenario_runner = pnp_evaluation.scenario_runner:main',
         ],
     },

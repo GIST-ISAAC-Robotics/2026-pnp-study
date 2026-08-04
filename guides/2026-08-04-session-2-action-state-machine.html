@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Session 2 ROS 2 action과 3층 상태기계 골격을 처음부터 따라 하는 실행 가이드">
+  <meta name="description" content="Session 2 ROS 2 action과 간단한 상태기계 골격을 정상 경로 중심으로 따라 하는 실행 가이드">
   <title>Session 2 · Action과 상태기계 골격 | 2026 PNP Study</title>
   <style>
     :root {
@@ -178,8 +178,7 @@
         <a href="#step1">자산</a>
         <a href="#step2">빌드</a>
         <a href="#step3">성공 경로</a>
-        <a href="#step4">실패·취소</a>
-        <a href="#step5">Watchdog</a>
+        <a href="#step4">수동 취소</a>
         <a href="#finish">마무리</a>
       </div>
     </nav>
@@ -189,13 +188,13 @@
   <div class="hero">
     <div class="hero-inner">
       <div class="eyebrow">Week 1 · Session 2 · Beginner Guide</div>
-      <h1>Action과<br>3층 상태기계 골격</h1>
-      <p class="hero-lead">오래 걸리는 작업을 요청하고, 진행 단계를 feedback으로 보고, 취소와 timeout을 구분하는 두 단계 action 체인을 만듭니다. 오늘의 inner server는 로봇을 움직이지 않는 dummy입니다.</p>
+      <h1>Action과<br>상태기계 골격</h1>
+      <p class="hero-lead">오래 걸리는 작업을 요청하고, 진행 단계를 feedback으로 보며, 한 번의 수동 취소까지 경험하는 두 단계 action 체인을 만듭니다. 오늘의 inner server는 로봇을 움직이지 않는 dummy입니다.</p>
       <div class="pill-row">
-        <span class="pill">예상 3~4시간</span>
+        <span class="pill">예상 2~3시간</span>
         <span class="pill">ROS 2 Jazzy · Python</span>
         <span class="pill">RunTrial → PickPlace</span>
-        <span class="pill">실행 창 T0~T4</span>
+        <span class="pill">실행 창 T0~T3</span>
       </div>
     </div>
   </div>
@@ -203,62 +202,45 @@
   <main id="main">
     <section id="overview">
       <div class="kicker">먼저 큰 그림</div>
-      <h2>요청 하나를 두 action과 세 책임 계층으로 나눕니다</h2>
-      <p class="subtitle">Service는 짧은 요청·응답에 적합하지만, 픽앤플레이스처럼 오래 걸리고 중간 진행률과 취소가 필요한 작업은 Action으로 표현합니다. 상태기계는 “지금 어느 단계이며 다음에 어디로 갈 수 있는가”를 코드로 제한합니다.</p>
+      <h2>정상 action 흐름을 만들고 수동 취소를 한 번 경험합니다</h2>
+      <p class="subtitle">Session 2의 목표는 모든 통신 장애를 막는 것이 아닙니다. goal이 두 action을 지나가고, stage feedback과 result가 돌아오는 정상 흐름을 이해한 뒤 manual cancel 한 가지만 확인합니다.</p>
 
-      <div class="flow" aria-label="Session 2 action 흐름">
-        <div class="flow-node"><b>pnp_evaluation</b><br><small>profile·attempt·결과 판정</small></div>
+      <div class="flow" aria-label="Session 2 outer action 흐름">
+        <div class="flow-node"><b>scenario_runner</b><br><small>학습용 goal 전송</small></div>
         <div class="flow-arrow">→</div>
         <div class="flow-action"><b>/task/run_trial</b><br><code>RunTrial</code></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-node"><b>pnp_orchestrator</b><br><small>target 선택·outer 상태</small></div>
+        <div class="flow-node"><b>pnp_orchestrator</b><br><small>목표 선택·단계 연결</small></div>
       </div>
       <div class="flow" aria-label="Session 2 inner action 흐름">
-        <div class="flow-node"><b>pnp_orchestrator</b><br><small>inner goal·cancel 전달</small></div>
+        <div class="flow-node"><b>pnp_orchestrator</b><br><small>inner goal 전달</small></div>
         <div class="flow-arrow">→</div>
         <div class="flow-action"><b>/pick_place/execute</b><br><code>PickPlace</code></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-node"><b>dummy manipulation</b><br><small>Session 4 전까지 로봇 동작 없음</small></div>
+        <div class="flow-node"><b>dummy server</b><br><small>Session 4에서 MoveIt server로 교체</small></div>
       </div>
 
       <div class="grid">
-        <div class="mini-card"><b>Action</b><p>goal을 받고 feedback을 보내며 최종 result 또는 cancel terminal을 반환합니다.</p></div>
-        <div class="mini-card"><b>State machine</b><p>허용된 전이만 통과시켜 단계 소유권과 실패 위치를 명확하게 합니다.</p></div>
-        <div class="mini-card"><b>Heartbeat</b><p><code>/task/status</code>가 2 Hz로 증가해야 active task가 살아 있다고 판단합니다.</p></div>
-        <div class="mini-card"><b>trial_completed</b><p>성공 여부가 아니라 기록 가능한 terminal과 필요한 cleanup이 끝났다는 뜻입니다.</p></div>
-        <div class="mini-card"><b>pipeline_success</b><p>요청한 scope의 필수 stage가 모두 성공하고 error code가 0이라는 뜻입니다.</p></div>
-        <div class="mini-card"><b>SAFE_STOP</b><p>inner terminal을 확인하지 못한 경우 다음 reset·goal을 막고 수동 복구를 기다립니다.</p></div>
+        <div class="mini-card"><b>Action</b><p>goal·feedback·result·cancel을 제공하는 오래 걸리는 작업 인터페이스입니다.</p></div>
+        <div class="mini-card"><b>State machine</b><p>현재 단계를 명시해 전체 순서를 읽기 쉽게 만듭니다.</p></div>
+        <div class="mini-card"><b>이번 검증 범위</b><p>정상 완료 1회와 manual cancel 1회만 필수입니다.</p></div>
       </div>
 
-      <div class="callout info"><p><strong>오늘 Gazebo·MoveIt·로봇은 실행하지 않습니다.</strong> 실제 <code>pnp_manipulation</code> 패키지는 Session 4에서 만듭니다. 오늘은 <code>pnp_evaluation/test/dummy_pick_place_server.py</code>가 inner action 계약만 흉내 냅니다.</p></div>
-
-      <h3>두 scope와 성공 mask</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>target mode</th><th>scope</th><th>필수 succeeded bit</th><th>정상 mask</th></tr></thead>
-          <tbody>
-            <tr><td><code>fixed</code></td><td><code>PICK_LIFT_ONLY</code></td><td>PLANNING·VERIFY_PICK·TRANSPORT·CLEANUP</td><td><code>92</code></td></tr>
-            <tr><td><code>fixed</code></td><td><code>FULL_PICK_PLACE</code></td><td>위 네 bit + PLACE</td><td><code>124</code></td></tr>
-            <tr><td><code>perception</code></td><td><code>PICK_LIFT_ONLY</code></td><td>lift mask + DETECTION·TF</td><td><code>95</code></td></tr>
-            <tr><td><code>perception</code></td><td><code>FULL_PICK_PLACE</code></td><td>full mask + DETECTION·TF</td><td><code>127</code></td></tr>
-          </tbody>
-        </table>
-      </div>
+      <div class="callout info"><p><strong>이번 개편에서 제외한 것:</strong> 잘못된 scope·profile, heartbeat 단절, timeout 경계, terminal 누락, <code>SAFE_STOP</code>, 중복 goal fault injection은 신뢰성 확장 과제로 이동했습니다.</p></div>
 
       <h3>이번 회차 완료 기준</h3>
       <ul class="checklist">
-        <li><input id="goal-build" type="checkbox"><label for="goal-build">두 action과 세 message가 clean build되고 Python·C++에서 상수를 사용했습니다.</label><span class="tag">BUILD</span></li>
-        <li><input id="goal-chain" type="checkbox"><label for="goal-chain"><code>task_scope</code>, stage mask·flag·retry counter·<code>planning_time_ms</code>가 inner → outer로 손실 없이 전달됩니다.</label><span class="tag">CHAIN</span></li>
-        <li><input id="goal-cancel" type="checkbox"><label for="goal-cancel">manual cancel이 inner terminal을 먼저 확인하고 outer를 <code>CANCELED</code>로 끝냅니다.</label><span class="tag">CANCEL</span></li>
-        <li><input id="goal-watchdog" type="checkbox"><label for="goal-watchdog">heartbeat 단절과 inner terminal 미확인을 각각 timeout과 <code>SAFE_STOP</code>으로 분류합니다.</label><span class="tag">WATCH</span></li>
-        <li><input id="goal-doc" type="checkbox"><label for="goal-doc"><code>docs/system_architecture.md</code>를 실제 실행 결과로 갱신했습니다.</label><span class="tag">DOC</span></li>
+        <li><input id="v4-goal-build" type="checkbox"><label for="v4-goal-build">간소화한 두 action과 세 Python 패키지가 clean build됩니다.</label><span class="tag">BUILD</span></li>
+        <li><input id="v4-goal-success" type="checkbox"><label for="v4-goal-success">정상 goal에서 stage feedback과 <code>SUCCEEDED</code> result가 보입니다.</label><span class="tag">NORMAL</span></li>
+        <li><input id="v4-goal-cancel" type="checkbox"><label for="v4-goal-cancel">manual cancel 한 번이 inner와 outer의 <code>CANCELED</code> terminal로 이어집니다.</label><span class="tag">CANCEL</span></li>
+        <li><input id="v4-goal-explain" type="checkbox"><label for="v4-goal-explain">topic·service·action의 차이와 두 action의 역할을 설명할 수 있습니다.</label><span class="tag">CONCEPT</span></li>
       </ul>
     </section>
 
     <section id="step0">
-      <div class="kicker">Step 0 · 약 20분</div>
-      <h2><span class="step-badge">0</span>container와 다섯 창 준비</h2>
-      <p class="subtitle">Session 1 workspace를 그대로 이어 씁니다. 상주 process가 없는지 확인하고 router부터 하나만 시작합니다.</p>
+      <div class="kicker">Step 0 · 약 15분</div>
+      <h2><span class="step-badge">0</span>container와 네 창 준비</h2>
+      <p class="subtitle">Session 1 workspace를 이어 쓰고 Zenoh router 하나만 실행합니다.</p>
 
       <h3>0-1 · container 시작</h3>
       <div class="code-block">
@@ -271,65 +253,48 @@ docker ps --filter name=open_manipulator</pre>
       </div>
       <p>container가 <code>Up</code>이면 준비됐습니다.</p>
 
-      <h3>0-2 · Ubuntu 탭 다섯 개를 열고 container 진입</h3>
+      <h3>0-2 · Ubuntu 탭 네 개에서 container 진입</h3>
       <div class="terminal-grid">
         <div class="terminal"><b>T0</b><small>Zenoh router</small></div>
         <div class="terminal"><b>T1</b><small>dummy PickPlace server</small></div>
         <div class="terminal"><b>T2</b><small>orchestrator</small></div>
-        <div class="terminal"><b>T3</b><small>scenario runner</small></div>
-        <div class="terminal"><b>T4</b><small>build·검사·두 번째 client</small></div>
+        <div class="terminal"><b>T3</b><small>build·runner</small></div>
       </div>
       <div class="code-block">
-        <div class="code-head"><b>Bash · 다섯 창에서 각각 한 번</b><span class="where">Ubuntu → Container</span><button class="copy" aria-label="코드 복사">복사</button></div>
+        <div class="code-head"><b>Bash · 네 창에서 각각 한 번</b><span class="where">Ubuntu → Container</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd ~/open_manipulator
 ./docker/container.sh enter</pre>
       </div>
 
-      <h3>0-3 · 중복 process와 Session 1 workspace 확인</h3>
+      <h3>0-3 · workspace와 중복 process 확인</h3>
       <div class="code-block">
-        <div class="code-head"><b>Bash · 저장소 갱신과 사전 점검</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>source /opt/ros/jazzy/setup.bash
-git -c safe.directory=/workspace/2026-pnp-study \
-  -C /workspace/2026-pnp-study pull --ff-only origin main
-
 test -d /workspace/pick_place_ws/src/pnp_orchestrator
 test -f /workspace/pick_place_ws/src/pnp_orchestrator/pnp_orchestrator/target_pose_monitor.py
-pgrep -af '[r]mw_zenohd|[o]rchestrator|[d]ummy_pick_place_server|[s]cenario_runner|[t]arget_pose_(publisher|monitor)|[p]arameter_bridge' || true</pre>
+pgrep -af '[r]mw_zenohd|[o]rchestrator|[d]ummy_pick_place_server|[s]cenario_runner' || true</pre>
       </div>
-      <p>Git은 <code>Already up to date.</code> 또는 fast-forward 결과를 보여야 합니다. 로컬 변경 때문에 pull이 거부되면 덮어쓰지 말고 변경 파일부터 확인합니다. 두 <code>test</code> 명령은 성공하면 출력이 없고, process 검색은 비어 있어야 합니다. 의도적으로 실행 중인 다른 ROS 작업이 있다면 먼저 정상 종료합니다.</p>
+      <p>두 <code>test</code> 명령은 성공하면 출력이 없습니다. process 검색에 이전 Session 2 작업이 보이면 해당 창에서 정상 종료합니다.</p>
 
-      <h3>0-4 · Zenoh router 하나 시작</h3>
+      <h3>0-4 · Zenoh router 시작</h3>
       <div class="code-block">
         <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T0)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>source /opt/ros/jazzy/setup.bash
 ros2 run rmw_zenoh_cpp rmw_zenohd</pre>
       </div>
-      <p><code>Started Zenoh router</code>가 보이면 T0는 그대로 둡니다.</p>
-      <div class="next-check">Session 1 workspace와 다섯 창, Zenoh router 하나가 준비됐습니다.</div>
+      <div class="next-check">네 창과 router가 준비됐습니다.</div>
     </section>
 
     <section id="step1">
-      <div class="kicker">Step 1 · 약 35분</div>
-      <h2><span class="step-badge">1</span>interface와 dummy 패키지 배치</h2>
-      <p class="subtitle">긴 action·Python 소스를 직접 입력하지 않습니다. 패키지 뼈대를 만든 뒤 저장소의 제공 자산을 복사하고 핵심 계약만 읽습니다.</p>
+      <div class="kicker">Step 1 · 약 30분</div>
+      <h2><span class="step-badge">1</span>간소화한 interface와 패키지 배치</h2>
+      <p class="subtitle">긴 코드를 직접 입력하지 않고 저장소의 검증 대상 자산을 workspace에 복사합니다.</p>
 
-      <h3>1-1 · 새 패키지 두 개 생성</h3>
-      <div class="callout warn"><p><strong>같은 폴더가 이미 있으면 생성 명령을 반복하지 않습니다.</strong> 아래 첫 블록이 기존 폴더를 발견하면 내용을 확인한 뒤 진행합니다.</p></div>
+      <h3>1-1 · 필요한 패키지만 생성</h3>
       <div class="code-block">
-        <div class="code-head"><b>Bash</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws/src
-for package in pnp_interfaces pnp_evaluation; do
-  if test -e "$package"; then
-    echo "already exists: $package"
-  else
-    echo "missing: $package"
-  fi
-done</pre>
-      </div>
-      <p>다음 블록은 <code>missing</code>인 패키지만 생성하고, 이미 있는 패키지는 건너뜁니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 새 패키지에서 한 번</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws/src
+
 if ! test -e pnp_interfaces; then
   ros2 pkg create pnp_interfaces \
     --build-type ament_cmake \
@@ -345,10 +310,9 @@ if ! test -e pnp_evaluation; then
 fi</pre>
       </div>
 
-      <h3>1-2 · Session 1 orchestrator 백업 후 제공 파일 복사</h3>
-      <p>백업은 <code>src</code> 밖에 둡니다. 같은 package.xml을 가진 백업이 <code>src</code> 안에 있으면 colcon이 duplicate package로 중단합니다.</p>
+      <h3>1-2 · Session 1 orchestrator 백업 후 제공 자산 복사</h3>
       <div class="code-block">
-        <div class="code-head"><b>Bash · 블록 전체 실행</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+        <div class="code-head"><b>Bash · 블록 전체 실행</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>ASSET=/workspace/2026-pnp-study/guides/assets/session-2
 WS=/workspace/pick_place_ws
 BACKUP="$WS/session2_backup/pnp_orchestrator-session1"
@@ -360,124 +324,81 @@ fi
 
 cp -a "$ASSET/pnp_interfaces/." "$WS/src/pnp_interfaces/"
 cp -a "$ASSET/pnp_evaluation/." "$WS/src/pnp_evaluation/"
-cp -a "$ASSET/pnp_orchestrator/." "$WS/src/pnp_orchestrator/"
-
-chmod +x "$WS/src/pnp_evaluation/test/dummy_pick_place_server.py"</pre>
+cp -a "$ASSET/pnp_orchestrator/." "$WS/src/pnp_orchestrator/"</pre>
       </div>
 
-      <h3>1-3 · 다섯 custom interface와 실행 파일 확인</h3>
+      <h3>1-3 · 핵심 interface 읽기</h3>
       <div class="code-block">
-        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws
 find src/pnp_interfaces/action src/pnp_interfaces/msg \
   -maxdepth 1 -type f | sort
 
-grep -n 'task_scope\|planning_time_ms' \
-  src/pnp_interfaces/action/RunTrial.action \
-  src/pnp_interfaces/action/PickPlace.action
-
-grep -n 'scenario_runner\|orchestrator' \
-  src/pnp_evaluation/setup.py \
-  src/pnp_orchestrator/setup.py</pre>
+sed -n '1,30p' src/pnp_interfaces/action/RunTrial.action
+sed -n '1,30p' src/pnp_interfaces/action/PickPlace.action
+sed -n '1,20p' src/pnp_interfaces/msg/ErrorCode.msg</pre>
       </div>
-      <p><code>RunTrial.action</code>, <code>PickPlace.action</code>, <code>TaskStatus.msg</code>, <code>StageStatus.msg</code>, <code>ErrorCode.msg</code>가 모두 보여야 합니다.</p>
+      <p>두 action과 <code>ErrorCode.msg</code>만 보이면 됩니다. 이전 버전의 <code>TaskStatus.msg</code>·<code>StageStatus.msg</code>는 사용하지 않습니다.</p>
 
       <details class="fold">
-        <summary>왜 pose가 세 종류인가요? <small>object / pick / place</small></summary>
+        <summary>왜 action이 두 개인가요? <small>전체 작업과 조작 작업</small></summary>
         <div class="fold-body">
-          <ul>
-            <li><code>object_pose</code>: collision object 중심 pose입니다.</li>
-            <li><code>pick_pose</code>: end effector가 도달할 명령 pose입니다.</li>
-            <li><code>place_pose</code>: full scope에서 end effector가 배치할 명령 pose입니다.</li>
-          </ul>
-          <p>물체 중심과 EEF 명령 pose를 같은 값으로 취급하거나 evaluator의 ground truth로 보정하지 않습니다. lift-only에서는 <code>place_pose</code>의 frame과 stamp를 비워 둡니다.</p>
+          <p><code>RunTrial</code>은 목표 선택부터 조작 완료까지 전체 순서를 나타내고, <code>PickPlace</code>는 로봇 동작만 담당합니다. 이번 회차에는 dummy server를 쓰고 Session 4에서 실제 MoveIt server로 교체합니다.</p>
         </div>
       </details>
-      <div class="next-check">두 action·세 message와 evaluator·orchestrator Python 골격이 배치됐습니다.</div>
+      <div class="next-check">두 action과 최소 오류 코드, 세 Python package가 배치됐습니다.</div>
     </section>
 
     <section id="step2">
-      <div class="kicker">Step 2 · 약 25분</div>
-      <h2><span class="step-badge">2</span>문법 검사·build·상태 전이 test</h2>
-      <p class="subtitle">interface 생성 실패와 Python 오류를 runtime에서 만나기 전에 분리합니다.</p>
+      <div class="kicker">Step 2 · 약 15분</div>
+      <h2><span class="step-badge">2</span>세 패키지 build와 action 모양 확인</h2>
+      <p class="subtitle">build가 끝나면 생성된 두 action을 한 번 펼쳐 봅니다. 별도 문법·상수·상태 전이 test는 실제 정상 실행과 겹치므로 생략합니다.</p>
 
-      <h3>2-1 · Python과 XML 구문 확인</h3>
+      <h3>2-1 · 세 패키지 clean build</h3>
       <div class="code-block">
-        <div class="code-head"><b>Bash</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-python3 -m py_compile \
-  src/pnp_orchestrator/pnp_orchestrator/orchestrator.py \
-  src/pnp_orchestrator/pnp_orchestrator/state_machine.py \
-  src/pnp_evaluation/pnp_evaluation/scenario_runner.py \
-  src/pnp_evaluation/test/dummy_pick_place_server.py
-
-python3 -c "import xml.etree.ElementTree as ET; \
-[ET.parse(p) for p in ['src/pnp_interfaces/package.xml', \
-'src/pnp_orchestrator/package.xml', 'src/pnp_evaluation/package.xml']]; \
-print('PACKAGE_XML=PASS')"</pre>
-      </div>
-      <p>Python 검사는 성공하면 출력이 없고 XML 검사는 <code>PACKAGE_XML=PASS</code>를 출력합니다.</p>
-
-      <h3>2-2 · 세 패키지 clean build</h3>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 1~2분 걸릴 수 있음</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws
 source /opt/ros/jazzy/setup.bash
+rm -rf build/pnp_interfaces build/pnp_orchestrator build/pnp_evaluation \
+  install/pnp_interfaces install/pnp_orchestrator install/pnp_evaluation
 
 colcon build --symlink-install \
   --packages-select pnp_interfaces pnp_orchestrator pnp_evaluation</pre>
       </div>
-      <p>요약에 <code>3 packages finished</code>가 있고 failed package가 없어야 합니다.</p>
+      <p><code>3 packages finished</code>가 보이고 failed package가 없어야 합니다.</p>
 
-      <h3>2-3 · 생성된 interface와 상수 import</h3>
+      <h3>2-2 · 생성된 두 action 확인</h3>
       <div class="code-block">
-        <div class="code-head"><b>Bash</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 
-ros2 interface show pnp_interfaces/action/RunTrial | sed -n '1,45p'
-ros2 interface show pnp_interfaces/action/PickPlace | sed -n '1,42p'
-
-python3 -c "from pnp_interfaces.msg import ErrorCode, StageStatus; \
-print('TASK_CANCELED=', ErrorCode.TASK_CANCELED); \
-print('CLEANUP=', StageStatus.CLEANUP)"
-
-ros2 run pnp_interfaces interface_constants_check \
-  && echo 'CPP_CONSTANTS=PASS'</pre>
+ros2 interface show pnp_interfaces/action/RunTrial
+ros2 interface show pnp_interfaces/action/PickPlace</pre>
       </div>
-      <p>Python 값은 각각 <code>403</code>과 <code>64</code>, 마지막 줄은 <code>CPP_CONSTANTS=PASS</code>여야 합니다. 같은 generated 상수를 Python과 C++ 양쪽에서 읽은 결과입니다.</p>
-
-      <h3>2-4 · 허용·금지 상태 전이 단위 test</h3>
-      <div class="code-block">
-        <div class="code-head"><b>Bash</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-python3 -m pytest -q \
-  src/pnp_orchestrator/test/test_state_machine.py</pre>
-      </div>
-      <p><code>4 passed</code>가 보여야 합니다. 여기에는 evaluation 정상 경로, fixed outer 경로, lift-only inner 경로, <code>IDLE → VALIDATE</code> 불법 전이 거부가 포함됩니다.</p>
-      <div class="next-check">interface 생성, Python·C++ 상수 사용과 명시적 상태 전이 test가 통과했습니다.</div>
+      <p>각 action에 goal·result·feedback 구분선이 보이고, 위에서 읽은 필드와 같으면 됩니다.</p>
+      <div class="next-check">세 패키지가 build되고 두 action이 ROS에서 생성됐습니다.</div>
     </section>
 
     <section id="step3">
       <div class="kicker">Step 3 · 약 35분</div>
       <h2><span class="step-badge">3</span>두 action의 정상 체인 실행</h2>
-      <p class="subtitle">T1 inner server → T2 orchestrator → T3 evaluator 순서로 시작합니다. 모든 새 terminal에서 overlay를 source해야 합니다.</p>
+      <p class="subtitle">T1 dummy server, T2 orchestrator 순서로 시작하고 T3에서 normal goal을 보냅니다.</p>
 
-      <h3>3-1 · success inner와 fixed orchestrator 시작</h3>
+      <h3>3-1 · dummy PickPlace server 시작</h3>
       <div class="code-block">
         <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T1)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 
-python3 src/pnp_evaluation/test/dummy_pick_place_server.py \
-  --ros-args -p behavior:=success \
-  |& tee session2_inner_success.log</pre>
+ros2 run pnp_evaluation dummy_pick_place_server \
+  |& tee session2_dummy.log</pre>
       </div>
+      <p><code>dummy PickPlace server ready</code>가 보이면 T1을 그대로 둡니다.</p>
+
+      <h3>3-2 · orchestrator 시작</h3>
       <div class="code-block">
         <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws
@@ -485,441 +406,130 @@ source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 
 ros2 run pnp_orchestrator orchestrator \
-  --ros-args -p target_mode:=fixed \
-  |& tee session2_outer_fixed.log</pre>
+  |& tee session2_orchestrator.log</pre>
       </div>
-      <p>T1에는 <code>READY action=/pick_place/execute behavior=success</code>, T2에는 <code>READY action=/task/run_trial ... target_mode=fixed</code>가 보여야 합니다.</p>
+      <p><code>RunTrial orchestrator ready</code>가 보이면 T2를 그대로 둡니다.</p>
 
-      <h3>3-2 · action과 heartbeat 연결 확인</h3>
+      <h3>3-3 · action graph 확인</h3>
       <div class="code-block">
-        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 
 ros2 action list -t
 ros2 action info /task/run_trial
-ros2 action info /pick_place/execute
-ros2 param get /orchestrator task_status_rate_hz
-timeout 5 ros2 topic hz /task/status</pre>
+ros2 action info /pick_place/execute</pre>
       </div>
-      <p>두 action type과 server/client 수가 연결되고 parameter가 <code>Double value is: 2.0</code>, <code>/task/status</code>가 약 <code>2.0 Hz</code>여야 합니다. <code>timeout</code> 종료 때의 context 경고 한 줄은 측정 종료 메시지입니다.</p>
+      <p>두 action type이 보이고 각각 server가 연결돼 있어야 합니다.</p>
 
-      <h3>3-3 · FULL_PICK_PLACE 성공</h3>
+      <h3>3-4 · 정상 goal 실행</h3>
       <div class="code-block">
-        <div class="code-head"><b>Bash · 한 번 실행</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
-set -o pipefail
 
 ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope full \
-  --expect success \
-  --run-id session2-full-01 \
-  |& tee session2_full_success.log</pre>
+  --run-id session2-normal \
+  |& tee session2_normal.log</pre>
       </div>
+      <p><code>SELECT_TARGET</code>, <code>TRANSFORM</code>, inner stage들, <code>DONE</code> feedback 뒤 다음 결과가 보여야 합니다.</p>
       <div class="code-block">
-        <div class="code-head"><b>Text · 핵심 모양</b><span class="where">예상 출력</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>PROFILE_CHECK runner_profile=week2_baseline target_mode=fixed
-GOAL_RESPONSE=ACCEPTED ... task_scope=2
-RESULT ... action_status=SUCCEEDED trial_completed=true pipeline_success=true error_code=0
-STAGES reached=124 succeeded=124 planning_time_ms=12.5
-FLAGS perception_source_accepted=false perception_source_frame=- perception_source_stamp_ns=0 transport_prepare_attempted=true heartbeat_samples=... heartbeat_seq_monotonic=true heartbeat_seq=...
-RETRIES outer_input=0 planning_replan=0 verify_pick_recheck=0
-EXPECTATION=PASS</pre>
+        <div class="code-head"><b>예상 핵심 출력</b><span class="where">값 일부는 달라도 됨</span></div>
+<pre>FEEDBACK stage=SELECT_TARGET ...
+FEEDBACK stage=SETUP_SCENE ...
+FEEDBACK stage=PLACE ...
+FEEDBACK stage=DONE progress=1.00
+RESULT status=SUCCEEDED success=true error_code=0 ...</pre>
       </div>
-      <p><code>heartbeat_samples</code>는 2 이상, <code>heartbeat_seq_monotonic=true</code>여야 합니다. sample 수와 마지막 sequence 값은 timer 시작 시점에 따라 달라도 됩니다.</p>
-
-      <h3>3-4 · PICK_LIFT_ONLY와 PLACE 금지 bit</h3>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 한 번 실행</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope lift \
-  --expect success \
-  --run-id session2-lift-01 \
-  |& tee session2_lift_success.log</pre>
-      </div>
-      <p><code>task_scope=1</code>, <code>reached=92</code>, <code>succeeded=92</code>, <code>EXPECTATION=PASS</code>여야 합니다. PLACE bit <code>32</code>가 들어가면 lift-only 계약 위반입니다.</p>
-
-      <h3>3-5 · 허용되지 않은 scope를 motion 전에 거부</h3>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 계약 검사</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope invalid \
-  --expect invalid-scope \
-  --run-id session2-invalid-scope \
-  |& tee session2_invalid_scope.log</pre>
-      </div>
-      <p><code>error_code=107</code>, 두 mask가 <code>0</code>, <code>trial_completed=true</code>, <code>pipeline_success=false</code>여야 합니다.</p>
-
-      <h3>3-6 · target_mode와 runner_profile 조합</h3>
-      <p>현재 T2는 <code>fixed</code>입니다. 먼저 잘못된 profile이 action·reset 전에 거부되는지 봅니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · action 전 거부</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile perception_evaluation \
-  --scope full \
-  --expect profile-rejected \
-  --run-id session2-profile-reject \
-  |& tee session2_profile_rejected.log</pre>
-      </div>
-      <p><code>error_code=106</code>과 <code>attempt_allocated=false reset_called=false action_sent=false</code>가 보여야 합니다.</p>
-      <p>이제 T2에서 <kbd>Ctrl+C</kbd> 후 perception 분기로 다시 시작합니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-ros2 run pnp_orchestrator orchestrator \
-  --ros-args -p target_mode:=perception \
-  |& tee session2_outer_perception.log</pre>
-      </div>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · dummy perception 경로</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile perception_evaluation \
-  --scope full \
-  --expect success \
-  --run-id session2-perception-01 \
-  |& tee session2_perception_success.log</pre>
-      </div>
-      <p><code>reached=127</code>, <code>succeeded=127</code>, <code>perception_source_accepted=true</code>, <code>perception_source_frame=camera_optical_frame</code>과 0보다 큰 source stamp가 보여야 합니다. 이는 DETECT·TRANSFORM 상태와 source stamp/frame 전파를 확인하는 dummy 경로이며 실제 RGB-D 검출 성공을 뜻하지 않습니다.</p>
-      <div class="next-check">두 scope와 fixed/perception 분기, profile·scope 사전 검증이 동작합니다.</div>
+      <div class="next-check">normal goal이 outer action에서 inner action으로 전달되고 result가 돌아왔습니다.</div>
     </section>
 
     <section id="step4">
-      <div class="kicker">Step 4 · 약 40분</div>
-      <h2><span class="step-badge">4</span>코드화된 실패와 cancel terminal</h2>
-      <p class="subtitle">성공만 보는 action은 절반짜리입니다. result가 있는 코드화된 실패와 사용자가 요청한 cancel을 서로 다른 의미로 남깁니다.</p>
+      <div class="kicker">Step 4 · 약 15분</div>
+      <h2><span class="step-badge">4</span>manual cancel 한 번 확인</h2>
+      <p class="subtitle">고의 오류 시험군은 만들지 않습니다. Action의 핵심 기능인 사용자 취소만 한 번 경험합니다.</p>
 
-      <h3>4-1 · fixed orchestrator로 복귀</h3>
-      <p>T2에서 <kbd>Ctrl+C</kbd> 후 아래 명령으로 다시 시작합니다. 이후 각 inner behavior를 바꿀 때는 T1만 종료·재시작합니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-ros2 run pnp_orchestrator orchestrator \
-  --ros-args -p target_mode:=fixed \
-  |& tee session2_outer_failure_cancel.log</pre>
-      </div>
-
-      <h3>4-2 · 코드화된 planning 실패</h3>
-      <p>T1의 기존 server를 <kbd>Ctrl+C</kbd>로 종료하고 다음 behavior로 시작합니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T1)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-python3 src/pnp_evaluation/test/dummy_pick_place_server.py \
-  --ros-args -p behavior:=coded_failure \
-  |& tee session2_inner_coded_failure.log</pre>
-      </div>
+      <h3>4-1 · 실행 중 cancel 보내기</h3>
+      <p>T1과 T2를 그대로 둔 상태에서 T3에서 실행합니다.</p>
       <div class="code-block">
         <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope full \
-  --expect coded-failure \
-  --run-id session2-coded-failure \
-  |& tee session2_coded_failure.log</pre>
-      </div>
-      <p><code>action_status=ABORTED</code>, <code>trial_completed=true</code>, <code>pipeline_success=false</code>, <code>error_code=200</code>, mask <code>68 / 64</code>여야 합니다. 실패 result와 cleanup을 받았으므로 기록 가능한 trial입니다.</p>
-
-      <h3>4-3 · manual cancel 전파</h3>
-      <p>T1을 종료하고 <code>behavior:=success</code>로 다시 시작한 뒤 다음 client를 실행합니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T1)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 
-python3 src/pnp_evaluation/test/dummy_pick_place_server.py \
-  --ros-args -p behavior:=success \
-  |& tee session2_inner_manual_cancel.log</pre>
-      </div>
-      <div class="code-block">
-        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope full \
-  --expect canceled \
-  --cancel-after 0.6 \
+ros2 run pnp_evaluation scenario_runner \
+  --cancel-after 0.8 \
   --run-id session2-manual-cancel \
   |& tee session2_manual_cancel.log</pre>
       </div>
-      <p>T1의 <code>CANCEL_ACCEPTED</code>가 먼저 보이고 T2가 <code>INNER_CANCEL_SENT</code>를 남긴 뒤 client는 <code>action_status=CANCELED</code>, <code>trial_completed=false</code>, <code>error_code=403</code>으로 끝나야 합니다.</p>
+      <p><code>CANCEL_SENT reason=manual</code> 뒤 <code>RESULT status=CANCELED</code>가 보이면 충분합니다. inner와 outer의 정확한 millisecond 경계, cancel timeout 예산, terminal 누락은 시험하지 않습니다.</p>
 
-      <h3>4-4 · inner cancel timeout 경계</h3>
-      <p>T1을 종료하고 다음 behavior로 시작합니다. cancel terminal을 기본 inner timeout 5.0초보다 0.1초 앞선 4.9초에 반환합니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T1)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-python3 src/pnp_evaluation/test/dummy_pick_place_server.py \
-  --ros-args \
-  -p behavior:=boundary_cancel \
-  -p cancel_delay_s:=4.9 \
-  |& tee session2_inner_boundary_cancel.log</pre>
-      </div>
+      <h3>4-2 · 정상 goal 한 번 더 실행</h3>
       <div class="code-block">
         <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope full \
-  --expect canceled \
-  --cancel-after 0.6 \
-  --run-id session2-boundary-cancel \
-  |& tee session2_boundary_cancel.log</pre>
+  --run-id session2-after-cancel</pre>
       </div>
-      <p>약 5초를 기다린 뒤에도 <code>EXPECTATION=PASS</code>이고 T2가 <code>SAFE_STOP</code>으로 가지 않아야 합니다.</p>
-
-      <h3>4-5 · active 중복 goal 거부</h3>
-      <p>T1은 boundary behavior, T2는 fixed 상태를 유지합니다. T3에서 위 경계 cancel 명령을 다시 시작하고, 종료되기 전 T4에서 즉시 다음 명령을 실행합니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 두 번째 client</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-set -o pipefail
-
-ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope full \
-  --expect goal-rejected \
-  --run-id session2-duplicate-goal \
-  |& tee session2_duplicate_goal.log</pre>
-      </div>
-      <p>두 번째 client는 <code>GOAL_RESPONSE=REJECTED</code>로 끝나고, 첫 번째 client의 결과에는 영향을 주지 않아야 합니다.</p>
-      <div class="next-check">성공·코드화된 실패·manual cancel과 timeout 경계가 서로 다른 terminal 의미로 남습니다.</div>
-    </section>
-
-    <section id="step5">
-      <div class="kicker">Step 5 · 약 45분</div>
-      <h2><span class="step-badge">5</span>heartbeat watchdog과 SAFE_STOP</h2>
-      <p class="subtitle">timeout이 cancel을 시작했을 때는 <code>TASK_CANCELED</code>로 덮어쓰지 않고 최초 원인을 유지합니다. terminal을 확인하지 못하면 완료로 가장하지 않습니다.</p>
-
-      <h3>5-1 · inner action 실행 timeout</h3>
-      <p>T1·T2를 종료합니다. T1의 stage를 일부러 느리게 만들고, T2의 steady-clock action watchdog을 0.8초로 줄입니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T1)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-python3 src/pnp_evaluation/test/dummy_pick_place_server.py \
-  --ros-args \
-  -p behavior:=success \
-  -p stage_delay_s:=1.0 \
-  |& tee session2_inner_execution_timeout.log</pre>
-      </div>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-ros2 run pnp_orchestrator orchestrator \
-  --ros-args \
-  -p target_mode:=fixed \
-  -p pick_place_action_timeout_s:=0.8 \
-  |& tee session2_outer_execution_timeout.log</pre>
-      </div>
-      <div class="code-block">
-        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope full \
-  --expect execution-timeout \
-  --run-id session2-execution-timeout \
-  |& tee session2_execution_timeout.log</pre>
-      </div>
-      <p>T2에는 <code>reason=execution-timeout error_code=202</code>, client에는 <code>action_status=ABORTED</code>, <code>trial_completed=false</code>, <code>effective_error_code=202</code>, <code>EXPECTATION=PASS</code>가 보여야 합니다.</p>
-
-      <h3>5-2 · heartbeat 단절 분류</h3>
-      <p>T1은 종료 후 <code>behavior:=success</code>로 시작합니다. T2도 종료하고 active 시작 0.8초 뒤 heartbeat를 멈추는 설정으로 다시 시작합니다. 이 fault injection에서는 빠른 확인을 위해 client timeout을 기본 2.0초에서 1.2초로만 임시 축소합니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T1)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-python3 src/pnp_evaluation/test/dummy_pick_place_server.py \
-  --ros-args -p behavior:=success \
-  |& tee session2_inner_heartbeat.log</pre>
-      </div>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-ros2 run pnp_orchestrator orchestrator \
-  --ros-args \
-  -p target_mode:=fixed \
-  -p pause_heartbeat_after_s:=0.8 \
-  |& tee session2_outer_heartbeat_timeout.log</pre>
-      </div>
-      <div class="code-block">
-        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope full \
-  --expect heartbeat-timeout \
-  --task-status-timeout 1.2 \
-  --run-id session2-heartbeat-timeout \
-  |& tee session2_heartbeat_timeout.log</pre>
-      </div>
-      <p><code>CANCEL_SENT reason=heartbeat-timeout</code>, terminal result 수신, <code>effective_error_code=401</code>, <code>EXPECTATION=PASS</code>여야 합니다. action cancel 응답 자체의 403과 evaluator가 보존한 최초 원인 401은 역할이 다릅니다.</p>
-
-      <h3>5-3 · cancel terminal 미확인과 SAFE_STOP</h3>
-      <p>T1·T2를 모두 종료합니다. T1은 cancel을 10초간 종료하지 않는 behavior, T2는 정상 fixed 설정으로 시작합니다.</p>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T1)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-python3 src/pnp_evaluation/test/dummy_pick_place_server.py \
-  --ros-args \
-  -p behavior:=ignore_cancel \
-  -p ignore_cancel_s:=10.0 \
-  |& tee session2_inner_no_terminal.log</pre>
-      </div>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-
-ros2 run pnp_orchestrator orchestrator \
-  --ros-args -p target_mode:=fixed \
-  |& tee session2_outer_safe_stop.log</pre>
-      </div>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · 약 8초</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope full \
-  --expect no-result \
-  --cancel-after 0.6 \
-  --run-id session2-no-terminal \
-  |& tee session2_no_terminal.log</pre>
-      </div>
-      <p><code>run_trial_result_received=false</code>, <code>trial_completed=false</code>, <code>next_state=SAFE_STOP</code>, <code>EXPECTATION=PASS</code>여야 합니다. T2 로그에는 <code>reason=inner-cancel-terminal-timeout</code>이 남습니다.</p>
-
-      <h3>5-4 · SAFE_STOP에서 새 goal 거부</h3>
-      <div class="code-block">
-        <div class="code-head"><b>Bash</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --runner-profile week2_baseline \
-  --scope full \
-  --expect goal-rejected \
-  --run-id session2-after-safe-stop \
-  |& tee session2_after_safe_stop.log</pre>
-      </div>
-      <p><code>GOAL_RESPONSE=REJECTED</code>여야 합니다. 새 goal을 보내기 위해 자동으로 SAFE_STOP을 해제하지 않습니다. T1·T2를 정상 종료하고 원인을 확인한 뒤 재시작하는 것이 수동 복구입니다.</p>
-
-      <h3>5-5 · cancel timeout 불변식</h3>
-      <div class="code-block">
-        <div class="code-head"><b>Bash · action 전 startup 거부</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>set +e
-ros2 run pnp_evaluation scenario_runner \
-  --run-trial-cancel-timeout 6.9 \
-  --pick-place-cancel-timeout 5.0 \
-  --cancel-margin 2.0
-code=$?
-set -e
-echo "exit_code=$code"</pre>
-      </div>
-      <p><code>STARTUP_CHECK=FAIL reason=cancel-timeout-invariant</code>와 비영(非零) 종료 코드가 보여야 합니다. outer 7.0초가 inner 5.0초와 전파 margin 2.0초보다 작아지면 실행하지 않습니다.</p>
-      <div class="next-check">inner action timeout·heartbeat timeout의 최초 오류 코드와 terminal 미확인 SAFE_STOP을 분리했습니다.</div>
+      <p>다시 <code>SUCCEEDED</code>가 나오면 cancel 뒤 다음 작업을 받을 수 있음을 확인한 것입니다.</p>
+      <div class="next-check">정상 실행과 수동 취소의 차이를 확인했습니다.</div>
     </section>
 
     <section id="finish">
-      <div class="kicker">Finish · 약 25분</div>
-      <h2>실제 결과를 문서에 반영하고 clean stop</h2>
+      <div class="kicker">Finish · 약 15분</div>
+      <h2>구조 문서를 갱신하고 clean stop</h2>
 
-      <h3>E-1 · 구조 문서용 snippet 확인</h3>
-      <p>템플릿은 기존 <code>docs/system_architecture.md</code>를 덮어쓰는 파일이 아닙니다. 실제 결과와 로그 경로를 채운 뒤 적절한 절에 병합합니다.</p>
+      <h3>F-1 · 구조 문서용 snippet 확인</h3>
       <div class="code-block">
-        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>SNIPPET=/workspace/2026-pnp-study/guides/assets/session-2/system_architecture-session2-snippet.md
-DOC=/workspace/2026-pnp-study/docs/system_architecture.md
-
-sed -n '1,220p' "$SNIPPET"
-echo "edit existing document: $DOC"</pre>
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>sed -n '1,160p' \
+  /workspace/2026-pnp-study/guides/assets/session-2/system_architecture-session2-snippet.md</pre>
       </div>
-      <p>두 action 데이터 흐름, 3층 상태 소유권, cancel timeout, heartbeat, 오류 코드와 실제 실행 mask를 기존 문서에 추가합니다. <code>TODO</code>를 확인하지 않은 값으로 채우지 않습니다.</p>
+      <p>실제 실행 결과를 확인한 뒤 <code>docs/system_architecture.md</code>의 Session 2 절에 정상 action 흐름과 manual cancel 결과를 반영합니다.</p>
 
-      <h3>E-2 · 완료 근거 모으기</h3>
+      <h3>F-2 · 핵심 로그만 확인</h3>
       <div class="code-block">
-        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>cd /workspace/pick_place_ws
+grep -h 'RESULT status=' \
+  session2_normal.log session2_manual_cancel.log
 
-grep -h 'EXPECTATION=PASS' session2_*.log 2>/dev/null || true
-grep -h 'SAFE_STOP\|INNER_CANCEL_SENT\|RESULT run_id=' \
-  session2_outer_*.log 2>/dev/null | tail -30
-grep -h 'exceeding delta 500ms' session2_*.log 2>/dev/null | wc -l
-
-sha256sum session2_*.log 2>/dev/null | sort</pre>
+grep -Rci 'exceeding delta' \
+  session2_dummy.log session2_orchestrator.log \
+  session2_normal.log session2_manual_cancel.log</pre>
       </div>
-      <p>실행한 시나리오마다 PASS가 있고 Zenoh timestamp 오류 수가 0이어야 합니다. 로그를 일부만 만든 경우 존재하는 파일만 해시하면 됩니다.</p>
+      <p><code>SUCCEEDED</code>와 <code>CANCELED</code>가 각각 보이면 됩니다. Zenoh timestamp 오류가 있으면 Session 1에서 정리한 시간 동기화 절차를 적용하되 action 실습 전체를 처음부터 반복하지 않습니다.</p>
 
-      <h3>E-3 · 종료 순서</h3>
+      <h3>F-3 · 종료 순서</h3>
       <ol>
-        <li>T3·T4에서 실행 중인 client가 있으면 종료</li>
-        <li>T2 orchestrator에 <kbd>Ctrl+C</kbd></li>
-        <li>T1 dummy inner server에 <kbd>Ctrl+C</kbd></li>
-        <li>오늘 ROS 작업을 끝낼 때 T0 router에 <kbd>Ctrl+C</kbd></li>
+        <li>T2 orchestrator에서 <kbd>Ctrl</kbd>+<kbd>C</kbd></li>
+        <li>T1 dummy server에서 <kbd>Ctrl</kbd>+<kbd>C</kbd></li>
+        <li>T0 Zenoh router에서 <kbd>Ctrl</kbd>+<kbd>C</kbd></li>
       </ol>
       <div class="code-block">
-        <div class="code-head"><b>Bash · 종료 확인</b><span class="where">Container (T4)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>source /opt/ros/jazzy/setup.bash
-source /workspace/pick_place_ws/install/setup.bash
-
-ros2 node list --no-daemon
-pgrep -af '[r]mw_zenohd|[o]rchestrator|[d]ummy_pick_place_server|[s]cenario_runner' || true</pre>
+        <div class="code-head"><b>Bash · 종료 확인</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>pgrep -af '[r]mw_zenohd|[o]rchestrator|[d]ummy_pick_place_server|[s]cenario_runner' || true</pre>
       </div>
-      <p>전부 종료했다면 두 출력이 비어야 합니다. router를 이어 쓸 경우에는 <code>rmw_zenohd</code> 한 줄만 남아도 됩니다.</p>
 
       <h3>최종 체크리스트</h3>
       <ul class="checklist">
-        <li><input id="final-build" type="checkbox"><label for="final-build">세 패키지 build, Python·C++ interface 확인과 상태 전이 test가 통과했습니다.</label><span class="tag">BUILD</span></li>
-        <li><input id="final-scope" type="checkbox"><label for="final-scope">fixed full mask 124와 lift mask 92, invalid scope 107을 확인했습니다.</label><span class="tag">SCOPE</span></li>
-        <li><input id="final-profile" type="checkbox"><label for="final-profile">profile·target mode 허용 조합과 perception dummy mask 127을 확인했습니다.</label><span class="tag">MODE</span></li>
-        <li><input id="final-result" type="checkbox"><label for="final-result">성공·코드화된 실패·cancel에서 result 수신, 두 bool, flag·retry·planning time을 구분했습니다.</label><span class="tag">RESULT</span></li>
-        <li><input id="final-safe" type="checkbox"><label for="final-safe">inner action·heartbeat timeout과 terminal 미확인 SAFE_STOP·새 goal 거부를 확인했습니다.</label><span class="tag">SAFE</span></li>
-        <li><input id="final-doc" type="checkbox"><label for="final-doc"><code>docs/system_architecture.md</code>와 활동 기록에 실제 결과·로그를 반영했습니다.</label><span class="tag">DOC</span></li>
-        <li><input id="final-clean" type="checkbox"><label for="final-clean">dummy 노드와 router를 의도한 상태로 종료했습니다.</label><span class="tag">CLEAN</span></li>
+        <li><input id="v4-final-build" type="checkbox"><label for="v4-final-build">세 패키지가 build되고 두 action이 생성됐습니다.</label><span class="tag">BUILD</span></li>
+        <li><input id="v4-final-normal" type="checkbox"><label for="v4-final-normal">정상 action chain이 <code>SUCCEEDED</code>로 끝났습니다.</label><span class="tag">NORMAL</span></li>
+        <li><input id="v4-final-cancel" type="checkbox"><label for="v4-final-cancel">manual cancel이 <code>CANCELED</code>로 끝났습니다.</label><span class="tag">CANCEL</span></li>
+        <li><input id="v4-final-doc" type="checkbox"><label for="v4-final-doc">두 action과 상태 흐름을 구조 문서에 반영할 준비가 됐습니다.</label><span class="tag">DOC</span></li>
       </ul>
-      <div class="callout good"><p><strong>모두 충족하면 Session 2 완료입니다.</strong> Session 3에서는 이 action 골격을 상위 launch와 controller graph에 연결하고 Week 1 Gate를 판정합니다.</p></div>
-    </section>
+      <div class="callout good"><p><strong>모두 충족하면 Session 2 완료입니다.</strong> Session 3에서는 이 골격을 TF·controller·상위 launch와 연결합니다.</p></div>
 
-    <section id="troubleshooting">
-      <div class="kicker">Troubleshooting</div>
-      <h2>오류 문자열별 빠른 분기</h2>
+      <h3>막혔을 때의 최소 분기</h3>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>증상</th><th>뜻</th><th>복구·재확인</th></tr></thead>
+          <thead><tr><th>증상</th><th>먼저 확인</th><th>다음 행동</th></tr></thead>
           <tbody>
-            <tr><td><code>Package 'pnp_interfaces' not found</code></td><td>interface build 또는 overlay source가 빠짐</td><td>세 패키지를 다시 build하고 모든 창에서 <code>source install/setup.bash</code></td></tr>
-            <tr><td><code>Duplicate package names not supported</code></td><td>백업 package를 <code>src</code> 안에 둠</td><td>백업을 <code>/workspace/pick_place_ws/session2_backup</code>처럼 <code>src</code> 밖으로 옮김</td></tr>
-            <tr><td><code>PickPlace server unavailable</code></td><td>T1이 꺼졌거나 다른 overlay를 source함</td><td>T1 READY 확인 후 <code>ros2 action info /pick_place/execute</code> 재확인</td></tr>
-            <tr><td><code>GOAL_RESPONSE=REJECTED</code></td><td>active goal 또는 SAFE_STOP이 남음</td><td>첫 client terminal을 확인하거나 T1·T2를 정상 재시작</td></tr>
-            <tr><td><code>PROFILE_CHECK=REJECT</code></td><td>runner profile과 effective target mode 불일치</td><td><code>ros2 param get /orchestrator target_mode</code>와 profile 조합 확인</td></tr>
-            <tr><td><code>STARTUP_CHECK=FAIL</code></td><td>outer cancel 예산이 inner + margin보다 작음</td><td>기본 7.0 / 5.0 / 2.0초로 복원</td></tr>
-            <tr><td><code>run_trial_result_received=false</code></td><td>inner terminal을 예산 안에 확인하지 못함</td><td>완료로 처리하지 말고 SAFE_STOP 로그 보존 후 T1·T2 수동 재시작</td></tr>
-            <tr><td><code>incoming timestamp ... 500ms</code></td><td>Windows·WSL·container 시각 불일치 재발</td><td>새 기능을 계속하지 말고 Docker 문서 §11.7의 host 시각 점검 후 전체 topology 재시작</td></tr>
+            <tr><td>interface build 실패</td><td>첫 error와 <code>.action</code> 구분선</td><td><code>pnp_interfaces</code>만 clean build</td></tr>
+            <tr><td>action server가 보이지 않음</td><td>T1·T2가 실행 중인지, overlay source 여부</td><td>해당 process만 재시작</td></tr>
+            <tr><td>feedback 뒤 result가 없음</td><td>마지막 stage와 T1 traceback</td><td>해당 오류를 고치고 normal goal 1회 재실행</td></tr>
+            <tr><td>cancel이 바로 처리되지 않음</td><td>T1·T2의 MultiThreadedExecutor 사용</td><td>두 process만 재시작해 cancel 1회 재확인</td></tr>
           </tbody>
         </table>
       </div>
