@@ -1,10 +1,10 @@
 # 진행 상황과 실행 로그
 
-> **현재 단계:** Week 1 진입 준비 완료 — Session 1 실행 가이드 준비
+> **현재 단계:** Week 1 진행 중 — Session 1 ROS graph와 데이터 흐름 완료
 >
 > **다음 Gate:** Week 1 Gate — Session 1~3 시스템 뼈대 검증
 >
-> **마지막 업데이트:** 2026-08-02
+> **마지막 업데이트:** 2026-08-04
 
 이 문서는 스터디 진행 상황의 단일 기록 원본이다. 회차 종료 시 최신 항목을 위에 추가하고, 성공뿐 아니라 실패·축소·보류 판정도 증빙과 함께 남긴다.
 
@@ -14,7 +14,7 @@
 |---|---|---|
 | 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v3.5.5 문서 계약 확정, README·Pages·문서 경로·ignore 규칙 정리 |
 | Week 0 — 환경·위험 제거 | **완료** | Gate 조건부 통과와 두 사람 확인 완료; C의 Session 5 `final` 재동결 조건은 6A 전까지 추적 |
-| Week 1 — ROS 2 시스템 뼈대 | 대기 | Session 1 실행 가이드 준비 완료; 실제 회차 시작 시 `진행 중`으로 변경 |
+| Week 1 — ROS 2 시스템 뼈대 | **진행 중** | Session 1 완료; Session 2 action·상태기계 골격과 Session 3 상위 launch 검증 필요 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
 | Week 3 — RGB-D 인식 통합 | 대기 | Week 2 Gate 통과 후 시작 |
 | Week 4 — 신뢰성·평가·정리 | 대기 | Week 3 Gate 통과 후 시작 |
@@ -32,12 +32,26 @@
 - [x] `docs/setup/week0_spike.md`에 동결값과 Gate 판정 기록
 - [x] RGB-depth registration 경계 3점과 CameraInfo 실제값 확인
 - [x] Week 0 조건부 Gate와 fallback 두 사람 확인
-- [ ] Session 1: ROS graph와 데이터 흐름 실습
+- [x] Session 1: ROS graph와 데이터 흐름 실습
+- [ ] Session 2 시작 전 Windows·WSL·container 시간 동기화 확인과 Zenoh timestamp 오류 0건 재확인
+- [ ] Session 2: action과 3층 상태기계 골격
+- [ ] Session 3: controller와 상위 launch 연결 및 Week 1 Gate 판정
 - [ ] Session 5에서 IK workspace·tool offset 재시험 후 `ik_mode_status=final` 재동결 (6A 진입 전)
 
-세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 0](./curriculum.md#6-week-0--환경-구축과-위험-제거)을 따른다.
+세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 1](./curriculum.md#7-week-1--ros-2-시스템-뼈대)을 따른다.
 
 ## 회차 로그
+
+### 2026-08-04 — Session 1 · ROS graph와 데이터 흐름
+
+- **상태:** 완료 — 기능 기준 통과, Zenoh 시간 동기화 경고 추적
+- **목표:** node·topic·`PoseStamped`·QoS·parameter·launch의 관계를 최소 ROS graph로 구성하고, YAML 좌표 변경이 publisher에서 monitor까지 전달되는지 검증
+- **수행:** `/workspace/pick_place_ws`에 `pnp_perception`, `pnp_orchestrator`, `pnp_bringup` 세 패키지를 만들고 제공 자산을 배치·build했다. Gazebo의 `/clock`을 ROS 2로 bridge한 뒤 `core_skeleton.launch.py`로 `target_pose_publisher`와 `target_pose_monitor`를 함께 실행했다. node/topic/type/QoS/message/sim-time 연결을 확인하고 YAML의 `target_y`를 `0.0`에서 `0.05`로 바꿔 재실행한 뒤 원래 값으로 복원했다.
+- **결과:** 기본 좌표 `(0.160, 0.000, 0.120)`의 `PUBLISH`와 `RECEIVE`가 각각 819건, YAML 변경 좌표 `(0.160, 0.050, 0.120)`가 각각 43건으로 수와 payload가 일치했다. 두 executable, `pnp_bringup` 설치 경로와 `params_file` launch argument가 검색됐고 source·install YAML 모두 `target_y: 0.0`으로 복원됐다. core launch·clock bridge·Gazebo·Zenoh router 종료 후 관련 잔여 프로세스가 없고 container는 `Up`임을 확인했으며, `docs/system_architecture.md`의 최초 버전을 작성했다.
+- **문제:** `session1_core.log`에 Zenoh `exceeding delta 500ms` 오류 25,434건, `session1_yaml_example.log`에 2,160건이 기록됐다. 관찰된 incoming timestamp는 local now보다 약 0.5~0.73초 앞섰다. pose 흐름의 발행·수신은 일치했지만 transport 로그가 clean하지 않으며, 이번 회차에는 Windows·WSL·container 시계 비교·동기화 후 재실행을 수행하지 않았다.
+- **결정:** Session 1의 graph·parameter·데이터 전달 기능 목표는 완료로 판정한다. 다만 시간 불일치의 원인을 이번 로그만으로 재확정하지 않고, Session 2 시작 전에 Windows Time 동기화와 전체 topology 재기동 후 Zenoh timestamp 오류 0건을 확인한다. 같은 오류가 남으면 새 기능 추가보다 시간 경로 복구를 우선한다.
+- **다음:** Session 2에서 action과 3층 상태기계 골격을 구현하되, 시작 전 wall-clock 동기화 확인을 선행한다.
+- **증빙:** [시스템 구조와 인터페이스](./docs/system_architecture.md), [Session 1 실행 가이드](./guides/2026-08-02-session-1-ros-graph-data-flow.html), container 영속 로그 `/workspace/pick_place_ws/session1_core.log` (`SHA-256 e8f35a26...230db61`)와 `/workspace/pick_place_ws/session1_yaml_example.log` (`SHA-256 b97e17b9...be34a`)
 
 ### 2026-08-02 — Session 0-3 · 핵심 위험 3종 spike와 Week 0 Gate
 
