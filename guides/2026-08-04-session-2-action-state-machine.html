@@ -274,9 +274,9 @@ test -d /workspace/pick_place_ws/src/pnp_orchestrator
 test -f /workspace/pick_place_ws/src/pnp_orchestrator/pnp_orchestrator/target_pose_monitor.py
 pgrep -af '[r]mw_zenohd|[o]rchestrator|[d]ummy_pick_place_server|[s]cenario_runner' || true</pre>
       </div>
-      <p>두 <code>test</code> 명령은 성공하면 출력이 없습니다. process 검색에 이전 Session 2 작업이 보이면 해당 창에서 정상 종료합니다.</p>
+      <p>두 <code>test</code> 명령은 성공하면 출력이 없습니다. 이전 orchestrator·dummy server·runner가 보이면 해당 창에서 정상 종료합니다. <code>rmw_zenohd</code>가 정확히 하나 이미 실행 중이면 그대로 재사용하고 0-4는 건너뜁니다.</p>
 
-      <h3>0-4 · Zenoh router 시작</h3>
+      <h3>0-4 · 실행 중인 router가 없을 때만 시작</h3>
       <div class="code-block">
         <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T0)</span><button class="copy" aria-label="코드 복사">복사</button></div>
 <pre>source /opt/ros/jazzy/setup.bash
@@ -497,7 +497,7 @@ ros2 run pnp_evaluation scenario_runner \
         <li><input id="v4-final-build" type="checkbox"><label for="v4-final-build">세 패키지가 build되고 두 action이 생성됐습니다.</label><span class="tag">BUILD</span></li>
         <li><input id="v4-final-normal" type="checkbox"><label for="v4-final-normal">정상 action chain이 <code>SUCCEEDED</code>로 끝났습니다.</label><span class="tag">NORMAL</span></li>
         <li><input id="v4-final-cancel" type="checkbox"><label for="v4-final-cancel">manual cancel이 <code>CANCELED</code>로 끝났습니다.</label><span class="tag">CANCEL</span></li>
-        <li><input id="v4-final-doc" type="checkbox"><label for="v4-final-doc">두 action과 상태 흐름을 구조 문서에 반영할 준비가 됐습니다.</label><span class="tag">DOC</span></li>
+        <li><input id="v4-final-doc" type="checkbox"><label for="v4-final-doc">두 action과 상태 흐름을 <code>docs/system_architecture.md</code>에 반영했습니다.</label><span class="tag">DOC</span></li>
       </ul>
       <div class="callout good"><p><strong>모두 충족하면 Session 2 완료입니다.</strong> Session 3에서는 이 골격을 TF·controller·상위 launch와 연결합니다.</p></div>
 
