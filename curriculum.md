@@ -1,5 +1,5 @@
 # 2026 여름 픽앤플레이스 스터디
-## 최종 실행 커리큘럼 v4.0.0 — ROS 2 · Gazebo · MoveIt · RGB-D 개념 순회형
+## 최종 실행 커리큘럼 v4.0.1 — ROS 2 · Gazebo · MoveIt · RGB-D 개념 순회형
 
 > **기간:** 시작 전 Week 0 + 본과정 4주  
 > **인원:** 2명  
@@ -772,9 +772,11 @@ T1에는 다음 위험이 추가로 남는다.
 17. reset 직후 이 state source가 읽은 position·shortest-angle orientation 오차와 linear/angular speed가 각 threshold 아래인지 확인. 명령 response나 요청값을 actual measurement로 쓰지 않음
 18. 성공한 명령 경로를 `reset_backend`, 측정 경로를 `reset_state_source`로 각각 동결
 
-#### Week 2 Session 6B로 넘기는 것
+#### 본과정 뒤 선택 확장으로 넘기는 것
 
-- 10 Hz와 20 Hz의 주기 sweep 및 후보 중 최대 안정 주기 측정. 단, Session 6A의 `6A-min` 이관분이 있으면 Session 6B 「시간이 부족할 때」 규칙에 따라 생략하고 Week 0에서 동결한 주기를 유지
+아래 항목은 T1의 원리를 확인한 뒤 더 깊게 다루고 싶을 때만 수행한다. 현재 Session 6B의 필수 범위에는 포함하지 않는다.
+
+- 10 Hz와 20 Hz의 주기 sweep 및 후보 중 최대 안정 주기 측정
 - quaternion 정규화·부호 연속성
 - 요청 pose와 실제 pose의 정량 오차
 - 보간과 예측 적용
@@ -935,6 +937,8 @@ node·topic·message·QoS·parameter·launch의 관계를 작은 graph로 확인
 - node·topic·parameter·launch의 역할을 두 사람이 설명 가능
 
 같은 메시지 수를 장시간 세거나 의도적인 잘못된 frame·QoS 조합을 만드는 시험은 하지 않는다.
+
+> **완료 회차 가이드 보존:** 배포된 Session 1 HTML 가이드는 이미 사용 중인 해설 자료와 당시 실습 절차에 맞춰 기존본을 유지한다. 그 가이드에 남은 graph 다중 확인, YAML 원복 재빌드, 로그 재확인과 회차 사이 재실행은 완료 회차의 보존 절차이며, 이후 회차의 반복 의무나 v4.0.1의 최소 완료 기준으로 확대하지 않는다.
 
 ---
 
@@ -1579,6 +1583,12 @@ Gate는 다음 주차에 필요한 정상 연결을 확인하는 장치다. 품�
 
 # 18. 개정 이력
 
+## v4.0.1 — 2026-08-05
+
+- 기존 해설 자료와 맞춘 Session 1 가이드를 완료 회차 보존본으로 명시하고, 현재 최소 완료 기준과 구분
+- Week 0의 핵심 실습은 유지하면서 삭제된 `6A-min`·Session 6B 하위 절을 가리키던 참조를 선택 확장 설명으로 교정
+- 가이드 목록·작성 지침·진행 기록과 Session 2 준비 절차의 소규모 교차 문서 불일치를 정리
+
 ## v4.0.0 — 2026-08-05
 
 - Week 0 본문은 변경하지 않고 Week 1~4를 개념 순회형으로 전면 개편
@@ -1593,7 +1603,7 @@ Gate는 다음 주차에 필요한 정상 연결을 확인하는 장치다. 품�
 
 - 중첩 action, 다층 상태·status, heartbeat·watchdog, timeout·retry, 30·20·10회 평가, batch·artifact 계약까지 제품형 신뢰성 구조를 상세 설계했다.
 - TF·reset·transport·평가 데이터의 생산자와 소비자, 문서 경로, fallback 조건을 반복 교정한 기록은 `progress.md`와 Git 이력에 보존한다.
-- 위 계약은 v4.0.0의 현재 필수 범위가 아니다. 필요한 심화 항목만 §14의 확장 메뉴에서 선택적으로 참고한다.
+- 위 계약은 v4.0.1의 현재 필수 범위가 아니다. 필요한 심화 항목만 §14의 확장 메뉴에서 선택적으로 참고한다.
 
 ## 유지한 핵심 방향
 

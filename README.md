@@ -4,7 +4,7 @@ ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤
 
 > **현재 상태 — 2026-08-05**
 >
-> 실행 커리큘럼 `v4.0.0` · **Week 0 및 Session 1 완료** · 다음 Session 2 간소화 action·상태기계 골격
+> 실행 커리큘럼 `v4.0.1` · **Week 0 및 Session 1 완료** · 다음 Session 2 간소화 action·상태기계 골격
 
 ## 바로가기
 

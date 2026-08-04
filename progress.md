@@ -1,6 +1,6 @@
 # 진행 상황과 실행 로그
 
-> **현재 단계:** Week 1 진행 중 — v4.0.0 개편·저장소 전반 재검토 완료, Session 1 완료
+> **현재 단계:** Week 1 진행 중 — v4.0.1 교차 문서 보정·Session 1 가이드 보존 완료
 >
 > **다음 Gate:** Week 1 Gate — Session 1~3 시스템 뼈대 연결
 >
@@ -12,7 +12,7 @@
 
 | 단계 | 상태 | 현재 결과 / 진입 조건 |
 |---|---|---|
-| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v4.0.0에서 Week 1~4를 개념 순회형으로 개편하고 Week 0은 보존 |
+| 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v4.0.1에서 Week 1~4 개념 순회형과 완료 회차 가이드 보존 원칙을 정리 |
 | Week 0 — 환경·위험 제거 | **완료** | Gate 조건부 통과와 두 사람 확인 완료; C의 Session 5 `final` 재동결 조건은 6A 전까지 추적 |
 | Week 1 — ROS 2 시스템 뼈대 | **진행 중** | Session 1 완료; Session 2 간소화 action·상태 흐름과 Session 3 상위 launch 필요 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
@@ -42,6 +42,17 @@
 
 ## 회차 로그
 
+### 2026-08-05 — v4.0.1 최종 일관성 검토 · Session 1 가이드 보존
+
+- **상태:** 완료 — 대규모 재설계 없이 교차 문서·파일 구조의 소규모 불일치 보정
+- **목표:** v4.0.0 개편본과 Session 1 복원 뒤 문서 앞뒤, 색인, 가이드 자산과 실제 파일 구조가 다시 어긋난 곳이 없는지 확인
+- **수행:** PR #24 전 기준·개편본·Session 1 복원본을 비교하고 `progress.md`, `curriculum.md`, README 계열, 가이드 HTML·목록·작성 지침, `docs/` 경로표와 Session 1~2 제공 자산을 교차 검토했다. Session 1 HTML은 기존 해설 자료와 맞는 원본 blob을 그대로 보존하고 현재 커리큘럼의 최소 기준과 적용 범위만 문서화했다.
+- **결과:** 로컬 Markdown·HTML 링크, HTML ID·label·anchor, `guides.json` 항목·경로, JSON·XML·action 형식과 제공 Python 파일 AST 검사가 통과했다. Session 2 action·오류 코드·entry point·package 구조는 커리큘럼 및 가이드와 일치했다. Session 2 자산은 PR #24에서 이미 clean build·정상 action chain·manual cancel까지 확인한 동일본이므로 ROS runtime과 HTML 화면 검사는 반복하지 않았다.
+- **문제:** 기존 로그가 제거된 Session 1 절차를 현재 상태처럼 설명했고, 가이드 작성 지침은 존재하지 않는 README 목록 표 갱신을 요구했다. Week 0에는 삭제된 `6A-min`·Session 6B 하위 절 참조가 남았고, 가이드 보관함의 JavaScript 비활성 fallback과 Session 2 router 재사용 안내도 현재 구조와 어긋났다.
+- **결정:** Session 1 HTML 본문은 수정하지 않고 완료 회차 보존본으로 유지한다. 현재 필수 범위와 이후 Gate는 `curriculum.md` v4.0.1을 따르며, 확인된 나머지 불일치는 문구·참조·준비 절차만 최소 보정한다.
+- **다음:** 간소화한 Session 2 가이드 실행
+- **증빙:** [실행 커리큘럼 v4.0.1](./curriculum.md), [Session 1 실행 가이드](./guides/2026-08-02-session-1-ros-graph-data-flow.html), [Session 2 실행 가이드](./guides/2026-08-04-session-2-action-state-machine.html), [가이드 관리 규칙](./guides/README.md)
+
 ### 2026-08-05 — Week 1~4 커리큘럼 개편 · 개념 순회형 전환
 
 - **상태:** 완료 — 개편안과 저장소 전반 재검토 완료
@@ -51,7 +62,7 @@
 - **문제:** v3.5.5를 전제로 만든 Session 2 가이드·interface가 새 방향과 충돌했음
 - **결정:** 정상 action 완료 1회와 manual cancel 1회만 Session 2 필수 검증으로 유지하고, fault injection matrix와 batch 무결성 감사는 본과정 밖으로 분리
 - **다음:** 간소화한 Session 2 가이드 실행
-- **증빙:** [실행 커리큘럼 v4.0.0](./curriculum.md), [Session 1 실행 가이드](./guides/2026-08-02-session-1-ros-graph-data-flow.html), [Session 2 실행 가이드](./guides/2026-08-04-session-2-action-state-machine.html), [가이드 작성 지침](./guides/AUTHORING.md)
+- **증빙:** [실행 커리큘럼 v4.0.0](https://github.com/GIST-ISAAC-Robotics/2026-pnp-study/blob/497ba79d62a1fcaf01909a39a002c3fb784f1358/curriculum.md), [Session 1 실행 가이드](./guides/2026-08-02-session-1-ros-graph-data-flow.html), [Session 2 실행 가이드](./guides/2026-08-04-session-2-action-state-machine.html), [가이드 작성 지침](./guides/AUTHORING.md)
 
 ### 2026-08-04 — Session 1 · ROS graph와 데이터 흐름
 
