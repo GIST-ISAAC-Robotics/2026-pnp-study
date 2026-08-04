@@ -258,6 +258,24 @@ Gazebo 또는 MoveIt 동작 실패가 아니라 Git의 저장소 소유권 보�
   Windows↔WSL 비교도 명령 실행 지연을 포함해 약 `93 ms`였고 WSL NTP 동기화 상태는
   `yes`
 
+#### 2026-08-04 재발 방지 조치
+
+Session 1에서 같은 오류가 다시 발생해 확인한 결과, 공통 ROS 구성보다 이 PC의 Windows
+NTP 갱신 주기와 WSL의 별도 시각 보정이 겹친 호스트별 문제로 판정했다. Windows Time을
+자동 시작·복수 NTP 원본·짧은 polling으로 조정하고, 실행 중인 WSL만 Windows 시각에
+맞추는 사용자 예약 작업을 등록했다. 변경 전 W32Time 설정은
+`C:\ProgramData\PnPStudy\time-sync-backups`에 백업했다.
+
+복구·자동 동기화·ROS 재검증 스크립트는 유지보수 참고용으로
+[`tools/maintenance/time-sync`](../../tools/maintenance/time-sync)에 보관한다. 이 설정은
+특정 PC의 재발 조건을 기준으로 하므로 다른 PC에 적용하기 전 스크립트의 배포판 이름,
+NTP 원본과 polling 값을 확인한다.
+
+조치 후 실제 Session 1 topology를 60초간 재실행해 `/clock` 1회 수신,
+`PUBLISH=119`, `RECEIVE=119`, Zenoh timestamp 오류 합계 `0`을 확인했다. 검증 로그는
+`/workspace/pick_place_ws/time_sync_fix_validation.log`
+(`SHA-256 b66b3c6aed129438d15a0b5941f473ace804f9041c1ee527c965a9ed74d76792`)에 보존한다.
+
 같은 오류가 특정 PC에서만 발생하면 팀 공통 ROS 설정을 바꾸기 전에 해당 PC에서 다음을
 확인한다.
 

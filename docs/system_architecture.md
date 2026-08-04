@@ -70,13 +70,7 @@ Session 1에서는 카메라와 로봇 팔을 연결하지 않는다. `pnp_perce
 | `/workspace/pick_place_ws/session1_core.log` | 11,411,556 bytes / 27,078행 | `e8f35a26afb9c7b61a3a78bb9b5befa4f5a56b0d58192d0d8bc960425230db61` |
 | `/workspace/pick_place_ws/session1_yaml_example.log` | 960,489 bytes / 2,252행 | `b97e17b994731ff44908840eb393068d3a997577c5be35865ae11515f45be34a` |
 
-## 5. 알려진 문제와 판정
-
-두 실행 로그에는 Zenoh의 `incoming timestamp ... exceeding delta 500ms is rejected` 오류가 각각 25,434건과 2,160건 기록됐다. 관찰된 사례에서는 incoming timestamp가 현재 시각보다 약 0.5~0.73초 앞섰다. Windows·WSL·container 사이 wall-clock 불일치가 재발한 것으로 보이지만, Session 1에서는 시계를 직접 비교하고 동기화한 뒤 clean rerun하지 않았으므로 이번 회차만으로 원인을 재확정하지 않는다.
-
-오류가 지속되는 동안에도 Session 1이 직접 검증한 두 pose 흐름의 `PUBLISH`와 `RECEIVE` 건수와 payload는 모두 일치했다. 따라서 **Session 1의 ROS graph·YAML 데이터 흐름 기능 목표는 완료**로 판정하고, transport 시간 동기화는 Session 2 시작 전 선행 점검으로 추적한다.
-
-## 6. 이후 회차에서 추가할 항목
+## 5. 이후 회차에서 추가할 항목
 
 - Session 2: action, 3층 상태기계, cancel/timeout, `/task/status`, 오류 코드 초안
 - Session 3: controller와 상위 launch 연결, 실제 robot graph, TF 책임

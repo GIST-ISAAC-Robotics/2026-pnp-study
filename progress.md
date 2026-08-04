@@ -33,7 +33,7 @@
 - [x] RGB-depth registration 경계 3점과 CameraInfo 실제값 확인
 - [x] Week 0 조건부 Gate와 fallback 두 사람 확인
 - [x] Session 1: ROS graph와 데이터 흐름 실습
-- [ ] Session 2 시작 전 Windows·WSL·container 시간 동기화 확인과 Zenoh timestamp 오류 0건 재확인
+- [x] Session 2 시작 전 Windows·WSL·container 시간 동기화 확인과 Zenoh timestamp 오류 0건 재확인
 - [ ] Session 2: action과 3층 상태기계 골격
 - [ ] Session 3: controller와 상위 launch 연결 및 Week 1 Gate 판정
 - [ ] Session 5에서 IK workspace·tool offset 재시험 후 `ik_mode_status=final` 재동결 (6A 진입 전)
@@ -44,14 +44,14 @@
 
 ### 2026-08-04 — Session 1 · ROS graph와 데이터 흐름
 
-- **상태:** 완료 — 기능 기준 통과, Zenoh 시간 동기화 경고 추적
+- **상태:** 완료 — 기능 기준과 시간 동기화 재검증 통과
 - **목표:** node·topic·`PoseStamped`·QoS·parameter·launch의 관계를 최소 ROS graph로 구성하고, YAML 좌표 변경이 publisher에서 monitor까지 전달되는지 검증
 - **수행:** `/workspace/pick_place_ws`에 `pnp_perception`, `pnp_orchestrator`, `pnp_bringup` 세 패키지를 만들고 제공 자산을 배치·build했다. Gazebo의 `/clock`을 ROS 2로 bridge한 뒤 `core_skeleton.launch.py`로 `target_pose_publisher`와 `target_pose_monitor`를 함께 실행했다. node/topic/type/QoS/message/sim-time 연결을 확인하고 YAML의 `target_y`를 `0.0`에서 `0.05`로 바꿔 재실행한 뒤 원래 값으로 복원했다.
-- **결과:** 기본 좌표 `(0.160, 0.000, 0.120)`의 `PUBLISH`와 `RECEIVE`가 각각 819건, YAML 변경 좌표 `(0.160, 0.050, 0.120)`가 각각 43건으로 수와 payload가 일치했다. 두 executable, `pnp_bringup` 설치 경로와 `params_file` launch argument가 검색됐고 source·install YAML 모두 `target_y: 0.0`으로 복원됐다. core launch·clock bridge·Gazebo·Zenoh router 종료 후 관련 잔여 프로세스가 없고 container는 `Up`임을 확인했으며, `docs/system_architecture.md`의 최초 버전을 작성했다.
-- **문제:** `session1_core.log`에 Zenoh `exceeding delta 500ms` 오류 25,434건, `session1_yaml_example.log`에 2,160건이 기록됐다. 관찰된 incoming timestamp는 local now보다 약 0.5~0.73초 앞섰다. pose 흐름의 발행·수신은 일치했지만 transport 로그가 clean하지 않으며, 이번 회차에는 Windows·WSL·container 시계 비교·동기화 후 재실행을 수행하지 않았다.
-- **결정:** Session 1의 graph·parameter·데이터 전달 기능 목표는 완료로 판정한다. 다만 시간 불일치의 원인을 이번 로그만으로 재확정하지 않고, Session 2 시작 전에 Windows Time 동기화와 전체 topology 재기동 후 Zenoh timestamp 오류 0건을 확인한다. 같은 오류가 남으면 새 기능 추가보다 시간 경로 복구를 우선한다.
-- **다음:** Session 2에서 action과 3층 상태기계 골격을 구현하되, 시작 전 wall-clock 동기화 확인을 선행한다.
-- **증빙:** [시스템 구조와 인터페이스](./docs/system_architecture.md), [Session 1 실행 가이드](./guides/2026-08-02-session-1-ros-graph-data-flow.html), container 영속 로그 `/workspace/pick_place_ws/session1_core.log` (`SHA-256 e8f35a26...230db61`)와 `/workspace/pick_place_ws/session1_yaml_example.log` (`SHA-256 b97e17b9...be34a`)
+- **결과:** 기본 좌표 `(0.160, 0.000, 0.120)`의 `PUBLISH`와 `RECEIVE`가 각각 819건, YAML 변경 좌표 `(0.160, 0.050, 0.120)`가 각각 43건으로 수와 payload가 일치했다. 두 executable, `pnp_bringup` 설치 경로와 `params_file` launch argument가 검색됐고 source·install YAML 모두 `target_y: 0.0`으로 복원됐다. 후속 시간 복구 뒤 60초 재시험은 `/clock` 1회, `PUBLISH=119`, `RECEIVE=119`, Zenoh timestamp 오류 합계 0건이었다. core launch·clock bridge·Gazebo·Zenoh router 종료 후 관련 잔여 프로세스가 없음을 확인하고 `docs/system_architecture.md`의 최초 버전을 작성했다.
+- **문제:** 최초 두 로그에 Zenoh `exceeding delta 500ms` 오류가 각각 25,434건과 2,160건 기록됐다. pose 발행·수신은 일치했지만 transport 로그가 clean하지 않아 Windows·WSL·container 시각 경로를 별도로 진단했다.
+- **결정:** 메인 PC의 Windows NTP와 WSL 시각 보정 경로를 정리하고 자동 동기화를 구성했다. 전체 topology 재시험에서 오류 0건을 확인했으며 Zenoh 허용치 500ms는 완화하지 않는다. 상세 조치와 보조 스크립트는 Docker 환경 문서에만 기록한다.
+- **다음:** Session 2에서 action과 3층 상태기계 골격을 구현한다.
+- **증빙:** [시스템 구조와 인터페이스](./docs/system_architecture.md), [Docker 개발 환경과 시각 동기화 복구](./docs/setup/docker.md#117-메인-pc에서만-발생한-시각-동기화-문제), [Session 1 실행 가이드](./guides/2026-08-02-session-1-ros-graph-data-flow.html), 최초 container 로그 `/workspace/pick_place_ws/session1_core.log` (`SHA-256 e8f35a26...230db61`)·`session1_yaml_example.log` (`SHA-256 b97e17b9...be34a`), 복구 검증 로그 `/workspace/pick_place_ws/time_sync_fix_validation.log` (`SHA-256 b66b3c6a...4d76792`)
 
 ### 2026-08-02 — Session 0-3 · 핵심 위험 3종 spike와 Week 0 Gate
 
