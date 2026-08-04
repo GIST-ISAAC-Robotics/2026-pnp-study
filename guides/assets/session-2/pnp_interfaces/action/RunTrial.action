@@ -1,24 +1,11 @@
-uint8 PICK_LIFT_ONLY=1
-uint8 FULL_PICK_PLACE=2
 string run_id
-uint32 seed
-string object_id
-uint8 task_scope
+bool use_perception
+geometry_msgs/PoseStamped fixed_object_pose
 geometry_msgs/PoseStamped place_pose
 ---
-bool trial_completed
-bool pipeline_success
-bool perception_source_accepted
-builtin_interfaces/Time perception_source_stamp
-string perception_source_frame
-bool transport_prepare_attempted
-pnp_interfaces/StageStatus stage_status
-uint8 outer_input_retry_count
-uint8 planning_replan_count
-uint8 verify_pick_recheck_count
-float32 planning_time_ms
+bool success
 uint16 error_code
 string message
 ---
-string outer_stage
+string stage
 float32 progress

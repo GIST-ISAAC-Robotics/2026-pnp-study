@@ -1,17 +1,17 @@
 # 2026 여름 픽앤플레이스 스터디
 
-ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤플레이스 시스템을 처음부터 반복 평가까지 완주하는 2인 스터디입니다.
+ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤플레이스의 주요 개념을 한 바퀴 경험하는 2인 스터디입니다.
 
-> **현재 상태 — 2026-08-04**
+> **현재 상태 — 2026-08-05**
 >
-> 실행 커리큘럼 `v3.5.5` · **Week 0 및 Session 1 완료** · 다음 Session 2 action·상태기계 골격
+> 실행 커리큘럼 `v4.0.0` · **Week 0 및 Session 1 완료** · 다음 Session 2 간소화 action·상태기계 골격
 
 ## 바로가기
 
 | 문서 | 용도 |
 |---|---|
 | [커리큘럼 웹 뷰](https://gist-isaac-robotics.github.io/2026-pnp-study/) | 검색·자동 목차·장별 접기를 지원하는 기본 열람 페이지 |
-| [일일 실행 가이드](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/) | 날짜별 준비물, 명령, 검증 기준을 모은 따라 하기용 가이드 보관함 |
+| [일일 실행 가이드](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/) | 날짜별 준비물, 명령, 필수 완료 기준을 모은 따라 하기용 가이드 보관함 |
 | [실행 커리큘럼](./curriculum.md) | 구현 계약과 회차별 실습을 담은 원본 Markdown |
 | [진행 상황과 로그](./progress.md) | 현재 단계, 다음 작업, 회차별 결과와 증빙 기록 |
 | [문서 산출물 경로](./docs/README.md) | `docs/` 전문 문서의 정확한 경로와 작성·갱신 회차 |
@@ -24,8 +24,8 @@ ROS 2 · Gazebo · MoveIt 2 · RGB-D를 연결해, 시뮬레이션 기반 픽앤
 | 인원 | 2명 |
 | 환경 | Windows + WSL2 Ubuntu 24.04 · ROBOTIS 공식 Docker · ROS 2 Jazzy · Gazebo Harmonic · MoveIt 2 |
 | 대상 | OpenMANIPULATOR-X 시뮬레이션 |
-| 최종 목표 | RGB-D 인식 → TF 변환 → pick → transport/place → 반복 평가·CSV |
-| 운영 방식 | 매 회차 실행 증빙과 로그를 남기고 Week별 Gate로 다음 단계 진입 여부 판정 |
+| 최종 목표 | RGB-D 인식 → TF 변환 → pick → transport/place → 간단한 5회 평가·CSV |
+| 운영 방식 | 정상 경로를 먼저 완주하고, 개념 이해에 필요한 대표 확인만 수행한 뒤 Week별 Gate로 다음 단계 진입 여부 판정 |
 
 상세 성공 기준, fallback, 인터페이스 계약과 회차별 완료 조건은 [curriculum.md](./curriculum.md)를 기준으로 합니다. README는 입구이고, 커리큘럼이 계약 원본입니다. 둘이 싸우면 커리큘럼이 이깁니다.
 
@@ -42,15 +42,9 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 
 ## 일일 실행 가이드
 
-매일 실제로 따라 할 준비물, 명령, 검증 기준과 기록 방법은 [일일 실행 가이드 보관함](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/)에 모읍니다. 가이드의 날짜는 **제작일 기준**입니다. 새 가이드는 [`guides/`](./guides/)에 HTML 파일을 추가하고 [`guides.json`](./guides/guides.json)에 항목 하나를 등록하면 보관함에 최신순으로 나타납니다.
+매일 실제로 따라 할 준비물, 명령, 필수 완료 기준과 기록 방법은 [일일 실행 가이드 보관함](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/)에 모읍니다. 가이드의 날짜는 **제작일 기준**입니다. 새 가이드는 [`guides/`](./guides/)에 HTML 파일을 추가하고 [`guides.json`](./guides/guides.json)에 항목 하나를 등록하면 보관함에 최신순으로 나타납니다.
 
-| 제작일 | 회차 | 가이드 |
-|---|---|---|
-| 2026-07-31 | Session 0-3 | [핵심 위험 3종 spike](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-31-session-0-3-week0-spikes.html) |
-| 2026-07-29 | Session 0-2 | [공식 Gazebo·MoveIt smoke test](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-29-session-0-2-gazebo-moveit-smoke-test.html) |
-| 2026-07-28 | Session 0-1 | [ROBOTIS Docker 환경 구축](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-28-session-0-1-docker-setup.html) |
-
-파일명과 목록 갱신 규칙은 [`guides/README.md`](./guides/README.md)에 정리되어 있습니다.
+개별 항목은 중복 표로 관리하지 않습니다. 현재 전체 목록은 보관함 또는 [`guides.json`](./guides/guides.json)에서 확인하고, 파일명과 갱신 규칙은 [`guides/README.md`](./guides/README.md)를 따릅니다.
 
 ## 의사결정 아카이브
 
@@ -74,11 +68,7 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 │   ├── index.html                    # GitHub Pages 가이드 보관함
 │   ├── guides.json                   # 가이드 목록의 단일 원본
 │   ├── assets/                       # 가이드에서 내려받는 예제 코드·모델
-│   ├── 2026-07-28-session-0-1-docker-setup.html
-│   ├── 2026-07-29-session-0-2-gazebo-moveit-smoke-test.html
-│   ├── 2026-07-31-session-0-3-week0-spikes.html
-│   ├── 2026-08-02-session-1-ros-graph-data-flow.html
-│   └── 2026-08-04-session-2-action-state-machine.html
+│   └── YYYY-MM-DD-session-*.html      # 회차별 실행 가이드
 ├── docs/
 │   ├── README.md                     # 전문 산출물 경로표
 │   ├── setup/
@@ -100,8 +90,9 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 ## 운영 원칙
 
 - 구현·평가 기준은 항상 `curriculum.md`의 최신 버전을 따릅니다.
-- 한 회차는 실행 가능한 증빙과 `progress.md` 로그가 있어야 종료됩니다.
+- 한 회차는 핵심 목표의 정상 실행 결과와 다음 작업자가 이어갈 기록이 있으면 종료합니다.
 - `docs/` 전문 산출물은 [경로표](./docs/README.md)에 적힌 파일만 해당 회차에서 생성합니다.
-- 기능 수보다 end-to-end 완주와 반복 재현성을 우선합니다.
+- 모든 예외를 미리 닫기보다 end-to-end 개념 순회와 정상 경로 완주를 우선합니다.
+- 의도적 오류 주입은 커리큘럼이 지정한 대표 사례만 수행하고, 같은 검증은 구현·환경이 바뀐 경우에만 반복합니다.
 - 축소 경로를 택했다면 이유와 영향을 함께 기록합니다.
 - 비밀키, 개인 토큰, 대용량 bag·영상 원본은 저장소에 직접 commit하지 않습니다.

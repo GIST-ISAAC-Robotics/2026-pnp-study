@@ -72,7 +72,7 @@ Session 1에서는 카메라와 로봇 팔을 연결하지 않는다. `pnp_perce
 
 ## 5. 이후 회차에서 추가할 항목
 
-- Session 2: action, 3층 상태기계, cancel/timeout, `/task/status`, 오류 코드 초안
+- Session 2: 두 action의 정상 데이터 흐름, 간단한 상태 흐름, manual cancel
 - Session 3: controller와 상위 launch 연결, 실제 robot graph, TF 책임
-- Session 10: 최종 상태 전이도, 오류 코드, retry·cleanup 경계
+- Session 10: 실제 node 연결, 최소 오류 코드와 cleanup 흐름
 - Session 12: 최종 구조, 재현 명령과 Known issues 확정

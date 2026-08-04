@@ -1,19 +1,19 @@
 {
   "schema_version": 1,
-  "updated": "2026-08-04",
+  "updated": "2026-08-05",
   "guides": [
     {
       "date": "2026-08-04",
       "session": "Session 2",
       "title": "Action과 상태기계 골격",
-      "description": "중첩 action 계약과 3층 상태기계를 만들고 성공·실패·취소·heartbeat timeout·SAFE_STOP 경로를 dummy server로 검증합니다.",
+      "description": "두 단계 action과 간단한 상태 흐름을 만들고 정상 완료와 manual cancel을 한 번씩 경험합니다.",
       "path": "./2026-08-04-session-2-action-state-machine.html",
       "tags": [
         "Week 1",
         "ROS 2 action",
         "state machine",
-        "cancel",
-        "watchdog"
+        "feedback",
+        "manual cancel"
       ]
     },
     {

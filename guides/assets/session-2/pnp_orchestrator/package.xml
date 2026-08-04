@@ -2,7 +2,7 @@
 <package format="3">
   <name>pnp_orchestrator</name>
   <version>0.0.0</version>
-  <description>Outer task orchestration skeleton for the pick-and-place study.</description>
+  <description>Minimal RunTrial to PickPlace action chain for the study.</description>
   <maintainer email="student@example.com">PNP Study</maintainer>
   <license>Apache-2.0</license>
 
@@ -10,11 +10,6 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>pnp_interfaces</exec_depend>
   <exec_depend>rclpy</exec_depend>
-
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
-  <test_depend>python3-pytest</test_depend>
 
   <export>
     <build_type>ament_python</build_type>

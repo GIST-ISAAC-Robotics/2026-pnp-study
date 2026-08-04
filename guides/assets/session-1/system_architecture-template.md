@@ -40,12 +40,12 @@ flowchart LR
 
 - 기본 pose: `[ ] PUBLISH와 RECEIVE 확인`
 - YAML 좌표 변경: `[ ] 변경한 y 좌표가 양쪽 로그에 반영됨을 확인`
-- ROS graph 캡처: `TODO: 파일 또는 링크`
+- ROS graph 그림 또는 topic 상세 출력: `TODO: 파일 또는 링크`
 - 재현 담당/날짜: `TODO`
 
 ## 6. 이후 회차에서 추가할 항목
 
-- Session 2: action, 3층 상태기계, cancel/timeout, `/task/status`, 오류 코드 초안
+- Session 2: 두 action, 간단한 상태 흐름, manual cancel, 최소 오류 코드
 - Session 3: controller와 상위 launch 연결, 실제 ROS graph
-- Session 10: 최종 상태 전이도, 오류 코드, retry·cleanup 경계
+- Session 10: 실제 노드 상태 흐름, 대표 `TARGET_UNAVAILABLE`, cleanup
 - Session 12: 최종 구조와 재현 명령
