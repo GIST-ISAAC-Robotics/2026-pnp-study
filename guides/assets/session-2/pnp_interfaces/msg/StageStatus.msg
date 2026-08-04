@@ -1,0 +1,9 @@
+uint32 DETECTION=1
+uint32 TF=2
+uint32 PLANNING=4
+uint32 VERIFY_PICK=8
+uint32 TRANSPORT=16
+uint32 PLACE=32
+uint32 CLEANUP=64
+uint32 reached_mask
+uint32 succeeded_mask

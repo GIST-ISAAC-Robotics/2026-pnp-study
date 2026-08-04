@@ -77,7 +77,8 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 │   ├── 2026-07-28-session-0-1-docker-setup.html
 │   ├── 2026-07-29-session-0-2-gazebo-moveit-smoke-test.html
 │   ├── 2026-07-31-session-0-3-week0-spikes.html
-│   └── 2026-08-02-session-1-ros-graph-data-flow.html
+│   ├── 2026-08-02-session-1-ros-graph-data-flow.html
+│   └── 2026-08-04-session-2-action-state-machine.html
 ├── docs/
 │   ├── README.md                     # 전문 산출물 경로표
 │   ├── setup/
