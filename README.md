@@ -44,15 +44,7 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 
 매일 실제로 따라 할 준비물, 명령, 필수 완료 기준과 기록 방법은 [일일 실행 가이드 보관함](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/)에 모읍니다. 가이드의 날짜는 **제작일 기준**입니다. 새 가이드는 [`guides/`](./guides/)에 HTML 파일을 추가하고 [`guides.json`](./guides/guides.json)에 항목 하나를 등록하면 보관함에 최신순으로 나타납니다.
 
-| 제작일 | 회차 | 가이드 |
-|---|---|---|
-| 2026-08-04 | Session 2 | [Action과 상태기계 골격](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-08-04-session-2-action-state-machine.html) |
-| 2026-08-02 | Session 1 | [ROS graph와 데이터 흐름](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-08-02-session-1-ros-graph-data-flow.html) |
-| 2026-07-31 | Session 0-3 | [핵심 위험 3종 spike](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-31-session-0-3-week0-spikes.html) |
-| 2026-07-29 | Session 0-2 | [공식 Gazebo·MoveIt smoke test](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-29-session-0-2-gazebo-moveit-smoke-test.html) |
-| 2026-07-28 | Session 0-1 | [ROBOTIS Docker 환경 구축](https://gist-isaac-robotics.github.io/2026-pnp-study/guides/2026-07-28-session-0-1-docker-setup.html) |
-
-파일명과 목록 갱신 규칙은 [`guides/README.md`](./guides/README.md)에 정리되어 있습니다.
+개별 항목은 중복 표로 관리하지 않습니다. 현재 전체 목록은 보관함 또는 [`guides.json`](./guides/guides.json)에서 확인하고, 파일명과 갱신 규칙은 [`guides/README.md`](./guides/README.md)를 따릅니다.
 
 ## 의사결정 아카이브
 
@@ -76,11 +68,7 @@ GitHub Pages 메인 화면은 `progress.md`를 직접 불러오므로 별도 HTM
 │   ├── index.html                    # GitHub Pages 가이드 보관함
 │   ├── guides.json                   # 가이드 목록의 단일 원본
 │   ├── assets/                       # 가이드에서 내려받는 예제 코드·모델
-│   ├── 2026-07-28-session-0-1-docker-setup.html
-│   ├── 2026-07-29-session-0-2-gazebo-moveit-smoke-test.html
-│   ├── 2026-07-31-session-0-3-week0-spikes.html
-│   ├── 2026-08-02-session-1-ros-graph-data-flow.html
-│   └── 2026-08-04-session-2-action-state-machine.html
+│   └── YYYY-MM-DD-session-*.html      # 회차별 실행 가이드
 ├── docs/
 │   ├── README.md                     # 전문 산출물 경로표
 │   ├── setup/

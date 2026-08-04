@@ -1,6 +1,6 @@
 # 진행 상황과 실행 로그
 
-> **현재 단계:** Week 1 진행 중 — v4.0.0 개편안 작성, Session 1 완료
+> **현재 단계:** Week 1 진행 중 — v4.0.0 개편·저장소 전반 재검토 완료, Session 1 완료
 >
 > **다음 Gate:** Week 1 Gate — Session 1~3 시스템 뼈대 연결
 >
@@ -44,13 +44,13 @@
 
 ### 2026-08-05 — Week 1~4 커리큘럼 개편 · 개념 순회형 전환
 
-- **상태:** 완료 — 개편안 작성, PR 검토 대기
+- **상태:** 완료 — 개편안과 저장소 전반 재검토 완료
 - **목표:** Week 0은 보존하고 Week 1~4에서 핵심 학습을 벗어난 반복 검증·대규모 fault injection·평가 계약을 줄임
 - **수행:** 정상 경로 우선, 대표 오류 확인은 회차당 최대 한 가지, 같은 검증은 구현·환경 변경 때만 반복하는 원칙으로 `curriculum.md`를 v4.0.0으로 개편했다. Session 2의 heartbeat·중첩 cancel timeout·invalid profile/scope·`SAFE_STOP`·stage mask 시험을 필수에서 제거하고, Week 2·3은 각 3회, Week 4 최종 평가는 5회로 축소했다. Session 1 가이드의 GUI 설치·YAML 원복 재빌드·로그 재감사·회차 사이 의무 재실행도 제거했으며, Session 2 가이드와 제공 자산·가이드 목록·문서 작성 규칙을 같은 방향으로 정리했다.
-- **결과:** 커리큘럼은 3,756줄에서 1,747줄로 줄었고, main과 비교한 Week 0 구간은 줄바꿈 정규화 뒤 동일했다(SHA-256 `99269a8568f68f91155187fc66178ce698da7b555ff6657ed905034cee62ffb6`). 기존 상세 신뢰성 검증은 삭제하지 않고 §14의 선택 확장으로 이동했다.
+- **결과:** 커리큘럼은 3,756줄에서 1,602줄로 줄었고, main과 비교한 Week 0 구간은 줄바꿈 정규화 뒤 동일했다(SHA-256 `99269a8568f68f91155187fc66178ce698da7b555ff6657ed905034cee62ffb6`). 기존 상세 신뢰성 검증은 본과정에서 제거하고 §14에 선택 확장 주제로 요약했으며, 구체 명세는 Git 이력의 v3.5.5에 남겼다. README·진행 기록·전문 문서 경로표·가이드 목록·Session 2 제공 자산까지 교차 검토해 반복 Gate 실행과 오래된 정밀 평가 계약도 정리했다.
 - **문제:** v3.5.5를 전제로 만든 Session 2 가이드·interface가 새 방향과 충돌했음
 - **결정:** 정상 action 완료 1회와 manual cancel 1회만 Session 2 필수 검증으로 유지하고, fault injection matrix와 batch 무결성 감사는 본과정 밖으로 분리
-- **다음:** 개편 PR 검토·merge 뒤 간소화한 Session 2 가이드 실행
+- **다음:** 간소화한 Session 2 가이드 실행
 - **증빙:** [실행 커리큘럼 v4.0.0](./curriculum.md), [Session 1 실행 가이드](./guides/2026-08-02-session-1-ros-graph-data-flow.html), [Session 2 실행 가이드](./guides/2026-08-04-session-2-action-state-machine.html), [가이드 작성 지침](./guides/AUTHORING.md)
 
 ### 2026-08-04 — Session 1 · ROS graph와 데이터 흐름

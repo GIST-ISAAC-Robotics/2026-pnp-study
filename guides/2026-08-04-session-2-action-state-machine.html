@@ -191,7 +191,7 @@
       <h1>Action과<br>상태기계 골격</h1>
       <p class="hero-lead">오래 걸리는 작업을 요청하고, 진행 단계를 feedback으로 보며, 한 번의 수동 취소까지 경험하는 두 단계 action 체인을 만듭니다. 오늘의 inner server는 로봇을 움직이지 않는 dummy입니다.</p>
       <div class="pill-row">
-        <span class="pill">예상 2~3시간</span>
+        <span class="pill">예상 약 2시간</span>
         <span class="pill">ROS 2 Jazzy · Python</span>
         <span class="pill">RunTrial → PickPlace</span>
         <span class="pill">실행 창 T0~T3</span>
@@ -230,7 +230,7 @@
 
       <h3>이번 회차 완료 기준</h3>
       <ul class="checklist">
-        <li><input id="v4-goal-build" type="checkbox"><label for="v4-goal-build">간소화한 두 action과 세 Python 패키지가 clean build됩니다.</label><span class="tag">BUILD</span></li>
+        <li><input id="v4-goal-build" type="checkbox"><label for="v4-goal-build">간소화한 두 action과 세 ROS 패키지가 clean build됩니다.</label><span class="tag">BUILD</span></li>
         <li><input id="v4-goal-success" type="checkbox"><label for="v4-goal-success">정상 goal에서 stage feedback과 <code>SUCCEEDED</code> result가 보입니다.</label><span class="tag">NORMAL</span></li>
         <li><input id="v4-goal-cancel" type="checkbox"><label for="v4-goal-cancel">manual cancel 한 번이 inner와 outer의 <code>CANCELED</code> terminal로 이어집니다.</label><span class="tag">CANCEL</span></li>
         <li><input id="v4-goal-explain" type="checkbox"><label for="v4-goal-explain">topic·service·action의 차이와 두 action의 역할을 설명할 수 있습니다.</label><span class="tag">CONCEPT</span></li>
@@ -346,7 +346,7 @@ sed -n '1,20p' src/pnp_interfaces/msg/ErrorCode.msg</pre>
           <p><code>RunTrial</code>은 목표 선택부터 조작 완료까지 전체 순서를 나타내고, <code>PickPlace</code>는 로봇 동작만 담당합니다. 이번 회차에는 dummy server를 쓰고 Session 4에서 실제 MoveIt server로 교체합니다.</p>
         </div>
       </details>
-      <div class="next-check">두 action과 최소 오류 코드, 세 Python package가 배치됐습니다.</div>
+      <div class="next-check">두 action과 최소 오류 코드, 세 ROS package가 배치됐습니다.</div>
     </section>
 
     <section id="step2">
@@ -447,7 +447,7 @@ RESULT status=SUCCEEDED success=true error_code=0 ...</pre>
     </section>
 
     <section id="step4">
-      <div class="kicker">Step 4 · 약 15분</div>
+      <div class="kicker">Step 4 · 약 10분</div>
       <h2><span class="step-badge">4</span>manual cancel 한 번 확인</h2>
       <p class="subtitle">고의 오류 시험군은 만들지 않습니다. Action의 핵심 기능인 사용자 취소만 한 번 경험합니다.</p>
 
@@ -466,18 +466,11 @@ ros2 run pnp_evaluation scenario_runner \
       </div>
       <p><code>CANCEL_SENT reason=manual</code> 뒤 <code>RESULT status=CANCELED</code>가 보이면 충분합니다. inner와 outer의 정확한 millisecond 경계, cancel timeout 예산, terminal 누락은 시험하지 않습니다.</p>
 
-      <h3>4-2 · 정상 goal 한 번 더 실행</h3>
-      <div class="code-block">
-        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>ros2 run pnp_evaluation scenario_runner \
-  --run-id session2-after-cancel</pre>
-      </div>
-      <p>다시 <code>SUCCEEDED</code>가 나오면 cancel 뒤 다음 작업을 받을 수 있음을 확인한 것입니다.</p>
       <div class="next-check">정상 실행과 수동 취소의 차이를 확인했습니다.</div>
     </section>
 
     <section id="finish">
-      <div class="kicker">Finish · 약 15분</div>
+      <div class="kicker">Finish · 약 10분</div>
       <h2>구조 문서를 갱신하고 clean stop</h2>
 
       <h3>F-1 · 구조 문서용 snippet 확인</h3>
@@ -488,20 +481,7 @@ ros2 run pnp_evaluation scenario_runner \
       </div>
       <p>실제 실행 결과를 확인한 뒤 <code>docs/system_architecture.md</code>의 Session 2 절에 정상 action 흐름과 manual cancel 결과를 반영합니다.</p>
 
-      <h3>F-2 · 핵심 로그만 확인</h3>
-      <div class="code-block">
-        <div class="code-head"><b>Bash</b><span class="where">Container (T3)</span><button class="copy" aria-label="코드 복사">복사</button></div>
-<pre>cd /workspace/pick_place_ws
-grep -h 'RESULT status=' \
-  session2_normal.log session2_manual_cancel.log
-
-grep -Rci 'exceeding delta' \
-  session2_dummy.log session2_orchestrator.log \
-  session2_normal.log session2_manual_cancel.log</pre>
-      </div>
-      <p><code>SUCCEEDED</code>와 <code>CANCELED</code>가 각각 보이면 됩니다. Zenoh timestamp 오류가 있으면 Session 1에서 정리한 시간 동기화 절차를 적용하되 action 실습 전체를 처음부터 반복하지 않습니다.</p>
-
-      <h3>F-3 · 종료 순서</h3>
+      <h3>F-2 · 종료 순서</h3>
       <ol>
         <li>T2 orchestrator에서 <kbd>Ctrl</kbd>+<kbd>C</kbd></li>
         <li>T1 dummy server에서 <kbd>Ctrl</kbd>+<kbd>C</kbd></li>

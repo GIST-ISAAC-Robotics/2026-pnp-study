@@ -390,6 +390,8 @@ IDLE → SETUP_SCENE → APPROACH → GRASP → LIFT
                             └──────→ FAILED
 ```
 
+위 흐름은 action feedback과 구조도에 쓰는 상위 stage다. Session 6A에서는 `APPROACH`와 `GRASP` 안의 실습 순서를 `PRE_GRASP`·`CLOSE`·`GRASP_CHECK`·`ATTACH`로 더 잘게 나누지만, 별도의 중첩 상태기계를 추가로 만들 필요는 없다.
+
 구현 규칙은 다음 정도로 제한한다.
 
 - 현재 stage를 feedback과 로그에 남긴다.
@@ -955,7 +957,7 @@ node·topic·message·QoS·parameter·launch의 관계를 작은 graph로 확인
 3. 로봇을 움직이지 않는 dummy `PickPlace` server를 만든다.
 4. orchestrator가 `RunTrial` goal을 받아 inner action을 호출하도록 연결한다.
 5. `SELECT_TARGET → CALL_PICK_PLACE → DONE` feedback을 확인한다.
-6. 정상 FULL pick-place dummy goal을 한 번 실행한다.
+6. 정상 전체 pick-place dummy goal을 한 번 실행한다.
 7. 실행 중 manual cancel을 한 번 보내 canceled terminal을 확인한다.
 8. `docs/system_architecture.md`에 두 action과 상태 흐름을 추가한다.
 
@@ -1163,7 +1165,7 @@ T1의 dropped update·RTT·timeout·relative-pose 오차를 전부 수집하지 
 
 ### Week 2 Gate
 
-- fixed pose pick-place 3회 실행
+- Session 6B에서 수행한 fixed pose pick-place 3회 결과
 - grasp check가 transport 전에 동작
 - T1 또는 T0 선택과 이유 기록
 - reset 후 다음 trial 실행 가능
@@ -1263,7 +1265,7 @@ TF 오류·stale message·out-of-workspace 입력을 각각 주입하는 시험�
 - live RGB-D 입력 사용
 - P1 또는 문서화한 P2 선택
 - camera → planning frame TF 변환
-- sensor-to-action 3회와 최소 1회 전체 성공
+- Session 9에서 수행한 sensor-to-action 3회 결과와 최소 1회 전체 성공
 
 ---
 
@@ -1428,11 +1430,12 @@ reset 실패를 성공률 분모에 넣는 계약, stage별 `NA` 규칙, action�
 |---|---|---|
 | Week 0 | 환경·RGB-D·reset·transport·IK 경로 확인 | 문서화한 fallback 또는 blocker 판정 |
 | Week 1 | topic·action·TF·controller·상위 launch | 막힌 구성 요소만 복구 |
-| Week 2 | fixed pick-place 3회와 T1/T0 | 동작 단순화 후 완주 |
-| Week 3 | live sensor-to-action 3회와 최소 1회 성공 | P2 또는 workspace 축소 |
-| Week 4 | 최종 runner 5회, CSV, README, 시연 | 3회로 축소하고 한계 기록 |
+| Week 2 | Session 6B의 fixed pick-place 3회와 T1/T0 | 동작 단순화 후 완주 |
+| Week 3 | Session 9의 live sensor-to-action 3회와 최소 1회 성공 | P2 또는 workspace 축소 |
+| Week 4 | Session 11의 runner 5회, CSV, README, 시연 | 3회로 축소하고 한계 기록 |
 
 Gate는 다음 주차에 필요한 정상 연결을 확인하는 장치다. 품질보증 승인 절차처럼 사용하지 않는다.
+표의 횟수는 해당 주차 실습에서 이미 얻은 결과를 재사용하며, Gate 판정을 위해 같은 실행을 추가로 반복하지 않는다.
 
 ---
 
@@ -1448,7 +1451,7 @@ Gate는 다음 주차에 필요한 정상 연결을 확인하는 장치다. 품�
 - stage별 artifact 존재성 검사
 - 20~30회 batch와 중단·재개
 
-기존 v3.5.5의 상세 검증 항목은 사라진 것이 아니라 이 확장 트랙으로 이동한다.
+기존 v3.5.5의 상세 검증 항목은 본과정에서 제외했다. 나중에 필요해지면 Git 이력의 v3.5.5를 참고해 이 확장 트랙에서 필요한 항목만 선택적으로 되살린다.
 
 ## B. P1 견고성
 
@@ -1586,162 +1589,14 @@ Gate는 다음 주차에 필요한 정상 연결을 확인하는 장치다. 품�
 - Session 11의 artifact 존재성·NA·aborted batch·config hash 계약을 선택 신뢰성 확장으로 이관
 - 반복 검증은 구현·환경이 바뀐 경우에만 수행하도록 명시
 
-## v3.5.5 — 2026-07-28
+## v3.1~v3.5.5 — 상세 신뢰성 설계기 (현재 기준에서 폐기)
 
-- §4.4의 EEF `pick_pose` 방향 규칙 참조를 운영 규칙 장이 아니라 실제 정의 위치인 Session 5의 `ik_mode` 목표 생성 규칙으로 교정
-- Session 4의 「완료 기준에 추가」 절을 기본 완료 기준 뒤로 이동해, 추가 대상 절보다 먼저 나오던 역순 구조를 해소
-- Session 2가 명시한 `pnp_evaluation/test/` dummy server 경로를 §4.1 권장 패키지 트리에 반영
-- Session 8의 optical frame 이름 동결 회차를 프레임 고정표와 일치하는 Session 5·7로 교정 (Week 0 spike A는 공식 demo world 기준이므로 프로젝트 world frame 이름의 동결 회차가 아님)
-- `runner_profile` 용도표에 Session 6A 분리 시험의 `week2_baseline` 사용을 명시
-- §12.6과 §12.7 사이의 불필요한 구분선을 제거해 진단표 하위 절 서식을 통일
+- 중첩 action, 다층 상태·status, heartbeat·watchdog, timeout·retry, 30·20·10회 평가, batch·artifact 계약까지 제품형 신뢰성 구조를 상세 설계했다.
+- TF·reset·transport·평가 데이터의 생산자와 소비자, 문서 경로, fallback 조건을 반복 교정한 기록은 `progress.md`와 Git 이력에 보존한다.
+- 위 계약은 v4.0.0의 현재 필수 범위가 아니다. 필요한 심화 항목만 §14의 확장 메뉴에서 선택적으로 참고한다.
 
-## v3.5.4 — 2026-07-28
+## 유지한 핵심 방향
 
-- `docs/system_architecture.md`를 최종 시스템 구조도·상태 전이도·오류 코드 표의 단일 원본으로, `docs/frames.md`를 TF tree 원본으로 명시하고 S1·S2·S3·S10·S12의 실제 작성·갱신 책임을 연결
-- S0-2의 Docker smoke-test 문서 갱신과 S9의 통합·TF·평가 geometry 산출물 절을 복구하고 `docs/frames.md`·`docs/world_layout.md` 갱신 회차를 경로표와 일치시킴
-- Session 12의 Known issues·최종 실행 구성·축소 사유·후속 확장을 루트 `README.md`에 귀속해 최종 문서 산출물의 파일 경로를 닫음
-- §4.5 존재성 표에서 final GT 필수 조건을 `FULL_PICK_PLACE`로 한정해 `PICK_LIFT_ONLY`의 place/full-task `NA` 계약과 일치시킴
-- `docs/setup/week0_spike.md`의 최초 작성 회차를 실제 산출 회차인 S0-3으로 교정하고 README·문서 경로표를 동기화
-
-## v3.5.3 — 2026-07-28
-
-- S1 ROS graph 문서를 회차 일지로 오인하지 않도록 장기 보존 전문 문서 `docs/system_architecture.md`로 바꾸고 S1 최초 작성·S2~S3 갱신 책임을 명시
-- 정의 없이 한 번 쓰인 batch 식별자 표현을 제거하고 batch별 새 출력 디렉터리, `raw.csv`, `batch_summary.yaml`의 경로·schema·완주/중단 규칙을 추가
-- Session 11 산출물·완료 기준·Session 12 요약·최종 체크리스트에 batch summary를 연결하고 평가 중 `TASK_CANCELED`도 중단 batch 계약에 포함
-- reset 실패도 유효한 평가 row라는 계약과 Session 11 완료 기준을 일치시키고, Week 2 최소 CSV에 `reset_state_measured`와 final-GT audit 필드를 복구
-- `StageStatus` 생산자 표의 code-span 내부 pipe가 열 구분자로 해석되던 Markdown 표 렌더링 오류를 교정
-
-## v3.5.2 — 2026-07-27
-
-- reset 명령 경로 `reset_backend`와 actual pose·twist 측정 경로 `reset_state_source`를 분리하고 `ResetTrial.state_measured`·NaN/CSV NA 계약을 추가
-- gripper close exact-target 조건을 제거하고 close travel·final aperture의 구동 envelope로 교정해 정상 접촉 파지를 거부할 수 있는 모순을 해소
-- ROBOTIS Gazebo launch가 `.sdf`를 붙이는 실제 동작에 맞춰 `project_world_file`과 extensionless `world` argument를 분리
-- final GT가 terminal 뒤 늦게 도착한 과거 sample을 재사용하지 않도록 receive sequence와 source stamp의 이중 신선도 경계를 추가
-- 고정 bag을 개발 전용 deferred 경로로 명시하고 최종 P2·Week 3 Gate와 분리
-- manual confirmed cancel의 canonical `TASK_CANCELED` 코드와 reset·final-GT audit CSV 필드를 추가
-- README·progress·docs 경로표까지 v3.5.2 기록 계약으로 동기화
-
-## v3.5.1 — 2026-07-27
-
-- RGB-D 윗면점·AprilTag 원점과 collision object 중심을 분리하고, 중심 offset·고정 object orientation·EEF 방향의 생산자와 `config_hash` 입력을 명시
-- 고정 yaw가 실제로 복원되도록 `ResetTrial`에 position·orientation error를 분리하고 reset response→CSV→Gate 검증을 연결
-- Session 6A의 실제 호출 경로를 `RunTrial → PickPlace`로 복구하고, T0 lift 뒤 `UPDATE_ONCE`·relative-pose check 순서를 상태 계약과 일치시킴
-- 정적 table/world collision은 bringup, trial별 동적 object lifecycle은 manipulation이 소유하도록 체크리스트까지 일관되게 교정
-- `INTERNAL_ERROR`도 partial CSV를 flush한 뒤 batch를 중단하는 조건으로 통일하고, Week 3 sensor-to-action을 full-scope 평가 경로에 명시
-- ROS 2 interface 표기와 Gazebo Harmonic API 링크를 현재 배포 계약에 맞춰 교정
-
-## v3.5.0 — 2026-07-27
-
-- T0 one-shot과 T1 lifecycle에 `run_id`가 포함된 `ControlTransport.srv`를 추가하고 `START_FOLLOW | UPDATE_ONCE | CHECK_RELATIVE_POSE | STOP` command·phase·idempotency 계약을 정의
-- `VERIFY_PICK_BASELINE`이 평가용 topic이 아니라 같은 run의 `CHECK_RELATIVE_POSE` service response로 fresh GT/TF verdict를 받도록 배선
-- 두 action의 `task_scope`를 `PICK_LIFT_ONLY | FULL_PICK_PLACE`로 분리하고 scope 전파·required stage mask를 정의해 6A 정상 성공을 표현
-- sensor/fixed `object_pose`, EEF `pick_pose`/`place_pose`, scoring-only target을 분리하고 trial별 Planning Scene·robot cleanup 생명주기를 manipulation으로 일원화; evaluator는 reset service 호출·채점만 담당
-- inner state machine에 `SETUP_SCENE`과 명시적 `CLEANUP`을 추가하고 PLACE와 stop·detach·open·home·scene 제거 경계를 분리
-- 생산자·호출 인터페이스가 없던 sensor pick verify와 검증-source 문자열 필드를 본과정에서 제거하고 `VERIFY_PICK_BASELINE`만 필수 계약으로 유지
-- `planning_time_ms`를 모든 MoveIt planning call의 steady-clock wall duration 합계로 통일해 Cartesian path를 포함
-- yaw 미채점 시 최악 회전 footprint로 place threshold를 계산하고 `place_ok`와 물리 위치 지표 `place_success`를 분리
-- Session 5·6A·6B·10 축소 경로마다 checkpoint와 실제 완료 판정을 분리
-- 회차 로그는 `progress.md`, 전문 산출물 경로는 `docs/README.md`로 단일화해 정의되지 않은 반복 일지 요구를 제거
-
-## v3.4.1 — 미배포 검토안
-
-- Session 6B 작업 단계를 6A의 pick prefix만 재사용하도록 고쳐, 6A cleanup·terminal result·reset이 full trial 중간에 중복 실행되지 않게 함
-- `place_error_mm` L2 목표와 place zone/object 치수·safety margin에 기반한 `place_success_threshold_mm` 계산·동결 규칙을 추가
-- 두 action result에 manipulation 생산 검증-source 문자열과 `planning_time_ms`를 추가하고 outer 복사·CSV 변환·evaluator 시간 측정 계약을 명시했던 임시안 기록
-- 구형 pick stage 필드를 `verify_pick_ok`로 바꾸고 `StageStatus` 7개 bit와 stage 필드의 일대일 대응을 명시
-- 고정 scenario/CSV row 수 일치 조건을 완주 batch로 한정하고 중단 batch의 partial CSV 보존·최종 분모 제외 규칙을 추가
-
-## v3.4.0
-
-- 모호한 기존 약칭을 폐기하고 `completion_level`부터 `target_mode`까지 일곱 **최종 실행 구성 필드**를 명시
-- `PoseStamped` GT/perception에는 `run_id`가 없음을 반영해 action/status는 run ID, pose sample은 active attempt time window·timestamp slop으로 결합하도록 평가 계약 교정
-- 공통 `StageStatus`·retry counter를 action result에 추가해 CSV의 3상태 단계값과 재시도 횟수 생산자를 명시하고, EEF 명령 `place_pose`와 scoring-only object target을 분리
-- `ErrorCode.msg`에 numeric code를 동결하고 CSV primary code의 생산 계층·우선순위·action/transport 불일치 처리를 명시
-- reset 실패·정상 stage 미도달·분류된 no-terminal liveness 실패와 실제 `EVALUATION_DATA_MISSING`을 구분하고 CSV에 result 수신·stage 도달 flag와 `NA` 규칙 추가
-- `RunTrial`·`PickPlace` result에 `perception_source_accepted`·source stamp/frame·`transport_prepare_attempted`를 배선하고 prepare 도달 시에만 terminal `TransportStatus`를 요구
-- Session 6A 순서를 `/transport/prepare` grasp gate → attach → T1 start/T0 준비로 교정하고 evaluator 채점 전 manipulation 내부 reset을 금지
-- B-1 one-shot 실패를 T0로 축소하던 불가능한 Week 0 fallback을 hard blocker로 교정하고 B-2 연속 추종 실패만 T0 전환 허용
-- outer 입력 retry·inner planning replan·evaluator reset 소유권을 분리하고 active transport 위 prepare 덮어쓰기를 금지
-- reset angular speed 단위를 `rad/s`로 명시하고 필드명을 `angular_speed_rad_s`로 교정
-
-## v3.3.1
-
-- Week 0의 1점 IK fallback을 `ik_mode_status=provisional`로 명시하고, Session 5 grid 재판정·`final` 재동결·6A 진입 금지 규칙을 추가
-- `scenario_runner.py`에 `week2_baseline + fixed`와 `perception_evaluation + perception` profile을 분리해 Session 11 이후에도 Week 2 회귀 시험을 보존
-- profile/mode 불일치를 `INVALID_TARGET_MODE`로 attempt·reset 전에 거부하도록 Session 2·11과 최종 체크리스트에 배선
-- `TransportStatus`의 T1·T0·prepare 거부 상태열과 `PREPARED`·`FOLLOWING` 전이 시점을 정의하고 Session 6A 검증에 연결
-
-## v3.3.0
-
-- `RunTrial.result`에 outer `pipeline_success`를 추가하고 `trial_completed`와 성공 의미를 분리
-- `TransportStatus`에 grasp 평가·오차·max slip 누적값을 추가하고 evaluator의 run ID 기반 metric 결합·누락 중단 계약을 정의
-- `/transport/prepare`에서 caller 제공 목표 offset을 제거하고 transport가 fresh GT와 동시점 TF로 실제 `T_eef_object`를 내부 계산하도록 변경
-- `/perception/target_pose`를 source-frame 원본 pose로 바로잡고 orchestrator/evaluator의 `planning_frame` 변환 책임을 분리
-- `ResetTrial.initial_pose`를 stamped `world_frame` pose로 바꾸고 GT adapter·reset service를 Session 5 `simulation-min`, fixed runner를 Session 6B로 앞당겨 Week 2 무개입 10회 Gate를 실행 가능하게 함
-- Week 0 primary/fallback/hard-blocker 판정 규칙을 분리하고, 정의되지 않은 `L3` 명칭과 남은 `P0/L1` 구문을 제거
-- 고정 scenario마다 reset 전 attempt를 할당해 reset 실패도 raw CSV와 성공률 분모에 남기도록 평가 계약을 보강
-
-## v3.2.6
-
-- `6A-min` 이관 여부를 Week 0 이월·실패 규칙, 6A/6B 비교표, T1 주기 설명, 6B 실습에 연결해 10·20 Hz sweep의 수행·생략 조건을 통일
-- Session 10과 Session 12에 §2.2 최소 완료 세트로 이어지는 상태기계·오류 코드·테스트·README·도식·평가 요약·시연 영상 산출물을 명시
-
-## v3.2.5
-
-- `ResetTrial.srv`와 `reset_trial_node.py`를 Session 11의 구현·산출물에 배정하고 `/simulation/reset_trial`의 소유자와 완료 판정을 명시
-- Session 6A에 fail-closed skeleton과 `6A-min` 안전 체크포인트를 추가하고, 미완료 구현의 제한된 6B 이관·작업량 상쇄·T0 전환 규칙을 정의
-
-## v3.2.4
-
-- 중첩 action cancel 예산을 `pick_place_cancel_timeout_s` 5.0초와 `run_trial_cancel_timeout_s` 7.0초로 분리하고 2.0초 전파·정리 margin 불변식 및 경계 시험 추가
-- Session 6A에 당시의 legacy transport lifecycle server·status publisher·최소 T1/T0 구현을 산출물로 고정하고, Session 6B는 전 구간 확장·진단 강건화로 정리
-- §12.8 deadlock 진단에 `handle_cancel()` 수락, `MoveGroupInterface::stop()`, inner terminal state 확인 경로 추가
-
-## v3.2.3
-
-- Session 4의 manipulation liveness를 orchestrator `/task/status`에서 분리하고 `PickPlace` feedback·steady-clock action/stage timeout·cancel terminal state로 검증
-- 단일 cancel timeout의 기본값을 5.0초로 정하고 Session 2·11의 evaluator 구현에 연결 (v3.2.4에서 계층별 예산으로 분리)
-- §5.1 회차 구간 합계를 150~210분으로 맞추고 Week 0 총량과 하드 캡을 6~7.5시간으로 일치
-- `pnp_evaluation`, `pnp_simulation`, `pnp_transport` 패키지 생성 시점을 최초 사용 회차에 명시
-
-## v3.2.2
-
-- `TaskStatus`를 orchestrator 단일 발행·evaluation watchdog 구독으로 배선하고 steady-clock 주기·timeout·idle/active 의미를 정의
-- Session 2·Week 1 Gate·Session 4·Session 11·최종 체크리스트에 `/task/status` 구현과 fault injection을 연결하고 `TASK_HEARTBEAT_TIMEOUT` 오류 코드를 추가
-- §2.4의 단계 검증 횟수 설명에 Week 3 Gate를 포함해 §9의 최소 10회 trial과 일치시킴
-
-## v3.2.1
-
-- `pnp_interfaces`의 action·service·message 6개와 `pnp_transport`의 gate·server·T0/T1 구현을 4.1 패키지 트리에 반영
-- 최종 평가 30·20·10회의 중앙/좌우/경계 표본 비율과 고정 seed 축소 규칙 추가
-- 회차 사이 개인 작업을 1인당 주 2시간으로 제한하고 6A·6B 축소분과 Week 2 10회 시험의 중복 누적 제거
-- grasp gate의 close 조건이 명령 실행 확인일 뿐 파지 증거가 아님을 명시
-- Planning Scene 존재 조건을 attach 전 world collision object 등록으로 구체화
-- 목차에 §5·§11·§14·§16·§17 추가
-- 본문의 과거 버전 참조를 제거하고 최종 평가 횟수의 단일 기준을 §2.5로 통합
-
-## v3.2
-
-- effective `position_only_ik`를 가정하지 않고 Week 0에서 position-only/full-pose를 비교해 `ik_mode`를 동결
-- `base_link` 하드코딩을 제거하고 planning frame·`link1`·EEF·camera frame 역할 분리
-- PosePublisher → bridge → adapter ground-truth 생산 경로 추가
-- evaluator·orchestrator·manipulation의 3층 상태기계와 `RunTrial`/`PickPlace` action 분리
-- legacy transport lifecycle, 1-in-flight/latest-wins 정책, custom status 계약 추가
-- RGB-depth registration·CameraInfo·optical frame 검증 추가
-- SetEntityPose와 pose+twist reset backend 분리
-- project world argument, package resource export, model URI 규칙 추가
-- 결과물을 최소·선택 경로·권장 증빙으로 분리하고 L2/L1-fallback 평가 횟수 고정
-- grasp frame·접근축 변환·desired axial offset·gripper aperture 계약과 6A cleanup 보강
-- sim time과 steady-clock watchdog 분리
-- 확장 메뉴를 실제 추천 순서로 재배치
-
-## v3.1
-
-- grasp geometry gate, 성공 지표 3분할, Week 0 위험 spike, Session 6A/6B 분할
-- 접근축 벡터 투영, worker thread 구조, world 단일화, 읽기 순서 추가
-
-## 유지한 범위
-
-- F0 균형 완주형, M3 MoveGroupInterface, 기본 P1 HSV+depth, 기본 T1 Pose follower
+- F0 개념 순회형, MoveGroupInterface, 기본 P1 HSV+depth, 기본 T1 Pose follower
+- 단일 물체 sensor-to-action 완주, reset, 최소 오류 분류, Gate, 실행 README
 - 실물 팔·YOLO 학습·강화학습·6-DoF 물체 자세 추정은 본과정에서 제외
-- 오류 코드, reset, Gate, 반복 평가, 실행 README는 축소하지 않음
