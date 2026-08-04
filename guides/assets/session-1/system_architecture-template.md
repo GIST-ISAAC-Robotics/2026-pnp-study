@@ -40,7 +40,7 @@ flowchart LR
 
 - 기본 pose: `[ ] PUBLISH와 RECEIVE 확인`
 - YAML 좌표 변경: `[ ] 변경한 y 좌표가 양쪽 로그에 반영됨을 확인`
-- ROS graph 그림 또는 topic 상세 출력: `TODO: 파일 또는 링크`
+- ROS graph 캡처: `TODO: 파일 또는 링크`
 - 재현 담당/날짜: `TODO`
 
 ## 6. 이후 회차에서 추가할 항목
