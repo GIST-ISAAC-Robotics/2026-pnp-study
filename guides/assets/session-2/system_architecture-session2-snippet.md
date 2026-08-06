@@ -1,4 +1,4 @@
-## Session 2 — 간소화한 action과 상태 흐름
+## Session 2 — Action과 상태 흐름
 
 ```mermaid
 flowchart LR
@@ -31,4 +31,4 @@ IDLE → SETUP_SCENE → APPROACH → GRASP → LIFT
 - [ ] stage feedback과 최종 `SUCCEEDED` result가 보임
 - [ ] manual cancel 1회가 inner와 outer의 `CANCELED` terminal로 이어짐
 
-heartbeat·watchdog·timeout 경계·invalid profile/scope·`SAFE_STOP` fault injection은 본과정에서 수행하지 않는다. 실제 로봇 동작은 Session 4에서 dummy server를 교체하며 연결한다.
+이 회차에서는 dummy server로 두 action의 연결과 상태 전달을 확인했다. 실제 로봇 동작은 Session 4에서 dummy server를 MoveIt server로 교체하며 연결한다.

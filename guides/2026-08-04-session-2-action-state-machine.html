@@ -203,7 +203,7 @@
     <section id="overview">
       <div class="kicker">먼저 큰 그림</div>
       <h2>정상 action 흐름을 만들고 수동 취소를 한 번 경험합니다</h2>
-      <p class="subtitle">Session 2의 목표는 모든 통신 장애를 막는 것이 아닙니다. goal이 두 action을 지나가고, stage feedback과 result가 돌아오는 정상 흐름을 이해한 뒤 manual cancel 한 가지만 확인합니다.</p>
+      <p class="subtitle">Session 2에서는 goal이 두 action을 거쳐 전달되고, 각 단계의 feedback과 최종 result가 돌아오는 흐름을 살펴봅니다. 정상 완료를 먼저 확인한 뒤, 실행 중 manual cancel이 inner와 outer action에 어떻게 전달되는지 확인합니다.</p>
 
       <div class="flow" aria-label="Session 2 outer action 흐름">
         <div class="flow-node"><b>scenario_runner</b><br><small>학습용 goal 전송</small></div>
@@ -223,14 +223,14 @@
       <div class="grid">
         <div class="mini-card"><b>Action</b><p>goal·feedback·result·cancel을 제공하는 오래 걸리는 작업 인터페이스입니다.</p></div>
         <div class="mini-card"><b>State machine</b><p>현재 단계를 명시해 전체 순서를 읽기 쉽게 만듭니다.</p></div>
-        <div class="mini-card"><b>이번 검증 범위</b><p>정상 완료 1회와 manual cancel 1회만 필수입니다.</p></div>
+        <div class="mini-card"><b>실습할 두 흐름</b><p>정상 완료와 manual cancel을 각각 한 번 실행합니다.</p></div>
       </div>
 
-      <div class="callout info"><p><strong>이번 개편에서 제외한 것:</strong> 잘못된 scope·profile, heartbeat 단절, timeout 경계, terminal 누락, <code>SAFE_STOP</code>, 중복 goal fault injection은 신뢰성 확장 과제로 이동했습니다.</p></div>
+      <div class="callout info"><p><strong>흐름을 읽는 기준:</strong> runner가 보낸 goal을 따라가며 orchestrator가 inner action을 호출하고, feedback과 result를 다시 runner로 전달하는 과정을 확인합니다.</p></div>
 
       <h3>이번 회차 완료 기준</h3>
       <ul class="checklist">
-        <li><input id="v4-goal-build" type="checkbox"><label for="v4-goal-build">간소화한 두 action과 세 ROS 패키지가 clean build됩니다.</label><span class="tag">BUILD</span></li>
+        <li><input id="v4-goal-build" type="checkbox"><label for="v4-goal-build">두 action과 세 ROS 패키지가 clean build됩니다.</label><span class="tag">BUILD</span></li>
         <li><input id="v4-goal-success" type="checkbox"><label for="v4-goal-success">정상 goal에서 stage feedback과 <code>SUCCEEDED</code> result가 보입니다.</label><span class="tag">NORMAL</span></li>
         <li><input id="v4-goal-cancel" type="checkbox"><label for="v4-goal-cancel">manual cancel 한 번이 inner와 outer의 <code>CANCELED</code> terminal로 이어집니다.</label><span class="tag">CANCEL</span></li>
         <li><input id="v4-goal-explain" type="checkbox"><label for="v4-goal-explain">topic·service·action의 차이와 두 action의 역할을 설명할 수 있습니다.</label><span class="tag">CONCEPT</span></li>
@@ -287,7 +287,7 @@ ros2 run rmw_zenoh_cpp rmw_zenohd</pre>
 
     <section id="step1">
       <div class="kicker">Step 1 · 약 30분</div>
-      <h2><span class="step-badge">1</span>간소화한 interface와 패키지 배치</h2>
+      <h2><span class="step-badge">1</span>action interface와 패키지 배치</h2>
       <p class="subtitle">긴 코드를 직접 입력하지 않고 저장소의 검증 대상 자산을 workspace에 복사합니다.</p>
 
       <h3>1-1 · 필요한 패키지만 생성</h3>
@@ -338,7 +338,7 @@ sed -n '1,30p' src/pnp_interfaces/action/RunTrial.action
 sed -n '1,30p' src/pnp_interfaces/action/PickPlace.action
 sed -n '1,20p' src/pnp_interfaces/msg/ErrorCode.msg</pre>
       </div>
-      <p>두 action과 <code>ErrorCode.msg</code>만 보이면 됩니다. 이전 버전의 <code>TaskStatus.msg</code>·<code>StageStatus.msg</code>는 사용하지 않습니다.</p>
+      <p>목록에 <code>RunTrial.action</code>, <code>PickPlace.action</code>, <code>ErrorCode.msg</code>가 보이는지 확인합니다. 이어서 두 action의 goal·result·feedback 구분과 오류 코드 이름을 읽습니다.</p>
 
       <details class="fold">
         <summary>왜 action이 두 개인가요? <small>전체 작업과 조작 작업</small></summary>
@@ -352,7 +352,7 @@ sed -n '1,20p' src/pnp_interfaces/msg/ErrorCode.msg</pre>
     <section id="step2">
       <div class="kicker">Step 2 · 약 15분</div>
       <h2><span class="step-badge">2</span>세 패키지 build와 action 모양 확인</h2>
-      <p class="subtitle">build가 끝나면 생성된 두 action을 한 번 펼쳐 봅니다. 별도 문법·상수·상태 전이 test는 실제 정상 실행과 겹치므로 생략합니다.</p>
+      <p class="subtitle">build가 끝나면 생성된 두 action의 goal·result·feedback 구성을 확인하고, 다음 단계의 실제 실행 흐름과 연결합니다.</p>
 
       <h3>2-1 · 세 패키지 clean build</h3>
       <div class="code-block">
@@ -449,7 +449,7 @@ RESULT status=SUCCEEDED success=true error_code=0 ...</pre>
     <section id="step4">
       <div class="kicker">Step 4 · 약 10분</div>
       <h2><span class="step-badge">4</span>manual cancel 한 번 확인</h2>
-      <p class="subtitle">고의 오류 시험군은 만들지 않습니다. Action의 핵심 기능인 사용자 취소만 한 번 경험합니다.</p>
+      <p class="subtitle">실행 중인 goal에 취소를 보내고, inner action과 outer action이 모두 <code>CANCELED</code>로 끝나는 흐름을 확인합니다.</p>
 
       <h3>4-1 · 실행 중 cancel 보내기</h3>
       <p>T1과 T2를 그대로 둔 상태에서 T3에서 실행합니다.</p>
@@ -464,7 +464,7 @@ ros2 run pnp_evaluation scenario_runner \
   --run-id session2-manual-cancel \
   |& tee session2_manual_cancel.log</pre>
       </div>
-      <p><code>CANCEL_SENT reason=manual</code> 뒤 <code>RESULT status=CANCELED</code>가 보이면 충분합니다. inner와 outer의 정확한 millisecond 경계, cancel timeout 예산, terminal 누락은 시험하지 않습니다.</p>
+      <p><code>CANCEL_SENT reason=manual</code> 뒤 <code>RESULT status=CANCELED</code>가 보이면, 취소 요청이 action 체인을 따라 처리되어 최종 result로 돌아온 것입니다.</p>
 
       <div class="next-check">정상 실행과 수동 취소의 차이를 확인했습니다.</div>
     </section>
