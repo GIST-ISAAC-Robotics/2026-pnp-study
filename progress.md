@@ -14,7 +14,7 @@
 |---|---|---|
 | 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v4.0.1에서 Week 1~4 개념 순회형과 완료 회차 가이드 보존 원칙을 정리 |
 | Week 0 — 환경·위험 제거 | **완료** | Gate 조건부 통과와 두 사람 확인 완료; C의 Session 5 `final` 재동결 조건은 6A 전까지 추적 |
-| Week 1 — ROS 2 시스템 뼈대 | **진행 중** | Session 1 완료; Session 2 간소화 action·상태 흐름과 Session 3 상위 launch 필요 |
+| Week 1 — ROS 2 시스템 뼈대 | **진행 중** | Session 1 완료; Session 2 action·상태 흐름과 Session 3 상위 launch 필요 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
 | Week 3 — RGB-D 인식 통합 | 대기 | Week 2 Gate 통과 후 시작 |
 | Week 4 — 통합·평가·정리 | 대기 | Week 3 Gate 통과 후 시작 |

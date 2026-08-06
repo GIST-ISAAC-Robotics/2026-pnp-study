@@ -342,7 +342,7 @@ Week 2에서는 sensor 대신 YAML의 fixed pose를 사용하고, Week 3에서 �
 
 T1/T0 transport는 Week 0에서 검증한 ROS service 경로를 재사용한다. 본과정에서는 prepare/control/status를 별도 복잡한 수명주기 계약으로 확장하지 않아도 된다.
 
-## 4.4 간소화한 custom action
+## 4.4 Custom action 구성
 
 ```text
 # RunTrial.action
@@ -375,7 +375,7 @@ string stage
 float32 progress
 ```
 
-두 action은 정상 goal·feedback·result 흐름을 보여 주기 위한 최소 필드만 가진다. stage bitmask, retry counter, planning-time 전파, source stamp 복사, profile/scope 조합 검증은 필수 범위에서 제외한다.
+두 action은 역할을 나눠 전체 작업과 조작 단계를 연결한다. `RunTrial`은 한 번의 전체 작업을 요청하고, `PickPlace`는 로봇 조작 단계를 맡는다. 각 action은 goal·feedback·result와 공통 오류 코드를 통해 진행 상태와 결과를 전달한다.
 
 ## 4.5 상태 흐름
 
@@ -957,7 +957,7 @@ node·topic·message·QoS·parameter·launch의 관계를 작은 graph로 확인
 ### 실습
 
 1. `pnp_interfaces`와 `pnp_evaluation` 패키지를 만든다.
-2. 간소화한 `RunTrial.action`과 `PickPlace.action`을 작성한다.
+2. `RunTrial.action`과 `PickPlace.action`을 작성한다.
 3. 로봇을 움직이지 않는 dummy `PickPlace` server를 만든다.
 4. orchestrator가 `RunTrial` goal을 받아 inner action을 호출하도록 연결한다.
 5. `SELECT_TARGET → CALL_PICK_PLACE → DONE` feedback을 확인한다.
@@ -978,15 +978,6 @@ node·topic·message·QoS·parameter·launch의 관계를 작은 graph로 확인
 - feedback stage와 최종 result가 보임
 - manual cancel 1회가 멈춤과 canceled result로 이어짐
 - 정상 실행과 cancel의 차이를 설명 가능
-
-### 이번 회차에서 하지 않는 것
-
-- 잘못된 scope·profile 조합 시험
-- heartbeat publisher·watchdog
-- 중첩 cancel timeout과 0.1초 경계 시험
-- terminal 누락·`SAFE_STOP` fault injection
-- stage bitmask·retry counter·planning time 전파
-- 중복 goal 경쟁 조건 시험
 
 시간이 부족하면 `RunTrial` 하나로 action 개념을 먼저 확인하고, inner action 연결은 Session 4 전에 마친다.
 
@@ -1454,8 +1445,6 @@ Gate는 다음 주차에 필요한 정상 연결을 확인하는 장치다. 품�
 - invalid goal·중복 goal·통신 단절 fault injection
 - stage별 artifact 존재성 검사
 - 20~30회 batch와 중단·재개
-
-기존 v3.5.5의 상세 검증 항목은 본과정에서 제외했다. 나중에 필요해지면 Git 이력의 v3.5.5를 참고해 이 확장 트랙에서 필요한 항목만 선택적으로 되살린다.
 
 ## B. P1 견고성
 
