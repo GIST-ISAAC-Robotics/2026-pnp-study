@@ -1,10 +1,10 @@
 # 진행 상황과 실행 로그
 
-> **현재 단계:** Week 1 진행 중 — v4.0.1 교차 문서 보정·Session 1 가이드 보존 완료
+> **현재 단계:** Week 1 진행 중 — Session 1~2 완료, Session 3 상위 launch 준비
 >
 > **다음 Gate:** Week 1 Gate — Session 1~3 시스템 뼈대 연결
 >
-> **마지막 업데이트:** 2026-08-05
+> **마지막 업데이트:** 2026-08-09
 
 이 문서는 스터디 진행 상황의 단일 기록 원본이다. 회차 종료 시 최신 항목을 위에 추가하고, 성공뿐 아니라 실패·축소·보류 판정도 증빙과 함께 남긴다.
 
@@ -14,7 +14,7 @@
 |---|---|---|
 | 커리큘럼·저장소 준비 | **완료** | `curriculum.md` v4.0.1에서 Week 1~4 개념 순회형과 완료 회차 가이드 보존 원칙을 정리 |
 | Week 0 — 환경·위험 제거 | **완료** | Gate 조건부 통과와 두 사람 확인 완료; C의 Session 5 `final` 재동결 조건은 6A 전까지 추적 |
-| Week 1 — ROS 2 시스템 뼈대 | **진행 중** | Session 1 완료; Session 2 action·상태 흐름과 Session 3 상위 launch 필요 |
+| Week 1 — ROS 2 시스템 뼈대 | **진행 중** | Session 1~2 완료; Session 3에서 controller·TF·상위 launch 연결 필요 |
 | Week 2 — MoveIt 조작 | 대기 | Week 1 Gate 통과 후 시작 |
 | Week 3 — RGB-D 인식 통합 | 대기 | Week 2 Gate 통과 후 시작 |
 | Week 4 — 통합·평가·정리 | 대기 | Week 3 Gate 통과 후 시작 |
@@ -34,13 +34,24 @@
 - [x] Week 0 조건부 Gate와 fallback 두 사람 확인
 - [x] Session 1: ROS graph와 데이터 흐름 실습
 - [x] Session 2 시작 전 Windows·WSL·container 시간 동기화 확인과 Zenoh timestamp 오류 0건 재확인
-- [ ] Session 2: 두 action과 간단한 상태기계 골격, 정상 실행·manual cancel
+- [x] Session 2: 두 action과 간단한 상태기계 골격, 정상 실행·manual cancel
 - [ ] Session 3: controller와 상위 launch 연결 및 Week 1 Gate 판정
 - [ ] Session 5에서 IK workspace·tool offset 재시험 후 `ik_mode_status=final` 재동결 (6A 진입 전)
 
 세부 명령·완료 기준·실패 시 전환은 [curriculum.md의 Week 1](./curriculum.md#7-week-1--ros-2-시스템-뼈대)을 따른다.
 
 ## 회차 로그
+
+### 2026-08-09 — Session 2 · Action과 상태기계 골격
+
+- **상태:** 완료 — 두 action의 정상 chain과 manual cancel 1회 확인
+- **목표:** 오래 걸리는 작업을 ROS 2 action으로 요청하고, outer `RunTrial`과 inner `PickPlace` 사이의 goal·feedback·result·cancel 전달 및 간단한 상태 흐름을 경험
+- **수행:** `/workspace/pick_place_ws`에 `pnp_interfaces`, `pnp_orchestrator`, `pnp_evaluation`을 배치하고 clean build했다. T1에서 dummy `PickPlace` server, T2에서 orchestrator를 실행한 뒤 T3의 `scenario_runner`로 정상 goal과 0.8초 뒤 manual cancel goal을 각각 한 번 보냈다. 실제 로봇 대신 단계별 feedback을 내는 dummy server를 사용했다.
+- **결과:** 세 package build와 두 action interface 생성이 완료됐다. 정상 goal은 `SELECT_TARGET → TRANSFORM → CALL_PICK_PLACE`와 inner stage를 거쳐 `DONE`, `SUCCEEDED`, `success=true`, `error_code=0`으로 끝났다. manual cancel은 `GRASP` 뒤 전송되어 `CLEANUP`을 거친 다음 `CANCELED`, `success=false`, `error_code=0`, `manual cancel completed`로 끝났다. 취소 시험의 `success=false`는 작업 미완료를 뜻하며 오류가 아니라 의도한 terminal이다.
+- **문제:** 오래된 학습 저장소에서는 Session 2 자산 세 디렉터리를 찾지 못했고, 다른 PC에서는 미추적 `docs/system_architecture.md`가 최신 tracked 파일과 충돌해 fast-forward pull이 중단됐다. 또한 `session2_backup/pnp_orchestrator-session1`이 colcon 검색 범위에 들어가 `src/pnp_orchestrator`와 중복 package로 판정됐다.
+- **결정:** 가이드의 저장소 동기화 단계는 최신 `main`에 반영된 절차를 유지한다. 보존이 필요 없는 pull 충돌 파일은 오류에 표시된 정확한 경로만 정리하며 광범위한 `git clean`은 사용하지 않는다. Session 1 백업 디렉터리에는 `COLCON_IGNORE`를 두어 이후 build에서 제외한다. 본회차 필수 범위는 정상 완료와 manual cancel 각 1회로 닫고 추가 fault injection은 수행하지 않는다.
+- **다음:** Session 3에서 URDF·TF2·ros2_control을 확인하고 기존 world와 project node를 상위 launch 하나로 연결해 Week 1 Gate를 판정
+- **증빙:** [Session 2 실행 가이드](./guides/2026-08-04-session-2-action-state-machine.html), [시스템 구조와 인터페이스](./docs/system_architecture.md), container 로그 `/workspace/pick_place_ws/session2_dummy.log`, `/workspace/pick_place_ws/session2_orchestrator.log`, `/workspace/pick_place_ws/session2_normal.log`, `/workspace/pick_place_ws/session2_manual_cancel.log`
 
 ### 2026-08-05 — v4.0.1 최종 일관성 검토 · Session 1 가이드 보존
 

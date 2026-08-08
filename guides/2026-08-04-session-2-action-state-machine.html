@@ -336,6 +336,7 @@ WS=/workspace/pick_place_ws
 BACKUP="$WS/session2_backup/pnp_orchestrator-session1"
 
 mkdir -p "$WS/session2_backup"
+touch "$WS/session2_backup/COLCON_IGNORE"
 if ! test -e "$BACKUP"; then
   cp -a "$WS/src/pnp_orchestrator" "$BACKUP"
 fi
@@ -344,6 +345,7 @@ cp -a "$ASSET/pnp_interfaces/." "$WS/src/pnp_interfaces/"
 cp -a "$ASSET/pnp_evaluation/." "$WS/src/pnp_evaluation/"
 cp -a "$ASSET/pnp_orchestrator/." "$WS/src/pnp_orchestrator/"</pre>
       </div>
+      <p><code>COLCON_IGNORE</code>는 workspace 안의 Session 1 백업을 package 검색에서 제외합니다. 이 표식이 없으면 build할 때 백업본과 <code>src/pnp_orchestrator</code>가 같은 package 이름으로 발견될 수 있습니다.</p>
 
       <h3>1-3 · 핵심 interface 읽기</h3>
       <div class="code-block">
@@ -524,6 +526,7 @@ ros2 run pnp_evaluation scenario_runner \
         <table>
           <thead><tr><th>증상</th><th>먼저 확인</th><th>다음 행동</th></tr></thead>
           <tbody>
+            <tr><td><code>Duplicate package names</code></td><td><code>session2_backup/COLCON_IGNORE</code> 존재 여부</td><td>표식을 만든 뒤 세 package build 재실행</td></tr>
             <tr><td>interface build 실패</td><td>첫 error와 <code>.action</code> 구분선</td><td><code>pnp_interfaces</code>만 clean build</td></tr>
             <tr><td>action server가 보이지 않음</td><td>T1·T2가 실행 중인지, overlay source 여부</td><td>해당 process만 재시작</td></tr>
             <tr><td>feedback 뒤 result가 없음</td><td>마지막 stage와 T1 traceback</td><td>해당 오류를 고치고 normal goal 1회 재실행</td></tr>
