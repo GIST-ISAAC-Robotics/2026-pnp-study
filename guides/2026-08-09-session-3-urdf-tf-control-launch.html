@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Session 3 OpenMANIPULATOR-X의 URDF·TF2·ros2_control을 읽고 Gazebo·MoveIt·project node를 상위 launch 하나로 연결하는 실행 가이드">
+  <title>Session 3 · URDF·TF2·ros2_control·상위 launch | 2026 PNP Study</title>
+  <style>
+    :root {
+      --crimson: #a9231f;
+      --crimson-dark: #711411;
+      --crimson-deep: #3d0c0a;
+      --ink: #191716;
+      --body: #514b48;
+      --muted: #817a76;
+      --canvas: #f6f4f2;
+      --soft: #efebe8;
+      --line: #e2ddda;
+      --white: #fff;
+      --green: #176b45;
+      --green-soft: #eaf5ef;
+      --amber: #8a5700;
+      --amber-soft: #fff6df;
+      --blue: #205a87;
+      --blue-soft: #eaf3fa;
+      --code: #171514;
+      --code-ink: #f5f1ed;
+      --shadow: 0 8px 28px rgba(45, 34, 29, .08);
+      --radius: 14px;
+      --content: 1160px;
+    }
+
+    * { box-sizing: border-box; }
+    html { overflow-x: clip; scroll-behavior: smooth; scroll-padding-top: 76px; }
+    body {
+      margin: 0;
+      overflow-x: clip;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: Pretendard, "Noto Sans KR", "Segoe UI", sans-serif;
+      line-height: 1.68;
+      word-break: keep-all;
+    }
+    a { color: var(--crimson); text-underline-offset: 3px; }
+    code, pre { font-family: "Cascadia Code", Consolas, monospace; }
+    code {
+      padding: .12em .38em;
+      border-radius: 5px;
+      background: #eeeae7;
+      font-size: .91em;
+      word-break: break-word;
+    }
+    h1, h2, h3, h4 { line-height: 1.2; }
+    h2 { margin: 12px 0; font-size: clamp(30px, 4vw, 46px); letter-spacing: -.045em; }
+    h3 { margin: 38px 0 12px; font-size: 25px; letter-spacing: -.025em; }
+    h4 { margin: 28px 0 10px; font-size: 19px; }
+    p { margin: 10px 0; color: var(--body); }
+    ul, ol { padding-left: 1.4rem; }
+    li + li { margin-top: 6px; }
+    kbd { padding: 2px 7px; border: 1px solid #cbc4bf; border-bottom-width: 2px; border-radius: 5px; background: white; font: inherit; font-size: .85em; }
+
+    .skip-link { position: fixed; left: 12px; top: -80px; z-index: 100; padding: 10px 14px; color: white; background: var(--ink); border-radius: 8px; }
+    .skip-link:focus { top: 12px; }
+    :focus-visible { outline: 3px solid rgba(191, 43, 37,.4); outline-offset: 3px; }
+    .topbar { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,.92); border-bottom: 1px solid var(--line); backdrop-filter: blur(12px); }
+    .nav { max-width: var(--content); height: 62px; margin: auto; padding: 0 26px; display: flex; align-items: center; gap: 18px; }
+    .brand { color: inherit; font-weight: 800; letter-spacing: -.4px; text-decoration: none; white-space: nowrap; }
+    .brand i { color: var(--crimson); font-style: normal; }
+    .nav-links { margin-left: auto; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav-links a { padding: 7px 10px; color: var(--body); border-radius: 999px; font-size: 13px; font-weight: 650; text-decoration: none; white-space: nowrap; }
+    .nav-links a:hover { color: var(--crimson); background: #f8ecea; }
+    .progress-track { height: 3px; background: var(--line); }
+    .progress-fill { width: 0; height: 100%; background: linear-gradient(90deg, var(--crimson-dark), var(--crimson)); }
+
+    .hero { overflow: hidden; color: white; background: radial-gradient(circle at 84% 16%, rgba(248,175,107,.34), transparent 27%), radial-gradient(circle at 16% 8%, rgba(226,95,87,.26), transparent 30%), linear-gradient(135deg, var(--crimson-deep), var(--crimson-dark) 52%, var(--crimson)); }
+    .hero-inner { max-width: var(--content); margin: auto; padding: 74px 28px 60px; }
+    .hero .eyebrow, .kicker { display: flex; align-items: center; gap: 10px; margin-bottom: 0; font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    .hero .eyebrow { color: #ffd3cf; }
+    .kicker { color: var(--crimson); }
+    .hero .eyebrow::before, .kicker::before { content: ""; width: 26px; height: 2px; background: currentColor; }
+    .hero h1 { max-width: 940px; margin: 18px 0 12px; font-size: clamp(38px, 6vw, 66px); line-height: 1.08; letter-spacing: -.055em; }
+    .hero-lead { max-width: 880px; margin: 0; color: rgba(255,255,255,.84); font-size: clamp(18px, 2.4vw, 23px); line-height: 1.55; }
+    .hero code { color: white; background: rgba(0,0,0,.24); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+    .pill { padding: 8px 14px; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(255,255,255,.1); font-size: 13px; }
+
+    main { max-width: var(--content); margin: auto; padding: 24px 28px 70px; }
+    section { padding: 54px 0 24px; border-bottom: 1px solid var(--line); }
+    section:last-child { border-bottom: 0; }
+    .subtitle { max-width: 900px; margin: 0; color: var(--body); font-size: 18px; }
+    .step-badge { display: inline-grid; place-items: center; width: 36px; height: 36px; margin-right: 7px; color: white; background: var(--crimson); border-radius: 50%; font-size: 16px; vertical-align: 6px; }
+
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 22px 0; }
+    .mini-card { padding: 21px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); box-shadow: var(--shadow); }
+    .mini-card b { display: block; margin-bottom: 7px; font-size: 18px; }
+    .mini-card p { margin: 0; font-size: 14px; }
+    .flow { display: grid; grid-template-columns: 1.2fr auto 1fr auto 1fr auto 1fr; align-items: center; gap: 10px; margin: 26px 0; }
+    .flow-node, .flow-action { min-width: 0; padding: 18px; text-align: center; border: 1px solid var(--line); border-radius: 12px; background: white; box-shadow: var(--shadow); }
+    .flow-action { color: #fff; border-color: var(--crimson-dark); background: var(--crimson-dark); }
+    .flow-action code { color: white; background: rgba(0,0,0,.2); }
+    .flow-arrow { color: var(--crimson); font-size: 24px; font-weight: 900; }
+
+    .callout { margin: 22px 0; padding: 17px 20px; border-left: 4px solid; border-radius: 0 10px 10px 0; }
+    .callout p { margin: 0; }
+    .callout.info { border-color: var(--blue); background: var(--blue-soft); }
+    .callout.warn { border-color: var(--amber); background: var(--amber-soft); }
+    .callout.good { border-color: var(--green); background: var(--green-soft); }
+    .next-check { margin: 16px 0 26px; padding: 14px 17px; color: var(--green); border: 1px solid #bfdacb; border-radius: 10px; background: var(--green-soft); font-weight: 700; }
+    .next-check::before { content: "✓ "; }
+
+    .terminal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
+    .terminal { padding: 15px; border: 1px solid var(--line); border-radius: 10px; background: white; }
+    .terminal b { color: var(--crimson); }
+    .terminal small { display: block; margin-top: 5px; color: var(--muted); }
+
+    .code-block { margin: 15px 0 22px; overflow: hidden; border-radius: 10px; background: var(--code); box-shadow: var(--shadow); }
+    .code-head { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 8px 13px; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .code-head b { color: #ffb5af; font-size: 11px; letter-spacing: .09em; text-transform: uppercase; }
+    .code-head .where { color: rgba(255,255,255,.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+    .copy { margin-left: auto; padding: 5px 11px; color: white; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; background: transparent; cursor: pointer; font: inherit; font-size: 12px; }
+    .copy:hover { border-color: var(--crimson); background: var(--crimson); }
+    pre { margin: 0; padding: 17px; overflow-x: auto; color: var(--code-ink); font: 13px/1.65 "Cascadia Code", Consolas, monospace; tab-size: 2; white-space: pre; }
+    pre code { padding: 0; color: inherit; background: none; word-break: normal; }
+    .table-wrap { overflow-x: auto; margin: 18px 0 24px; border: 1px solid var(--line); border-radius: 12px; background: white; }
+    table { width: 100%; min-width: 720px; border-collapse: collapse; }
+    th, td { padding: 13px 15px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--ink); background: var(--soft); font-size: 13px; }
+    tr:last-child td { border-bottom: 0; }
+
+    .checklist { display: grid; gap: 10px; padding: 0; list-style: none; }
+    .checklist li { display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: 11px; margin: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: white; }
+    .checklist input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--crimson); }
+    .tag { align-self: center; padding: 3px 8px; color: var(--crimson-dark); border-radius: 999px; background: #f8e6e4; font-size: 11px; font-weight: 800; }
+
+    details.fold { margin: 20px 0; border: 1px solid var(--line); border-radius: 12px; background: white; }
+    details.fold summary { position: relative; padding: 16px 48px 16px 18px; cursor: pointer; font-weight: 750; list-style: none; }
+    details.fold summary::-webkit-details-marker { display: none; }
+    details.fold summary::before, details.fold summary::after { content: ""; position: absolute; right: 20px; top: 50%; width: 14px; height: 2px; background: var(--crimson); transform: translateY(-50%); }
+    details.fold summary::after { transform: translateY(-50%) rotate(90deg); transition: transform .18s ease; }
+    details[open].fold summary::after { transform: translateY(-50%) rotate(0); }
+    details.fold summary small { color: var(--muted); font-weight: 500; }
+    .fold-body { padding: 0 18px 18px; border-top: 1px solid var(--line); }
+    footer { padding: 28px; color: var(--muted); border-top: 1px solid var(--line); text-align: center; font-size: 13px; }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .flow-arrow { transform: rotate(90deg); text-align: center; }
+    }
+    @media (max-width: 620px) {
+      .nav { padding: 0 14px; }
+      .brand { font-size: 13px; }
+      .hero-inner { padding: 56px 20px 46px; }
+      main { padding: 14px 18px 58px; }
+      section { padding-top: 42px; }
+      .grid, .terminal-grid { grid-template-columns: 1fr; }
+      .checklist li { grid-template-columns: auto 1fr; }
+      .tag { grid-column: 2; justify-self: start; }
+      .code-head { align-items: flex-start; flex-wrap: wrap; }
+      .code-head .where { width: calc(100% - 74px); }
+    }
+    @media print {
+      .topbar, .copy { display: none !important; }
+      .hero { color: black; background: white; border-bottom: 2px solid #999; }
+      .hero-lead, .hero .eyebrow { color: #333; }
+      main { max-width: none; }
+      details.fold > * { display: block !important; }
+      .code-block { break-inside: avoid; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 바로가기</a>
+  <header class="topbar">
+    <nav class="nav" aria-label="가이드 목차">
+      <a class="brand" href="../" aria-label="2026 PNP Study 메인 페이지">2026 PNP STUDY<i>.</i></a>
+      <div class="nav-links">
+        <a href="#overview">개요</a>
+        <a href="#step0">준비</a>
+        <a href="#step1">모델 읽기</a>
+        <a href="#step2">상위 launch</a>
+        <a href="#step3">통합 실행</a>
+        <a href="#step4">TF·문서</a>
+        <a href="#finish">Gate</a>
+      </div>
+    </nav>
+    <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">Week 1 · Session 3 · Beginner Guide</div>
+      <h1>URDF·TF2·ros2_control과<br>상위 launch</h1>
+      <p class="hero-lead">로봇의 뼈대, 움직이는 좌표계, controller를 실제 파일과 실행 graph에서 확인하고 Gazebo·MoveIt·project node를 한 명령으로 시작합니다.</p>
+      <div class="pill-row">
+        <span class="pill">예상 약 2시간 30분</span>
+        <span class="pill">ROS 2 Jazzy · Python launch</span>
+        <span class="pill">world → end_effector_link</span>
+        <span class="pill">실행 창 T0~T2</span>
+      </div>
+    </div>
+  </div>
+
+  <main id="main">
+    <section id="overview">
+      <div class="kicker">먼저 큰 그림</div>
+      <h2>따로 실행하던 층을 하나의 시스템으로 묶습니다</h2>
+      <p class="subtitle">Session 3에서는 새 로봇 동작을 만들지 않습니다. 이미 검증한 Gazebo·MoveIt·Session 1~2 노드를 상위 launch 하나가 소유하게 만들고, 각 층이 URDF·TF·controller로 어떻게 연결되는지 읽습니다.</p>
+
+      <div class="flow" aria-label="Session 3 상위 launch 구성">
+        <div class="flow-action"><b>week1_system.launch.py</b><br><small>전체 실행 소유자</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><b>Gazebo</b><br><small>robot model · /clock</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><b>ros2_control</b><br><small>joint state · controller</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><b>MoveIt + project</b><br><small>planning · action</small></div>
+      </div>
+
+      <div class="grid">
+        <div class="mini-card"><b>URDF</b><p>link와 joint로 로봇의 물리적 뼈대를 정의합니다.</p></div>
+        <div class="mini-card"><b>TF2</b><p>각 frame 사이의 현재 위치·자세 관계를 전달합니다.</p></div>
+        <div class="mini-card"><b>ros2_control</b><p>joint를 읽고 명령하는 controller 계층입니다.</p></div>
+        <div class="mini-card"><b>상위 launch</b><p>여러 package와 하위 launch의 시작 인자를 한곳에서 소유합니다.</p></div>
+      </div>
+
+      <div class="callout info"><p><strong>구분 기준:</strong> URDF는 “무엇이 무엇에 연결됐는가”, TF는 “지금 서로 어디에 있는가”, controller는 “어떤 joint를 누가 읽고 움직이는가”, launch는 “이들을 누가 어떤 인자로 시작하는가”를 답합니다.</p></div>
+
+      <h3>이번 회차 완료 기준</h3>
+      <ul class="checklist">
+        <li><input id="goal-launch" type="checkbox"><label for="goal-launch">상위 launch 하나로 Gazebo·MoveIt·project node가 시작됩니다.</label><span class="tag">LAUNCH</span></li>
+        <li><input id="goal-tf" type="checkbox"><label for="goal-tf"><code>world → link1 → … → end_effector_link</code> 관계를 설명할 수 있습니다.</label><span class="tag">TF</span></li>
+        <li><input id="goal-control" type="checkbox"><label for="goal-control">세 controller가 <code>active</code>이고 <code>/joint_states</code>가 보입니다.</label><span class="tag">CONTROL</span></li>
+        <li><input id="goal-time" type="checkbox"><label for="goal-time">네 project node의 <code>use_sim_time</code>이 모두 <code>true</code>입니다.</label><span class="tag">TIME</span></li>
+        <li><input id="goal-doc" type="checkbox"><label for="goal-doc"><code>docs/frames.md</code>와 시스템 구조 문서를 실제 출력으로 갱신합니다.</label><span class="tag">DOC</span></li>
+      </ul>
+    </section>
+
+    <section id="step0">
+      <div class="kicker">Step 0 · 약 20분</div>
+      <h2><span class="step-badge">0</span>최신 자산과 세 창 준비</h2>
+      <p class="subtitle">Session 2 workspace를 이어 쓰되 학습 저장소를 먼저 최신화하고, 이전 ROS process가 없는 상태에서 Zenoh router 하나만 준비합니다.</p>
+
+      <h3>0-1 · container 시작</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash</b><span class="where">Ubuntu (WSL host)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>cd ~/open_manipulator
+if ! docker ps --format '{{.Names}}' | grep -qx 'open_manipulator'; then
+  ./docker/container.sh start
+fi
+docker ps --filter name=open_manipulator</pre>
+      </div>
+      <p>Container가 <code>Up</code>이면 준비됐습니다.</p>
+
+      <h3>0-2 · Ubuntu 탭 세 개에서 container 진입</h3>
+      <div class="terminal-grid">
+        <div class="terminal"><b>T0</b><small>Zenoh router 상주</small></div>
+        <div class="terminal"><b>T1</b><small>상위 launch 상주</small></div>
+        <div class="terminal"><b>T2</b><small>build · 검사 · runner</small></div>
+      </div>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 세 창에서 각각 한 번</b><span class="where">Ubuntu → Container</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>cd ~/open_manipulator
+./docker/container.sh enter</pre>
+      </div>
+
+      <h3>0-3 · 학습 저장소 동기화와 Session 3 자산 확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>git -C /workspace/2026-pnp-study status --short --branch
+git -C /workspace/2026-pnp-study pull --ff-only origin main
+
+ASSET=/workspace/2026-pnp-study/guides/assets/session-3
+test -f "$ASSET/pnp_bringup/launch/week1_system.launch.py" &amp;&amp;
+test -f "$ASSET/pnp_bringup/package.xml" &amp;&amp;
+test -f "$ASSET/frames-template.md" &amp;&amp;
+test -f "$ASSET/system_architecture-session3-snippet.md" &amp;&amp;
+echo "session-3 assets OK"</pre>
+      </div>
+      <p>수정·미추적 파일이 보이면 pull 전에 해당 파일을 확인합니다. 마지막에 <code>session-3 assets OK</code>가 보여야 합니다.</p>
+
+      <h3>0-4 · workspace와 잔존 process 확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>source /opt/ros/jazzy/setup.bash
+source /root/ros2_ws/install/setup.bash
+source /workspace/pick_place_ws/install/setup.bash
+
+test -f /workspace/pick_place_ws/src/pnp_bringup/launch/core_skeleton.launch.py
+test -x /workspace/pick_place_ws/install/pnp_orchestrator/lib/pnp_orchestrator/orchestrator
+test -x /workspace/pick_place_ws/install/pnp_evaluation/lib/pnp_evaluation/dummy_pick_place_server
+
+pgrep -af '[r]mw_zenohd|[g]z sim|[m]ove_group|[r]viz2|[p]np_orchestrator' || true</pre>
+      </div>
+      <p>세 <code>test</code>가 성공하면 출력이 없습니다. 이전 Gazebo·MoveIt·project process가 보이면 해당 창에서 정상 종료합니다. Router가 정확히 하나 이미 있다면 재사용합니다.</p>
+
+      <h3>0-5 · router가 없을 때만 시작</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T0)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>source /opt/ros/jazzy/setup.bash
+ros2 run rmw_zenoh_cpp rmw_zenohd</pre>
+      </div>
+      <div class="next-check">최신 Session 3 자산, 기존 workspace, router가 준비됐습니다.</div>
+    </section>
+
+    <section id="step1">
+      <div class="kicker">Step 1 · 약 30분</div>
+      <h2><span class="step-badge">1</span>실제 robot model과 controller 읽기</h2>
+      <p class="subtitle">인터넷 그림을 외우지 않고 현재 설치된 ROBOTIS source에서 link·joint·planning group·controller 이름을 직접 찾습니다.</p>
+
+      <h3>1-1 · 기준 package와 commit 확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>source /opt/ros/jazzy/setup.bash
+source /root/ros2_ws/install/setup.bash
+
+ros2 pkg prefix open_manipulator_description
+ros2 pkg prefix open_manipulator_bringup
+ros2 pkg prefix open_manipulator_moveit_config
+
+git -c safe.directory=/root/ros2_ws/src/open_manipulator \
+  -C /root/ros2_ws/src/open_manipulator rev-parse HEAD</pre>
+      </div>
+      <p>세 package 경로와 기준 commit <code>32975f87efdb089e82c9ad103f068ef532aabfd2</code>가 보여야 합니다. 다른 commit이면 이름을 추측하지 말고 실제 파일을 다시 읽습니다.</p>
+
+      <h3>1-2 · URDF와 SRDF에서 frame·group 찾기</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>OM=/root/ros2_ws/src/open_manipulator
+ROOT_XACRO="$OM/open_manipulator_description/urdf/open_manipulator_x/open_manipulator_x.urdf.xacro"
+ARM_XACRO="$OM/open_manipulator_description/urdf/open_manipulator_x/open_manipulator_x_arm.urdf.xacro"
+SRDF="$OM/open_manipulator_moveit_config/config/open_manipulator_x/open_manipulator_x.srdf"
+
+grep -n '&lt;link name="world"\|world_fixed' "$ROOT_XACRO"
+grep -n '&lt;link name=\|&lt;joint name=' "$ARM_XACRO"
+grep -n '&lt;group name=\|&lt;group_state name=\|&lt;end_effector ' "$SRDF"</pre>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>구분</th><th>실제 값</th><th>의미</th></tr></thead>
+          <tbody>
+            <tr><td>Root / planning frame</td><td><code>world</code></td><td>전체 pose를 해석하는 기준</td></tr>
+            <tr><td>Base link</td><td><code>link1</code></td><td><code>world_fixed</code>로 world에 고정</td></tr>
+            <tr><td>Arm chain</td><td><code>joint1~joint4</code> · <code>link1~link5</code></td><td>네 회전 관절의 연결</td></tr>
+            <tr><td>End effector</td><td><code>end_effector_link</code></td><td>현재 EEF 기준 frame</td></tr>
+            <tr><td>Planning groups</td><td><code>arm</code>, <code>gripper</code></td><td>MoveIt이 함께 계획하는 joint 집합</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>1-3 · ros2_control과 MoveIt controller 계약 읽기</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>HW="$OM/open_manipulator_bringup/config/open_manipulator_x/hardware_controller_manager.yaml"
+MOVEIT="$OM/open_manipulator_moveit_config/config/open_manipulator_x/moveit_controllers.yaml"
+
+grep -n 'joint_state_broadcaster\|arm_controller\|gripper_controller\|joint:' "$HW"
+grep -n 'controller_names\|arm_controller\|gripper_controller\|action_ns' "$MOVEIT"</pre>
+      </div>
+      <p><code>arm_controller</code>는 <code>joint1~joint4</code>의 trajectory를, <code>gripper_controller</code>는 <code>gripper_left_joint</code>를 명령합니다. Right gripper는 left를 multiplier <code>1</code>로 따르는 mimic joint입니다.</p>
+      <div class="next-check">URDF·SRDF·controller 설정에서 실제 이름과 각 계층의 책임을 찾았습니다.</div>
+    </section>
+
+    <section id="step2">
+      <div class="kicker">Step 2 · 약 30분</div>
+      <h2><span class="step-badge">2</span>상위 launch 배치와 build</h2>
+      <p class="subtitle">Session 1의 <code>pnp_bringup</code>을 보존한 뒤, 공식 Gazebo·MoveIt launch와 기존 project node를 포함하는 검증된 상위 launch를 복사합니다.</p>
+
+      <h3>2-1 · 기존 bringup 백업과 제공 자산 복사</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 블록 전체 실행</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>ASSET=/workspace/2026-pnp-study/guides/assets/session-3
+WS=/workspace/pick_place_ws
+BACKUP="$WS/session3_backup/pnp_bringup-before-session3"
+
+mkdir -p "$WS/session3_backup"
+touch "$WS/session3_backup/COLCON_IGNORE"
+if ! test -e "$BACKUP"; then
+  cp -a "$WS/src/pnp_bringup" "$BACKUP"
+fi
+
+mkdir -p "$WS/src/pnp_bringup/launch"
+cp "$ASSET/pnp_bringup/launch/week1_system.launch.py" \
+  "$WS/src/pnp_bringup/launch/"
+cp "$ASSET/pnp_bringup/package.xml" \
+  "$WS/src/pnp_bringup/package.xml"</pre>
+      </div>
+      <p><code>COLCON_IGNORE</code>는 백업을 package 검색에서 제외합니다. Session 2에서 만난 중복 package 문제를 굳이 재방송할 필요는 없습니다.</p>
+
+      <h3>2-2 · 상위 launch가 소유하는 것 읽기</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>cd /workspace/pick_place_ws
+sed -n '1,240p' src/pnp_bringup/launch/week1_system.launch.py
+grep -n 'open_manipulator\|pnp_' src/pnp_bringup/package.xml</pre>
+      </div>
+      <p>다음 연결을 찾습니다: 공식 Gazebo launch에 <code>world</code> 전달, 공식 MoveIt launch에 <code>use_sim=true</code>와 RViz 인자 전달, Session 1 core launch 포함, orchestrator와 dummy server 실행, project node sim time 적용.</p>
+
+      <h3>2-3 · pnp_bringup clean build와 launch 인자 확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>cd /workspace/pick_place_ws
+source /opt/ros/jazzy/setup.bash
+source /root/ros2_ws/install/setup.bash
+
+rm -rf build/pnp_bringup install/pnp_bringup
+colcon build --symlink-install --packages-select pnp_bringup
+
+source install/setup.bash
+ros2 launch pnp_bringup week1_system.launch.py --show-args</pre>
+      </div>
+      <p><code>Summary: 1 package finished</code>와 직접 선언한 <code>world</code>, <code>start_rviz</code>, <code>params_file</code>이 보여야 합니다. 포함된 하위 launch의 인자도 함께 출력될 수 있습니다.</p>
+      <div class="callout info"><p><strong><code>use_sim</code> 기본값이 false로 보이더라도:</strong> 이는 포함된 공식 MoveIt launch 자체의 기본값 표시입니다. 상위 launch는 실행할 때 그 인자를 <code>true</code>로 전달하며, Step 3에서 <code>/move_group use_sim_time</code>이 <code>true</code>인지 실제로 판정합니다.</p></div>
+      <div class="next-check">상위 launch가 설치되어 ROS에서 검색됩니다.</div>
+    </section>
+
+    <section id="step3">
+      <div class="kicker">Step 3 · 약 35분</div>
+      <h2><span class="step-badge">3</span>한 명령으로 전체 system 실행</h2>
+      <p class="subtitle">T1 하나가 Gazebo, controller, MoveIt·RViz, target pose node, orchestrator, dummy server의 생명주기를 함께 소유합니다.</p>
+
+      <h3>3-1 · 상위 launch 시작</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 상주 명령</b><span class="where">Container (T1)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>cd /workspace/pick_place_ws
+source /opt/ros/jazzy/setup.bash
+source /root/ros2_ws/install/setup.bash
+source install/setup.bash
+
+ros2 launch pnp_bringup week1_system.launch.py \
+  world:=empty_world \
+  start_rviz:=true \
+  |&amp; tee session3_system.log</pre>
+      </div>
+      <p><code>world</code>에는 <code>.sdf</code>를 붙이지 않습니다. 공식 launch가 내부에서 확장자를 붙입니다. Gazebo에 로봇이 보이고 RViz의 RobotModel이 표시된 뒤 다음 단계로 갑니다.</p>
+      <div class="code-block">
+        <div class="code-head"><b>예상 핵심 로그</b><span class="where">순서와 PID는 달라도 됨</span></div>
+<pre>RunTrial orchestrator ready
+dummy PickPlace server ready
+Configured and activated joint_state_broadcaster
+Configured and activated gripper_controller
+Configured and activated arm_controller
+You can start planning now!</pre>
+      </div>
+
+      <h3>3-2 · node·controller·action graph 확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>cd /workspace/pick_place_ws
+source /opt/ros/jazzy/setup.bash
+source /root/ros2_ws/install/setup.bash
+source install/setup.bash
+
+ros2 node list --no-daemon | grep -x -E \
+  '/controller_manager|/robot_state_publisher|/move_group|/rviz2_moveit|/target_pose_publisher|/target_pose_monitor|/pnp_orchestrator|/dummy_pick_place_server'
+
+ros2 control list_controllers --spin-time 5
+ros2 action list -t | grep -x -E \
+  '/task/run_trial.*|/pick_place/execute.*|/arm_controller/follow_joint_trajectory.*|/gripper_controller/gripper_cmd.*'
+
+ros2 topic echo /joint_states --once --timeout 10</pre>
+      </div>
+      <p>세 controller가 모두 <code>active</code>이고 네 action이 type과 함께 보여야 합니다. <code>/joint_states</code>에는 arm 네 joint와 gripper joint가 포함됩니다.</p>
+
+      <h3>3-3 · project node와 MoveIt의 sim time 확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>for node in \
+  /target_pose_publisher \
+  /target_pose_monitor \
+  /pnp_orchestrator \
+  /dummy_pick_place_server \
+  /move_group
+do
+  printf '%s: ' "$node"
+  ros2 param get "$node" use_sim_time
+done
+
+ros2 topic echo /clock --once --timeout 10</pre>
+      </div>
+      <p>다섯 줄이 모두 <code>Boolean value is: True</code>여야 하고 `/clock` 메시지가 한 번 보여야 합니다. 커리큘럼의 필수 조건인 “모든 project node sim time”은 앞의 네 project node로 판정합니다.</p>
+
+      <h3>3-4 · 상위 launch 안의 action chain 1회 확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>ros2 run pnp_evaluation scenario_runner \
+  --run-id session3-upper-launch \
+  |&amp; tee session3_action.log</pre>
+      </div>
+      <p>Session 2와 같은 stage feedback 뒤 <code>RESULT status=SUCCEEDED success=true error_code=0</code>이 보여야 합니다. Manual cancel은 이미 확인했으므로 반복하지 않습니다.</p>
+      <div class="next-check">상위 launch 하나가 simulation·planning·project action을 함께 시작했습니다.</div>
+    </section>
+
+    <section id="step4">
+      <div class="kicker">Step 4 · 약 25분</div>
+      <h2><span class="step-badge">4</span>TF tree를 읽고 frames.md 작성</h2>
+      <p class="subtitle">URDF에서 읽은 고정 구조와 runtime TF를 연결합니다. 숫자를 외우는 것이 아니라 root·base·EEF 사이의 경로와 static/dynamic 차이를 설명하는 것이 목표입니다.</p>
+
+      <h3>4-1 · world에서 EEF까지 runtime transform 확인</h3>
+      <p>아래 명령은 계속 출력됩니다. Translation과 quaternion이 한 번 이상 보이면 <kbd>Ctrl</kbd>+<kbd>C</kbd>로 종료합니다.</p>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 확인 뒤 Ctrl+C</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>ros2 run tf2_ros tf2_echo world end_effector_link \
+  |&amp; tee session3_tf_echo.log</pre>
+      </div>
+      <p><code>At time</code>, <code>Translation</code>, <code>Rotation</code>이 보이면 <code>world → end_effector_link</code> 경로가 연결된 것입니다.</p>
+
+      <h3>4-2 · 전체 TF diagram 생성</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>EVIDENCE=/workspace/pick_place_ws/session3_evidence
+mkdir -p "$EVIDENCE"
+touch "$EVIDENCE/COLCON_IGNORE"
+cd "$EVIDENCE"
+
+ros2 run tf2_tools view_frames
+ls -lh frames_*.pdf frames_*.gv 2&gt;/dev/null || true</pre>
+      </div>
+      <p>생성된 diagram에서 <code>world → link1 → link2 → link3 → link4 → link5 → end_effector_link</code>가 끊기지 않는지 확인합니다. Fixed joint인 <code>world_fixed</code>와 <code>end_effector_joint</code>는 `/tf_static`, 회전·gripper joint는 `/tf` 관계를 만듭니다.</p>
+
+      <h3>4-3 · frames.md 템플릿 배치</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 신규 파일일 때만 복사</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>ASSET=/workspace/2026-pnp-study/guides/assets/session-3
+DOC=/workspace/2026-pnp-study/docs/frames.md
+
+if ! test -e "$DOC"; then
+  cp "$ASSET/frames-template.md" "$DOC"
+fi
+
+sed -n '1,220p' "$DOC"</pre>
+      </div>
+      <p>실행일, 실제 world 인자, controller 상태, TF 로그와 PDF 파일명을 채웁니다. Grasp frame·camera frame·접근축은 아직 실행 근거가 없으므로 템플릿의 “이후 회차에서 확정” 상태를 유지합니다.</p>
+
+      <h3>4-4 · 시스템 구조 문서용 snippet 확인</h3>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 읽기 전용</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>sed -n '1,180p' \
+  /workspace/2026-pnp-study/guides/assets/session-3/system_architecture-session3-snippet.md</pre>
+      </div>
+      <p>실제 출력으로 checklist를 판정한 뒤 이 구조를 <code>docs/system_architecture.md</code>의 Session 3 절에 반영합니다. 미리 체크한 문서는 증빙이 아니라 소설이므로, 실행 뒤에만 채웁니다.</p>
+      <div class="next-check">실제 TF와 controller 관계를 문서화할 준비가 됐습니다.</div>
+    </section>
+
+    <section id="finish">
+      <div class="kicker">Finish · 약 10분</div>
+      <h2>Week 1 Gate 판정과 clean stop</h2>
+
+      <h3>F-1 · Week 1 Gate</h3>
+      <ul class="checklist">
+        <li><input id="gate-topic" type="checkbox"><label for="gate-topic">Session 1의 target pose topic 데이터 흐름이 완료됐습니다.</label><span class="tag">S1</span></li>
+        <li><input id="gate-action" type="checkbox"><label for="gate-action">Session 2의 정상 action과 manual cancel 1회가 완료됐습니다.</label><span class="tag">S2</span></li>
+        <li><input id="gate-upper" type="checkbox"><label for="gate-upper">상위 launch 하나로 기존 world와 project node가 실행됐습니다.</label><span class="tag">S3</span></li>
+        <li><input id="gate-frame" type="checkbox"><label for="gate-frame">Planning frame·<code>link1</code>·EEF 관계와 controller 상태를 설명할 수 있습니다.</label><span class="tag">S3</span></li>
+        <li><input id="gate-docs" type="checkbox"><label for="gate-docs"><code>frames.md</code>와 시스템 구조 문서에 실제 결과를 저장했습니다.</label><span class="tag">DOC</span></li>
+      </ul>
+      <div class="callout good"><p><strong>다섯 항목이 충족되면 Week 1 Gate 통과입니다.</strong> Timeout·heartbeat·invalid-input 시험은 Gate 조건이 아닙니다. Session 4부터 실제 MoveIt 조작 server를 만듭니다.</p></div>
+
+      <h3>F-2 · 종료 순서</h3>
+      <ol>
+        <li>T1의 상위 launch에서 <kbd>Ctrl</kbd>+<kbd>C</kbd>를 누르고 Gazebo·RViz 창이 닫힐 때까지 기다립니다.</li>
+        <li>T0의 Zenoh router에서 <kbd>Ctrl</kbd>+<kbd>C</kbd>를 누릅니다.</li>
+        <li>T2에서 잔존 process를 확인합니다.</li>
+      </ol>
+      <div class="code-block">
+        <div class="code-head"><b>Bash · 종료 확인</b><span class="where">Container (T2)</span><button class="copy" aria-label="코드 복사">복사</button></div>
+<pre>ros2 node list --no-daemon | grep -x -E \
+  '/controller_manager|/robot_state_publisher|/move_group|/rviz2_moveit|/target_pose_publisher|/target_pose_monitor|/pnp_orchestrator|/dummy_pick_place_server' \
+  || true
+
+pgrep -af '[r]mw_zenohd|[g]z sim|[m]ove_group|[r]viz2|[p]np_orchestrator' || true</pre>
+      </div>
+      <p>두 명령 모두 빈 출력이면 clean stop입니다.</p>
+
+      <h3>막혔을 때의 최소 분기</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>증상</th><th>먼저 확인</th><th>다음 행동</th></tr></thead>
+          <tbody>
+            <tr><td>Session 3 자산을 찾지 못함</td><td>Step 0-3의 Git status·pull 결과</td><td>학습 저장소만 fast-forward 동기화 후 자산 확인 재실행</td></tr>
+            <tr><td><code>Duplicate package names</code></td><td><code>session3_backup/COLCON_IGNORE</code></td><td>표식을 만든 뒤 <code>pnp_bringup</code> build 재실행</td></tr>
+            <tr><td>상위 launch를 찾지 못함</td><td>복사 경로와 overlay source</td><td><code>pnp_bringup</code>만 rebuild 후 <code>source install/setup.bash</code></td></tr>
+            <tr><td>Controller가 active가 아님</td><td>T1의 최초 spawner 오류</td><td>10초 기다려 재조회하고 계속 실패하면 상위 launch만 정상 종료·재시작</td></tr>
+            <tr><td>TF가 연결되지 않음</td><td><code>/joint_states</code>와 <code>/robot_state_publisher</code></td><td>둘 중 빠진 아래층부터 복구한 뒤 <code>tf2_echo</code> 재실행</td></tr>
+            <tr><td>MoveIt의 URDF 추론 warning</td><td>뒤에 <code>You can start planning now!</code>가 나오는지</td><td>준비 완료가 나오면 topic에서 description을 받은 정상 경로이므로 진행</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>2026 PNP STUDY · Session 3 실행 가이드 · 제작일 2026-08-09 · UTF-8</footer>
+
+  <script>
+    const progress = document.getElementById('progress');
+    const updateProgress = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
+      const ratio = max > 0 ? doc.scrollTop / max : 0;
+      progress.style.width = `${Math.min(100, Math.max(0, ratio * 100))}%`;
+    };
+    document.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+
+    const copyText = async (value) => {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+        return;
+      }
+      const area = document.createElement('textarea');
+      area.value = value;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      const copied = document.execCommand('copy');
+      area.remove();
+      if (!copied) throw new Error('copy command unavailable');
+    };
+
+    document.querySelectorAll('.copy').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const pre = button.closest('.code-block').querySelector('pre');
+        const original = button.textContent;
+        try {
+          await copyText(pre.textContent.replace(/^\n|\n$/g, ''));
+          button.textContent = '복사됨';
+        } catch {
+          button.textContent = '선택해 복사';
+        }
+        window.setTimeout(() => { button.textContent = original; }, 1400);
+      });
+    });
+
+    document.querySelectorAll('.checklist input[type="checkbox"]').forEach((box) => {
+      const key = `pnp-session-3:${box.id}`;
+      try { box.checked = localStorage.getItem(key) === '1'; } catch {}
+      box.addEventListener('change', () => {
+        try { localStorage.setItem(key, box.checked ? '1' : '0'); } catch {}
+      });
+    });
+  </script>
+</body>
+</html>

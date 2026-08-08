@@ -1,7 +1,21 @@
 {
   "schema_version": 1,
-  "updated": "2026-08-05",
+  "updated": "2026-08-09",
   "guides": [
+    {
+      "date": "2026-08-09",
+      "session": "Session 3",
+      "title": "URDF·TF2·ros2_control과 상위 launch",
+      "description": "OpenMANIPULATOR-X의 link·joint·TF·controller 관계를 읽고 Gazebo·MoveIt·프로젝트 노드를 상위 launch 하나로 연결합니다.",
+      "path": "./2026-08-09-session-3-urdf-tf-control-launch.html",
+      "tags": [
+        "Week 1",
+        "URDF",
+        "TF2",
+        "ros2_control",
+        "launch"
+      ]
+    },
     {
       "date": "2026-08-04",
       "session": "Session 2",
